@@ -22,6 +22,6 @@ public class Fournisseur {
     @OneToMany(mappedBy = "fournisseur")
     private List<CommandeFournisseur> commandes;
 
-    @OneToMany(mappedBy = "stock")
+    @OneToMany(mappedBy = "fournisseur")
     private List<CatalogueFournisseur> catalogue;
 }

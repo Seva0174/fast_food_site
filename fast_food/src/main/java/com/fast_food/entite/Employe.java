@@ -3,6 +3,8 @@ package com.fast_food.entite;
 import java.util.List;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -26,6 +28,7 @@ public class Employe {
         MANAGER,
         CAISIER
     }
+    @Enumerated(EnumType.STRING)
     private Role role;
     
     private String nom;

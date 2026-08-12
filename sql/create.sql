@@ -27,7 +27,7 @@ CREATE TABLE users (
     nom             VARCHAR(150) NOT NULL,
     role            VARCHAR(30)  NOT NULL DEFAULT 'client'
                         CHECK (role IN ('client', 'admin', 'employe')),
-    est_verfi       BOOLEAN      NOT NULL DEFAULT FALSE,
+    estVerf         BOOLEAN      NOT NULL DEFAULT FALSE,
     date_creation   TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -63,9 +63,9 @@ CREATE TABLE produit_menu (
     id_categorie    INTEGER NOT NULL REFERENCES categorie(id) ON DELETE RESTRICT,
     description     TEXT,
     prix            NUMERIC(8,2) NOT NULL,
-    image_url       VARCHAR(500),
+    imageURL       VARCHAR(500),
     nom             VARCHAR(150) NOT NULL,
-    est_dispo       BOOLEAN NOT NULL DEFAULT TRUE
+    estDispo       BOOLEAN NOT NULL DEFAULT TRUE
 );
 
 CREATE TABLE panier (
