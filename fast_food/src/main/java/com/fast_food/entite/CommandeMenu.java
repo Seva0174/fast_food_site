@@ -1,5 +1,7 @@
 package com.fast_food.entite;
 
+import java.math.BigDecimal;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -28,5 +30,5 @@ public class CommandeMenu {
     private Commande commandeInfo;
 
     private int quantite;
-    private float prix;
+    private BigDecimal prix;
 }

@@ -1,5 +1,6 @@
 package com.fast_food.entite;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import jakarta.persistence.Entity;
@@ -28,7 +29,7 @@ public class ProduitMenu {
     private Categorie categorie;
 
     private String description;
-    private float prix;
+    private BigDecimal prix;
     private String imageURL;
     private String nom;
     private boolean estDispo;

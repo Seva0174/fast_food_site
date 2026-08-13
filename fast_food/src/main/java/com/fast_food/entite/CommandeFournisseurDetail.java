@@ -30,5 +30,5 @@ public class CommandeFournisseurDetail {
     private StockMatierePremiere stock;
 
     private BigDecimal quantite;
-    private float prixUnitaire;
+    private BigDecimal prixUnitaire;
 }

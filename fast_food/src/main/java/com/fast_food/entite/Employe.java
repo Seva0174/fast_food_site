@@ -1,5 +1,6 @@
 package com.fast_food.entite;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import jakarta.persistence.Entity;
@@ -32,5 +33,5 @@ public class Employe {
     private Role role;
     
     private String nom;
-    private float salaire_heure;
+    private BigDecimal salaire_heure;
 }

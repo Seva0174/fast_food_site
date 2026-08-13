@@ -1,5 +1,7 @@
 package com.fast_food.entite;
 
+import java.math.BigDecimal;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -25,5 +27,5 @@ public class Recette {
     @JoinColumn(name = "id_produit")
     private ProduitMenu produitMenu;
 
-    private int quantiteRequise;
+    private BigDecimal quantiteRequise;
 }

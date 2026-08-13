@@ -1,5 +1,6 @@
 package com.fast_food.entite;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -46,7 +47,7 @@ public class Commande {
     private String cpVille;
     private String cpCodePostal;
 
-    private float total;
+    private BigDecimal total;
     private LocalDateTime dateCreation;
 
 }

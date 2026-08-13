@@ -1,6 +1,8 @@
 package com.fast_food.entite;
 
 
+import java.math.BigDecimal;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -26,7 +28,7 @@ public class CatalogueFournisseur {
     @JoinColumn(name = "id_stock")
     private StockMatierePremiere stock;
 
-    private float prixUnitaire;
+    private BigDecimal prixUnitaire;
     
     
 }

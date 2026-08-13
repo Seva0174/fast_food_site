@@ -1,6 +1,6 @@
 package com.fast_food.entite;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import jakarta.persistence.Entity;
@@ -39,7 +39,7 @@ public class User {
     private String email;
     private String mdp;
     private String nom;
-    private LocalDate dateCreation;
+    private LocalDateTime dateCreation;
     private boolean estVerif;
     private enum Role{
         ADMIN,

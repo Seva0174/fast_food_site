@@ -2,7 +2,7 @@
 -- UTILISATEURS
 -- Mots de passe stockés en clair ici uniquement pour la démo :
 -- =====================================================================
-INSERT INTO users (email, mdp, nom, role, est_verfi, date_creation) VALUES
+INSERT INTO users (email, mdp, nom, role, est_verif, date_creation) VALUES
 ('admin@tacoburger.fr',     '$2y$hash_admin',   'Amine Belkacem',    'admin',   TRUE,  '2025-01-10 09:00:00'),
 ('julie.martin@mail.fr',    '$2y$hash_julie',   'Julie Martin',      'client',  TRUE,  '2025-02-14 12:30:00'),
 ('thomas.dubois@mail.fr',   '$2y$hash_thomas',  'Thomas Dubois',     'client',  TRUE,  '2025-03-01 18:45:00'),

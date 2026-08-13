@@ -1,9 +1,10 @@
 package com.fast_food.entite;
 
 
-import java.util.Date;
 
-import org.hibernate.annotations.ManyToAny;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -26,7 +27,7 @@ public class EmployeHeure {
     @JoinColumn(name = "id_employe")
     private Employe employe;
 
-    private int nbHeure;
-    private Date date;
+    private BigDecimal nbHeure;
+    private LocalDate date;
     
 }
