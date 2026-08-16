@@ -41,7 +41,7 @@ public class User {
     private String nom;
     private LocalDateTime dateCreation;
     private boolean estVerif;
-    private enum Role{
+    public enum Role{
         ADMIN,
         CLIENT,
         EMPLOYE
