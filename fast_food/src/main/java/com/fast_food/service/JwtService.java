@@ -66,7 +66,6 @@ public class JwtService {
         return extractClaim(token, Claims::getExpiration);
     }
 
-    // Nouvelle syntaxe de parsing pour JJWT 0.12.x
     private Claims extractAllClaims(String token) {
         return Jwts.parser()
                 .verifyWith(getSignInKey())
