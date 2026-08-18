@@ -31,10 +31,10 @@ public class CommandeFournisseur {
     private LocalDate dateCommande;
     private LocalDate dateReception;
     private enum Status{
-        RECUE,
-        EXPEDIEE,
-        EN_ATTENTE,
-        ANNULEE
+        recue,
+        expedie,
+        en_attente,
+        annulee
     }
     @Enumerated(EnumType.STRING)
     private Status status; 

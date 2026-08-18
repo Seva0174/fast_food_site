@@ -21,34 +21,34 @@ DROP TABLE IF EXISTS users CASCADE;
 -- =====================================================================
 
 CREATE TABLE users (
-    id              BIGINT PRIMARY KEY,
+    id              BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     email           VARCHAR(255) NOT NULL UNIQUE,
     mdp             VARCHAR(255) NOT NULL,
     nom             VARCHAR(150) NOT NULL,
-    role            VARCHAR(30)  NOT NULL DEFAULT 'client'
+    role            VARCHAR(30) NOT NULL DEFAULT 'client'
                         CHECK (role IN ('client', 'admin', 'employe')),
-    est_verif         BOOLEAN      NOT NULL DEFAULT FALSE,
-    date_creation   TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP
+    est_verif       BOOLEAN NOT NULL DEFAULT FALSE,
+    date_creation   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE categorie (
-    id      BIGINT PRIMARY KEY,
+    id      BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     nom     VARCHAR(100) NOT NULL UNIQUE
 );
 
 CREATE TABLE stock_matiere_premiere (
-    id          BIGINT PRIMARY KEY,
+    id          BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     nom         VARCHAR(150) NOT NULL,
     quantite    NUMERIC(12,3) NOT NULL DEFAULT 0  
 );
 
 CREATE TABLE fournisseur (
-    id      BIGINT PRIMARY KEY,
+    id      BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     nom     VARCHAR(150) NOT NULL
 );
 
 CREATE TABLE employe (
-    id              BIGINT PRIMARY KEY,
+    id              BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     nom             VARCHAR(150) NOT NULL,
     role            VARCHAR(50)  NOT NULL,
     salaire_heure   NUMERIC(8,2) NOT NULL
@@ -59,22 +59,22 @@ CREATE TABLE employe (
 -- =====================================================================
 
 CREATE TABLE produit_menu (
-    id              BIGINT PRIMARY KEY,
+    id              BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     id_categorie    BIGINT NOT NULL REFERENCES categorie(id) ON DELETE RESTRICT,
     description     TEXT,
     prix            NUMERIC(8,2) NOT NULL,
-    imageURL       VARCHAR(500),
+    image_url       VARCHAR(500),
     nom             VARCHAR(150) NOT NULL,
     est_dispo       BOOLEAN NOT NULL DEFAULT TRUE
 );
 
 CREATE TABLE panier (
-    id          BIGINT PRIMARY KEY,
+    id          BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     id_user     BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE
 );
 
 CREATE TABLE adresse (
-    id              BIGINT PRIMARY KEY,
+    id              BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     id_user         BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     rue             VARCHAR(255) NOT NULL,
     ville           VARCHAR(150) NOT NULL,
@@ -82,14 +82,14 @@ CREATE TABLE adresse (
 );
 
 CREATE TABLE email_verification_tokens (
-    id          BIGINT PRIMARY KEY,
+    id          BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     id_user     BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     token       VARCHAR(255) NOT NULL,
     expire_le   TIMESTAMP NOT NULL
 );
 
 CREATE TABLE commandes (
-    id              BIGINT PRIMARY KEY,
+    id              BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     id_user         BIGINT NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
     status          VARCHAR(30) NOT NULL DEFAULT 'en_attente'
                         CHECK (status IN ('en_attente', 'en_preparation', 'prete', 'livree', 'annulee')),
@@ -105,14 +105,14 @@ CREATE TABLE commandes (
 -- =====================================================================
 
 CREATE TABLE panier_items (
-    id          BIGINT PRIMARY KEY,
+    id          BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     id_panier   BIGINT NOT NULL REFERENCES panier(id) ON DELETE CASCADE,
     id_produit  BIGINT NOT NULL REFERENCES produit_menu(id) ON DELETE CASCADE,
     quantite    INTEGER NOT NULL CHECK (quantite > 0)
 );
 
 CREATE TABLE commandes_menu (
-    id          BIGINT PRIMARY KEY,
+    id          BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     id_commande BIGINT NOT NULL REFERENCES commandes(id) ON DELETE CASCADE,
     id_produit  BIGINT NOT NULL REFERENCES produit_menu(id) ON DELETE RESTRICT,
     quantite    INTEGER NOT NULL CHECK (quantite > 0),
@@ -120,14 +120,14 @@ CREATE TABLE commandes_menu (
 );
 
 CREATE TABLE employe_heure (
-    id          BIGINT PRIMARY KEY,
+    id          BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     id_employe  BIGINT NOT NULL REFERENCES employe(id) ON DELETE CASCADE,
     nb_heure    NUMERIC(5,2) NOT NULL,
     date        DATE NOT NULL
 );
 
 CREATE TABLE commandes_fournisseurs (
-    id              BIGINT PRIMARY KEY,
+    id              BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     id_fournisseur  BIGINT NOT NULL REFERENCES fournisseur(id) ON DELETE RESTRICT,
     date_commande   DATE NOT NULL DEFAULT CURRENT_DATE,
     date_reception  DATE,
@@ -136,21 +136,21 @@ CREATE TABLE commandes_fournisseurs (
 );
 
 CREATE TABLE catalogue_fournisseur (
-    id              BIGINT PRIMARY KEY,
+    id              BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     id_fournisseur  BIGINT NOT NULL REFERENCES fournisseur(id) ON DELETE CASCADE,
     id_stock        BIGINT NOT NULL REFERENCES stock_matiere_premiere(id) ON DELETE CASCADE,
     prix_unitaire   NUMERIC(8,2) NOT NULL
 );
 
 CREATE TABLE recette (
-    id                  BIGINT PRIMARY KEY,
+    id                  BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     id_produit          BIGINT NOT NULL REFERENCES produit_menu(id) ON DELETE CASCADE,
     id_matiere          BIGINT NOT NULL REFERENCES stock_matiere_premiere(id) ON DELETE RESTRICT,
     quantite_requise    NUMERIC(10,3) NOT NULL
 );
 
 CREATE TABLE commandes_fournisseurs_details (
-    id                          BIGINT PRIMARY KEY,
+    id                         BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     id_commande_fournisseur    BIGINT NOT NULL REFERENCES commandes_fournisseurs(id) ON DELETE CASCADE,
     id_stock                   BIGINT NOT NULL REFERENCES stock_matiere_premiere(id) ON DELETE RESTRICT,
     quantite                   NUMERIC(12,3) NOT NULL,

@@ -42,9 +42,9 @@ public class User {
     private LocalDateTime dateCreation;
     private boolean estVerif;
     public enum Role{
-        ADMIN,
-        CLIENT,
-        EMPLOYE
+        admin,
+        client,
+        employe
     }
     @Enumerated(EnumType.STRING)
     private Role role;

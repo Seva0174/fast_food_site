@@ -30,7 +30,7 @@ public class ProduitMenu {
 
     private String description;
     private BigDecimal prix;
-    private String imageURL;
+    private String imageUrl;
     private String nom;
     private boolean estDispo;
     

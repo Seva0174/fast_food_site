@@ -25,7 +25,7 @@ public class UserMapper {
         user.setDateCreation(LocalDateTime.now());
         user.setEstVerif(false);
         // client par default
-        user.setRole(User.Role.CLIENT); 
+        user.setRole(User.Role.client); 
 
         return user;
     }

@@ -34,11 +34,11 @@ public class Commande {
     private User user;
 
     private enum Status{
-        EN_ATTENTE,
-        EN_PREPARATION,
-        PRETE,
-        LIVREE,
-        ANNULEE
+        en_attente,
+        en_preparation,
+        prete,
+        livree,
+        annulee
     }
     @Enumerated(EnumType.STRING)
     private Status status;
