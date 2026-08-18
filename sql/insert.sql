@@ -3,11 +3,11 @@
 -- Mots de passe stockés en clair ici uniquement pour la démo :
 -- =====================================================================
 INSERT INTO users (email, mdp, nom, role, est_verif, date_creation) VALUES
-('admin@tacoburger.fr',     '$2y$hash_admin',   'Amine Belkacem',    'admin',   TRUE,  '2025-01-10 09:00:00'),
-('julie.martin@mail.fr',    '$2y$hash_julie',   'Julie Martin',      'client',  TRUE,  '2025-02-14 12:30:00'),
-('thomas.dubois@mail.fr',   '$2y$hash_thomas',  'Thomas Dubois',     'client',  TRUE,  '2025-03-01 18:45:00'),
-('sofia.garcia@mail.fr',    '$2y$hash_sofia',   'Sofia Garcia',      'client',  FALSE, '2025-06-20 10:15:00'),
-('karim.said@tacoburger.fr','$2y$hash_karim',   'Karim Saidi',       'employe', TRUE,  '2025-01-15 08:00:00');
+('admin@tacoburger.fr',     '$2a$10$TOccMYVM3IdwUaMat/lMnuYqFKGipUGpNuUxdQjB82TxzvfWmilzO', 'Amine Belkacem', 'admin',   TRUE, '2025-01-10 09:00:00'), --password
+('julie.martin@mail.fr',    '$2a$10$TOccMYVM3IdwUaMat/lMnuYqFKGipUGpNuUxdQjB82TxzvfWmilzO', 'Julie Martin',   'client',  TRUE, '2025-02-14 12:30:00'),
+('thomas.dubois@mail.fr',   '$2a$10$TOccMYVM3IdwUaMat/lMnuYqFKGipUGpNuUxdQjB82TxzvfWmilzO', 'Thomas Dubois',  'client',  TRUE, '2025-03-01 18:45:00'),
+('sofia.garcia@mail.fr',    '$2a$10$TOccMYVM3IdwUaMat/lMnuYqFKGipUGpNuUxdQjB82TxzvfWmilzO', 'Sofia Garcia',   'client',  FALSE,'2025-06-20 10:15:00'),
+('karim.said@tacoburger.fr','$2a$10$TOccMYVM3IdwUaMat/lMnuYqFKGipUGpNuUxdQjB82TxzvfWmilzO', 'Karim Saidi',    'employe', TRUE, '2025-01-15 08:00:00');
 
 -- =====================================================================
 -- ADRESSES

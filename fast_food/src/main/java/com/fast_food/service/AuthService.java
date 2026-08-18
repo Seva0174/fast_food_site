@@ -41,7 +41,7 @@ public class AuthService {
         // 4. Définir les valeurs par défaut
         user.setEstVerif(true); // Compte vérifié automatiquement
         user.setDateCreation(LocalDateTime.now());
-        user.setRole(User.Role.client); // Rôle CLIENT par défaut
+        user.setRole(User.Role.client); // Rôle client par défaut
 
         // 5. Sauvegarder l'utilisateur en BDD
         User savedUser = userRepository.save(user);

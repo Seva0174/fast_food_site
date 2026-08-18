@@ -46,12 +46,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try{
             //si email est valide et l'user n'est pas deja authentifier
             if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                
                 //recup le role
                 String role = jwtService.extractClaim(jwt, claims -> claims.get("role", String.class));
+                
                 //Conversion du rôle sous forme de GrantedAuthority
                 var authorities = role != null 
                         ? Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role))
                         : Collections.<SimpleGrantedAuthority>emptyList();
+                
                 //création de l'objet d'authentification pour Spring Security avec l'email et les rôles
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                         userEmail,
@@ -59,7 +62,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         authorities
                 );
                 //ajout des détails de la requête HTTP (ex: adresse IP, session) à l'objet d'authentification
+                
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                
                 //enregistrement de l'utilisateur authentifié dans le contexte global de Spring Security
                 SecurityContextHolder.getContext().setAuthentication(authToken);
             }
