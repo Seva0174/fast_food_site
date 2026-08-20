@@ -3,6 +3,7 @@ package com.fast_food.config;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -24,13 +25,22 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         //creation de la config de securite
-        http
-            .csrf(AbstractHttpConfigurer::disable) // desactive la protection
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // pas de session
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**").permitAll() // Endpoints publics
-                .anyRequest().authenticated()               // Tout le reste nécessite un token d'authentification
-            )
+        http.authorizeHttpRequests(auth -> auth
+            // Auth endpoints
+            .requestMatchers("/api/auth/**").permitAll()
+            
+            // Consultation de la carte / catégories (Public)
+            .requestMatchers(HttpMethod.GET, "/api/categories/**").permitAll()
+            .requestMatchers(HttpMethod.GET, "/api/produits/**").permitAll()
+
+            // Modification du menu (Réservé ADMIN)
+            .requestMatchers(HttpMethod.POST, "/api/categories/**", "/api/produits/**").hasRole("ADMIN")
+            .requestMatchers(HttpMethod.PUT, "/api/categories/**", "/api/produits/**").hasRole("ADMIN")
+            .requestMatchers(HttpMethod.PATCH, "/api/categories/**", "/api/produits/**").hasRole("ADMIN")
+            .requestMatchers(HttpMethod.DELETE, "/api/categories/**", "/api/produits/**").hasRole("ADMIN")
+
+            .anyRequest().authenticated()
+        )
             //permet d'identifie l'utilisateur avant de vérifier ses accès
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
