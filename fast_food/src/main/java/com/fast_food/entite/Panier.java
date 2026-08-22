@@ -1,7 +1,9 @@
 package com.fast_food.entite;
 
+import java.util.ArrayList;
 import java.util.List;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -24,6 +26,6 @@ public class Panier {
     @JoinColumn(name = "id_user")
     private User user;
 
-    @OneToMany(mappedBy = "panier")
-    private List<PanierItem> panierContenu;
+    @OneToMany(mappedBy = "panier", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PanierItem> panierContenu = new ArrayList<>();
 }

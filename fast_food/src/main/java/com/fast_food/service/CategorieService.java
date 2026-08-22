@@ -12,6 +12,7 @@ import com.fast_food.entite.Categorie;
 import com.fast_food.exception.ResourceNotFoundException;
 import com.fast_food.mapper.CategorieMapper;
 import com.fast_food.repositorie.CategorieRepository;
+import com.fast_food.repositorie.ProduitMenuRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -21,6 +22,7 @@ public class CategorieService {
 
     private final CategorieRepository categorieRepository;
     private final CategorieMapper categorieMapper;
+    private final ProduitMenuRepository produitMenuRepository;
 
     // Récupérer toutes les catégories
     @Transactional(readOnly = true)
@@ -63,6 +65,10 @@ public class CategorieService {
         if (!categorieRepository.existsById(id)) {
             throw new ResourceNotFoundException("Catégorie introuvable avec l'ID : " + id);
         }
+        if (produitMenuRepository.existsByCategorieId(id)) {
+            throw new IllegalStateException("Impossible de supprimer la catégorie : des produits y sont encore rattachés.");
+        }
+
         categorieRepository.deleteById(id);
     }
 }
