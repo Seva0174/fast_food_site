@@ -32,19 +32,23 @@ public class SecurityConfig {
 
             // 3. Règles d'autorisation
             .authorizeHttpRequests(auth -> auth
-                // Auth endpoints
+                // Endpoints publics (Auth, Menu)
                 .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/categories/**", "/api/produits/**").permitAll()
+
+                // Panier & Commandes Client (Utilisateurs connectés)
+                .requestMatchers("/api/panier/**").authenticated()
+                .requestMatchers("/api/commandes/mes-commandes", "/api/commandes/{commandeId}").authenticated()
+
+                //Endpoints Admin / Employé 
+                .requestMatchers(HttpMethod.POST, "/api/categories/**", "/api/produits/**").hasAuthority("admin")
+                .requestMatchers(HttpMethod.PUT, "/api/categories/**", "/api/produits/**").hasAuthority("admin")
+                .requestMatchers(HttpMethod.PATCH, "/api/categories/**", "/api/produits/**").hasAuthority("admin")
+                .requestMatchers(HttpMethod.DELETE, "/api/categories/**", "/api/produits/**").hasAuthority("admin")
                 
-                // Consultation de la carte / catégories (Public)
-                .requestMatchers(HttpMethod.GET, "/api/categories/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/produits/**").permitAll()
+                .requestMatchers("/api/commandes/admin/**").hasAnyAuthority("admin", "employe")
 
-                // Modification du menu (Réservé ADMIN)
-                .requestMatchers(HttpMethod.POST, "/api/categories/**", "/api/produits/**").hasRole("admin")
-                .requestMatchers(HttpMethod.PUT, "/api/categories/**", "/api/produits/**").hasRole("admin")
-                .requestMatchers(HttpMethod.PATCH, "/api/categories/**", "/api/produits/**").hasRole("admin")
-                .requestMatchers(HttpMethod.DELETE, "/api/categories/**", "/api/produits/**").hasRole("admin")
-
+                // Tout le reste requiert une authentification
                 .anyRequest().authenticated()
             )
             // Filtre JWT

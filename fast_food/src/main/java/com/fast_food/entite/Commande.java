@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -26,14 +27,14 @@ public class Commande {
     @GeneratedValue( strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToMany(mappedBy = "commandeInfo")
+    @OneToMany(mappedBy = "commandeInfo", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CommandeMenu> commandeProduits;
 
     @ManyToOne
     @JoinColumn(name = "id_user")
     private User user;
 
-    private enum Status{
+    public enum Status{
         en_attente,
         en_preparation,
         prete,
