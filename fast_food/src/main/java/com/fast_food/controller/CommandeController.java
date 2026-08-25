@@ -20,16 +20,24 @@ import java.util.List;
 public class CommandeController {
 
     private final CommandeService commandeService;
-
+    
+    /**
+    * Récupère toutes les commandes du site (Réservé admin ou employe)
+    */
+    @GetMapping("/admin/toutes")
+    @PreAuthorize("hasRole('admin') or hasRole('employe')")
+    public ResponseEntity<List<CommandeResponse>> getAllCommandes() {
+        return ResponseEntity.ok(commandeService.getAllCommandes());
+    }
     /**
      * Valide le panier et passe la commande (Client connecté)
      */
     @PostMapping
-    public ResponseEntity<CommandeResponse> passerCommande(
-            @AuthenticationPrincipal User user,
-            @RequestBody CreerCommandeRequest request) {
+    public ResponseEntity<CommandeResponse> passerCommande(@AuthenticationPrincipal User user,
+                                                        @RequestBody CreerCommandeRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(commandeService.passerCommande(user, request));
     }
+
 
     /**
      * Récupère l'historique des commandes du client connecté
@@ -39,33 +47,24 @@ public class CommandeController {
         return ResponseEntity.ok(commandeService.getMesCommandes(user));
     }
 
-    /**
-     * Suivi d'une commande spécifique par son ID (Client propriétaire)
-     */
-    @GetMapping("/{commandeId}")
-    public ResponseEntity<CommandeResponse> getCommandeById(
-            @AuthenticationPrincipal User user,
-            @PathVariable Long commandeId) {
-        return ResponseEntity.ok(commandeService.getCommandeById(user, commandeId));
-    }
-
-    /**
-     * Récupère toutes les commandes du site (Réservé ADMIN ou EMPLOYE)
-     */
-    @GetMapping("/admin/toutes")
-    @PreAuthorize("hasRole('admin') or hasRole('employe')")
-    public ResponseEntity<List<CommandeResponse>> getAllCommandes() {
-        return ResponseEntity.ok(commandeService.getAllCommandes());
-    }
-
+    
+    
     /**
      * Met à jour le statut d'une commande (Réservé ADMIN ou EMPLOYE)
      */
     @PatchMapping("/admin/{commandeId}/status")
     @PreAuthorize("hasRole('admin') or hasRole('employe')")
-    public ResponseEntity<CommandeResponse> changerStatus(
-            @PathVariable Long commandeId,
-            @RequestBody ChangerStatusCommandeRequest request) {
+    public ResponseEntity<CommandeResponse> changerStatus(@PathVariable Long commandeId,
+                                                        @RequestBody ChangerStatusCommandeRequest request) {
         return ResponseEntity.ok(commandeService.changerStatus(commandeId, request));
+    }
+
+    /**
+     * Suivi d'une commande spécifique par son ID (Client propriétaire)
+     */
+    @GetMapping("/{commandeId}")
+    public ResponseEntity<CommandeResponse> getCommandeById( @AuthenticationPrincipal User user, 
+                                                            @PathVariable Long commandeId) {
+        return ResponseEntity.ok(commandeService.getCommandeById(user, commandeId));
     }
 }

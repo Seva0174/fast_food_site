@@ -38,15 +38,15 @@ public class SecurityConfig {
 
                 // Panier & Commandes Client (Utilisateurs connectés)
                 .requestMatchers("/api/panier/**").authenticated()
-                .requestMatchers("/api/commandes/mes-commandes", "/api/commandes/{commandeId}").authenticated()
-
-                //Endpoints Admin / Employé 
-                .requestMatchers(HttpMethod.POST, "/api/categories/**", "/api/produits/**").hasAuthority("admin")
-                .requestMatchers(HttpMethod.PUT, "/api/categories/**", "/api/produits/**").hasAuthority("admin")
-                .requestMatchers(HttpMethod.PATCH, "/api/categories/**", "/api/produits/**").hasAuthority("admin")
-                .requestMatchers(HttpMethod.DELETE, "/api/categories/**", "/api/produits/**").hasAuthority("admin")
+                .requestMatchers("/api/commandes", "/api/commandes/**").authenticated()
                 
-                .requestMatchers("/api/commandes/admin/**").hasAnyAuthority("admin", "employe")
+                //Endpoints Admin / Employé 
+                .requestMatchers(HttpMethod.POST, "/api/categories/**", "/api/produits/**").hasRole("admin")
+                .requestMatchers(HttpMethod.PUT, "/api/categories/**", "/api/produits/**").hasRole("admin")
+                .requestMatchers(HttpMethod.PATCH, "/api/categories/**", "/api/produits/**").hasRole("admin")
+                .requestMatchers(HttpMethod.DELETE, "/api/categories/**", "/api/produits/**").hasRole("admin")
+                
+                .requestMatchers("/api/commandes/admin/**").hasAnyRole("admin", "employe")
 
                 // Tout le reste requiert une authentification
                 .anyRequest().authenticated()

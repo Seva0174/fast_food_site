@@ -7,11 +7,17 @@ import com.fast_food.entite.Commande;
 import com.fast_food.entite.CommandeMenu;
 import com.fast_food.entite.Panier;
 import com.fast_food.entite.PanierItem;
+import com.fast_food.entite.ProduitMenu;
+import com.fast_food.entite.Recette;
+import com.fast_food.entite.StockMatierePremiere;
 import com.fast_food.entite.User;
 import com.fast_food.exception.ResourceNotFoundException;
 import com.fast_food.mapper.CommandeMapper;
 import com.fast_food.repositorie.CommandeRepository;
 import com.fast_food.repositorie.PanierRepository;
+import com.fast_food.repositorie.RecetteRepository;
+import com.fast_food.repositorie.StockMatierePremiereRepository;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,18 +37,58 @@ public class CommandeService {
     private final PanierService panierService;
     private final CommandeMapper commandeMapper;
 
-    //Valide le panier courant et crée une nouvelle commande.
+    // Nouveaux repositories pour la gestion des stocks
+    private final RecetteRepository recetteRepository;
+    private final StockMatierePremiereRepository stockRepository;
+
     @Transactional
     public CommandeResponse passerCommande(User user, CreerCommandeRequest request) {
-        // 1. Récupérer le panier de l'utilisateur
+        // 1. Récupérer le panier
         Panier panier = panierRepository.findByUser(user)
                 .orElseThrow(() -> new ResourceNotFoundException("Aucun panier trouvé pour cet utilisateur."));
-
         if (panier.getPanierContenu() == null || panier.getPanierContenu().isEmpty()) {
             throw new IllegalArgumentException("Votre panier est vide. Impossible de passer la commande.");
         }
 
-        // 2. Initialiser l'entité Commande
+        // 2. Verification des stocks
+        for (PanierItem item : panier.getPanierContenu()) {
+            ProduitMenu produit = item.getProduitMenu();
+
+            // Vérifier la disponibilité manuelle du produit
+            if (Boolean.FALSE.equals(produit.isEstDispo())) {
+                throw new IllegalArgumentException("Le produit '" + produit.getNom() + "' n'est plus disponible au menu.");
+            }
+
+            // Vérifier si le stock de matières premières est suffisant pour couvrir la quantité demandée
+            List<Recette> recettes = recetteRepository.findByProduitMenu(produit);
+            for (Recette recette : recettes) {
+                StockMatierePremiere stock = recette.getMatierePremiere();
+                BigDecimal quantiteNecessaire = recette.getQuantiteRequise()
+                        .multiply(BigDecimal.valueOf(item.getQuantite()));
+
+                if (stock.getQuantite().compareTo(quantiteNecessaire) < 0) {
+                    throw new IllegalArgumentException(
+                        "Stock insuffisant pour préparer le produit '" + produit.getNom() + "'"
+                    );
+                }
+            }
+        }
+
+        // 3. Deduction des stocks
+        for (PanierItem item : panier.getPanierContenu()) {
+            List<Recette> recettes = recetteRepository.findByProduitMenu(item.getProduitMenu());
+            for (Recette recette : recettes) {
+                StockMatierePremiere stock = recette.getMatierePremiere();
+                BigDecimal quantiteNecessaire = recette.getQuantiteRequise()
+                        .multiply(BigDecimal.valueOf(item.getQuantite()));
+
+                // Soustraction du stock disponible
+                stock.setQuantite(stock.getQuantite().subtract(quantiteNecessaire));
+                stockRepository.save(stock);
+            }
+        }
+
+        // 4. Initialiser et sauvegarder la Commande
         Commande commande = new Commande();
         commande.setUser(user);
         commande.setStatus(Commande.Status.en_attente);
@@ -51,7 +97,6 @@ public class CommandeService {
         commande.setCpCodePostal(request.getCpCodePostal());
         commande.setDateCreation(LocalDateTime.now());
 
-        // 3. Convertir les PanierItem en CommandeMenu & calculer le total
         BigDecimal totalCommande = BigDecimal.ZERO;
         List<CommandeMenu> itemsCommande = new ArrayList<>();
 
@@ -64,7 +109,7 @@ public class CommandeService {
             commandeMenu.setCommandeInfo(commande);
             commandeMenu.setProduitMenu(item.getProduitMenu());
             commandeMenu.setQuantite(item.getQuantite());
-            commandeMenu.setPrix(prixUnitaire); // Fige le prix au moment de l'achat
+            commandeMenu.setPrix(prixUnitaire);
 
             itemsCommande.add(commandeMenu);
         }
@@ -72,10 +117,9 @@ public class CommandeService {
         commande.setTotal(totalCommande);
         commande.setCommandeProduits(itemsCommande);
 
-        // 4. Sauvegarder la commande en BDD
         Commande commandeSauvegardee = commandeRepository.save(commande);
 
-        // 5. Vider le panier après commande réussie
+        // 5. Vider le panier
         panierService.viderPanier(user);
 
         return commandeMapper.toResponse(commandeSauvegardee);
@@ -104,7 +148,7 @@ public class CommandeService {
         return commandeMapper.toResponse(commande);
     }
 
-    //Récupérer toutes les commandes (Réservé Cuisinier / Admin)
+    //Récupérer toutes les commandes (Cuisinier / Admin)
     @Transactional(readOnly = true)
     public List<CommandeResponse> getAllCommandes() {
         return commandeRepository.findAllByOrderByDateCreationDesc().stream()
