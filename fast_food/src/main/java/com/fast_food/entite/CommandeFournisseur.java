@@ -30,9 +30,9 @@ public class CommandeFournisseur {
  
     private LocalDate dateCommande;
     private LocalDate dateReception;
-    private enum Status{
+    public enum Status{
         recue,
-        expedie,
+        expediee,
         en_attente,
         annulee
     }

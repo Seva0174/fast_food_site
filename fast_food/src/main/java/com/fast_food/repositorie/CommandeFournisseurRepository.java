@@ -1,11 +1,8 @@
 package com.fast_food.repositorie;
 
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
-
 import com.fast_food.entite.CommandeFournisseur;
+import org.springframework.data.jpa.repository.JpaRepository;
 
-@Repository
-public interface CommandeFournisseurRepository extends JpaRepository<CommandeFournisseur,Long>{
-    
+public interface CommandeFournisseurRepository extends JpaRepository<CommandeFournisseur, Long> {
+
 }

@@ -1,11 +1,9 @@
 package com.fast_food.repositorie;
 
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
-
 import com.fast_food.entite.CatalogueFournisseur;
+import org.springframework.data.jpa.repository.JpaRepository;
+import java.util.List;
 
-@Repository
-public interface CatalogueFournisseurRepository extends JpaRepository<CatalogueFournisseur,Long>{
-    
+public interface CatalogueFournisseurRepository extends JpaRepository<CatalogueFournisseur, Long> {
+    List<CatalogueFournisseur> findByFournisseurId(Long idFournisseur);
 }
