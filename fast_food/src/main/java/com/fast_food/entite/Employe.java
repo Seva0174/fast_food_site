@@ -24,7 +24,7 @@ public class Employe {
     @OneToMany(mappedBy = "employe")
     private List<EmployeHeure> heures;
     
-    private enum Role {
+    public enum Role {
         CUISINIER,
         MANAGER,
         CAISIER
