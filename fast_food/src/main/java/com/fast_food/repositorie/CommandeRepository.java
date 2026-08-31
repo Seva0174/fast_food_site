@@ -25,8 +25,16 @@ public interface CommandeRepository extends JpaRepository<Commande,Long>{
     BigDecimal calculateChiffreAffairesEntre(@Param("debut") LocalDateTime debut, @Param("fin") LocalDateTime fin);
 
     // Nombre total de commandes (hors annulées)
-    @Query("SELECT COUNT(c) FROM Commande c WHERE c.status <> 'annulee'")
-    Long countCommandesValides();
+    @Query("""
+    SELECT COUNT(c)
+    FROM Commande c
+    WHERE c.status <> 'annulee'
+    AND c.dateCreation BETWEEN :debut AND :fin
+    """)
+    Long countCommandesValidesEntre(
+            @Param("debut") LocalDateTime debut,
+            @Param("fin") LocalDateTime fin
+    );
 
     // Top des produits vendus
     @Query("SELECT cm.produit.id, cm.produit.nom, SUM(cm.quantite), SUM(cm.quantite * cm.prix) " +

@@ -17,6 +17,7 @@ import com.fast_food.dto.CategorieRequest;
 import com.fast_food.dto.CategorieResponse;
 import com.fast_food.service.CategorieService;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -40,7 +41,7 @@ public class CategorieController {
 
     // Créer une catégorie (Admin)
     @PostMapping
-    public ResponseEntity<CategorieResponse> createCategorie(@RequestBody CategorieRequest request) {
+    public ResponseEntity<CategorieResponse> createCategorie(@Valid @RequestBody CategorieRequest request) {
         CategorieResponse createdCategorie = categorieService.createCategorie(request);
         return new ResponseEntity<>(createdCategorie, HttpStatus.CREATED);
     }
@@ -49,7 +50,7 @@ public class CategorieController {
     @PutMapping("/{id}")
     public ResponseEntity<CategorieResponse> updateCategorie(
             @PathVariable Long id,
-            @RequestBody CategorieRequest request) {
+            @Valid @RequestBody CategorieRequest request) {
         return ResponseEntity.ok(categorieService.updateCategorie(id, request));
     }
 

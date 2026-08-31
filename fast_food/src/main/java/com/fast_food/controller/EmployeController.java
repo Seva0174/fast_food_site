@@ -2,6 +2,8 @@ package com.fast_food.controller;
 
 import com.fast_food.dto.*;
 import com.fast_food.service.EmployeService;
+
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
@@ -33,7 +35,7 @@ public class EmployeController {
     }
 
     @PostMapping
-    public ResponseEntity<EmployeResponse> creerEmploye(@RequestBody EmployeRequest request) {
+    public ResponseEntity<EmployeResponse> creerEmploye(@Valid @RequestBody EmployeRequest request) {
         EmployeResponse nouveauEmploye = employeService.creerEmploye(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(nouveauEmploye);
     }
@@ -41,7 +43,7 @@ public class EmployeController {
     @PutMapping("/{id}")
     public ResponseEntity<EmployeResponse> modifierEmploye(
             @PathVariable Long id,
-            @RequestBody EmployeRequest request) {
+            @Valid @RequestBody EmployeRequest request) {
         return ResponseEntity.ok(employeService.modifierEmploye(id, request));
     }
 
@@ -56,7 +58,7 @@ public class EmployeController {
     // ==========================================
 
     @PostMapping("/heures")
-    public ResponseEntity<EmployeHeureResponse> enregistrerHeures(@RequestBody EmployeHeureRequest request) {
+    public ResponseEntity<EmployeHeureResponse> enregistrerHeures(@Valid @RequestBody EmployeHeureRequest request) {
         EmployeHeureResponse heureSaisie = employeService.enregistrerHeures(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(heureSaisie);
     }

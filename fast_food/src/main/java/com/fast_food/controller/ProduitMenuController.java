@@ -19,6 +19,7 @@ import com.fast_food.dto.ProduitMenuRequest;
 import com.fast_food.dto.ProduitMenuResponse;
 import com.fast_food.service.ProduitMenuService;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -48,7 +49,7 @@ public class ProduitMenuController {
 
     // Créer un produit (Admin)
     @PostMapping
-    public ResponseEntity<ProduitMenuResponse> createProduit(@RequestBody ProduitMenuRequest request) {
+    public ResponseEntity<ProduitMenuResponse> createProduit(@Valid @RequestBody ProduitMenuRequest request) {
         ProduitMenuResponse createdProduit = produitMenuService.createProduit(request);
         return new ResponseEntity<>(createdProduit, HttpStatus.CREATED);
     }
@@ -57,12 +58,11 @@ public class ProduitMenuController {
     @PutMapping("/{id}")
     public ResponseEntity<ProduitMenuResponse> updateProduit(
             @PathVariable Long id,
-            @RequestBody ProduitMenuRequest request) {
+            @Valid @RequestBody ProduitMenuRequest request) {
         return ResponseEntity.ok(produitMenuService.updateProduit(id, request));
     }
 
     // Activer/Désactiver la disponibilité d'un produit (Admin)
-    // Exemple : PATCH /api/produits/5/disponibilite
     @PatchMapping("/{id}/disponibilite")
     public ResponseEntity<ProduitMenuResponse> toggleDisponibilite(@PathVariable Long id) {
         return ResponseEntity.ok(produitMenuService.toggleDisponibilite(id));

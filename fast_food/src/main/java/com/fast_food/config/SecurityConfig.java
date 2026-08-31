@@ -33,6 +33,8 @@ public class SecurityConfig {
 
                 // Panier & Commandes Client
                 .requestMatchers("/api/panier/**").authenticated()
+                .requestMatchers("/api/commandes/admin/**").hasAnyRole("admin", "employe")
+                
                 .requestMatchers("/api/commandes", "/api/commandes/**").authenticated()
                 
                 // Endpoints Admin & Approvisionnement
@@ -42,7 +44,6 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.PATCH, "/api/categories/**", "/api/produits/**").hasRole("admin")
                 .requestMatchers(HttpMethod.DELETE, "/api/categories/**", "/api/produits/**").hasRole("admin")
                 
-                .requestMatchers("/api/commandes/admin/**").hasAnyRole("admin", "employe")
 
                 // Tout le reste requiert une authentification
                 .anyRequest().authenticated()

@@ -5,6 +5,8 @@ import com.fast_food.dto.CommandeResponse;
 import com.fast_food.dto.CreerCommandeRequest;
 import com.fast_food.entite.User;
 import com.fast_food.service.CommandeService;
+
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -34,7 +36,7 @@ public class CommandeController {
      */
     @PostMapping
     public ResponseEntity<CommandeResponse> passerCommande(@AuthenticationPrincipal User user,
-                                                        @RequestBody CreerCommandeRequest request) {
+                                                        @Valid @RequestBody CreerCommandeRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(commandeService.passerCommande(user, request));
     }
 
@@ -55,7 +57,7 @@ public class CommandeController {
     @PatchMapping("/admin/{commandeId}/status")
     @PreAuthorize("hasRole('admin') or hasRole('employe')")
     public ResponseEntity<CommandeResponse> changerStatus(@PathVariable Long commandeId,
-                                                        @RequestBody ChangerStatusCommandeRequest request) {
+                                                        @Valid @RequestBody ChangerStatusCommandeRequest request) {
         return ResponseEntity.ok(commandeService.changerStatus(commandeId, request));
     }
 

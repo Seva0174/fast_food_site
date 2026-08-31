@@ -30,7 +30,10 @@ public class StatistiqueService {
         BigDecimal ca = commandeRepository.calculateTotalChiffreAffaires();
         BigDecimal appro = commandeFournisseurRepository.calculateTotalDepensesApprovisionnement();
         BigDecimal salaires = employeHeureRepository.calculateMasseSalarialeTotale();
-        Long totalCommandes = commandeRepository.countCommandesValides();
+
+        LocalDateTime fin = LocalDateTime.now();
+        LocalDateTime debut = fin.minusDays(7);
+        Long totalCommandes = commandeRepository.countCommandesValidesEntre(debut,fin);
 
         return statistiqueMapper.toGlobalesResponse(ca, appro, salaires, totalCommandes);
     }

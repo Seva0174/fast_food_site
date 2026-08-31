@@ -70,12 +70,12 @@ CREATE TABLE produit_menu (
 
 CREATE TABLE panier (
     id          BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    id_user     BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE
+    UNIQUE(id_user)     BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE
 );
 
 CREATE TABLE adresse (
     id              BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    id_user         BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    UNIQUE(id_user)         BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     rue             VARCHAR(255) NOT NULL,
     ville           VARCHAR(150) NOT NULL,
     code_postal     VARCHAR(20)  NOT NULL
@@ -83,7 +83,7 @@ CREATE TABLE adresse (
 
 CREATE TABLE email_verification_tokens (
     id          BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    id_user     BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    UNIQUE(id_user)     BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     token       VARCHAR(255) NOT NULL,
     expire_le   TIMESTAMP NOT NULL
 );
@@ -93,9 +93,9 @@ CREATE TABLE commandes (
     id_user         BIGINT NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
     status          VARCHAR(30) NOT NULL DEFAULT 'en_attente'
                         CHECK (status IN ('en_attente', 'en_preparation', 'prete', 'livree', 'annulee')),
-    cp_rue          VARCHAR(255),
-    cp_ville        VARCHAR(150),
-    cp_code_postal  VARCHAR(20),
+    cp_rue          VARCHAR(255) NOT NULL,
+    cp_ville        VARCHAR(150) NOT NULL,
+    cp_code_postal  VARCHAR(20)NOT NULL,
     total           NUMERIC(10,2) NOT NULL DEFAULT 0,
     date_creation   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );

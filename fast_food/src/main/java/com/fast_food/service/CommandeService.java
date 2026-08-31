@@ -17,6 +17,7 @@ import com.fast_food.repositorie.CommandeRepository;
 import com.fast_food.repositorie.PanierRepository;
 import com.fast_food.repositorie.RecetteRepository;
 import com.fast_food.repositorie.StockMatierePremiereRepository;
+import com.fast_food.exception.AccessDeniedException;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -83,8 +84,16 @@ public class CommandeService {
                         .multiply(BigDecimal.valueOf(item.getQuantite()));
 
                 // Soustraction du stock disponible
-                stock.setQuantite(stock.getQuantite().subtract(quantiteNecessaire));
-                stockRepository.save(stock);
+                int updated = stockRepository.decrementStock(
+                        stock.getId(),
+                        quantiteNecessaire
+                );
+
+                if (updated == 0) {
+                    throw new IllegalArgumentException(
+                        "Stock insuffisant pour le produit '" + item.getProduitMenu().getNom() + "'"
+                    );
+                }
             }
         }
 
@@ -142,7 +151,7 @@ public class CommandeService {
                 .orElseThrow(() -> new ResourceNotFoundException("Commande non trouvée avec l'id : " + commandeId));
 
         if (!commande.getUser().getId().equals(user.getId())) {
-            throw new IllegalArgumentException("Vous n'avez pas l'autorisation d'accéder à cette commande.");
+            throw new AccessDeniedException("Vous n'avez pas l'autorisation d'accéder à cette commande.");
         }
 
         return commandeMapper.toResponse(commande);
