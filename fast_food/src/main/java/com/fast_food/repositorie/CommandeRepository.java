@@ -41,9 +41,9 @@ public interface CommandeRepository extends JpaRepository<Commande,Long>{
     );
 
     // Top des produits vendus
-    @Query("SELECT cm.produit.id, cm.produit.nom, SUM(cm.quantite), SUM(cm.quantite * cm.prix) " +
-        "FROM CommandeMenu cm WHERE cm.commande.status <> 'annulee' " +
-        "GROUP BY cm.produit.id, cm.produit.nom " +
+    @Query("SELECT cm.produitMenu.id, cm.produitMenu.nom, SUM(cm.quantite), SUM(cm.quantite * cm.prix) " +
+        "FROM CommandeMenu cm WHERE cm.commandeInfo.status <> 'annulee' " +
+        "GROUP BY cm.produitMenu.id, cm.produitMenu.nom " +
         "ORDER BY SUM(cm.quantite) DESC")
     List<Object[]> findTopProduitsVendus();
 }

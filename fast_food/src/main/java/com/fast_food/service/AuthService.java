@@ -3,8 +3,10 @@ package com.fast_food.service;
 import com.fast_food.dto.AuthResponse;
 import com.fast_food.dto.LoginRequest;
 import com.fast_food.dto.RegisterRequest;
+import com.fast_food.entite.EmailVerificationToken;
 import com.fast_food.entite.User;
 import com.fast_food.mapper.UserMapper;
+import com.fast_food.repositorie.EmailVerificationTokenRepository;
 import com.fast_food.repositorie.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -12,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -21,55 +24,70 @@ public class AuthService {
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final EmailVerificationTokenRepository tokenRepository;
+    private final EmailService emailService;
 
-    /**
-     * Inscription d'un nouvel utilisateur (sans vérification par e-mail)
-     */
+    //Inscription d'un nouvel utilisateur
     @Transactional
-    public AuthResponse register(RegisterRequest request) {
-        // 1. Vérifier si l'email existe déjà
+    public String register(RegisterRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new IllegalArgumentException("Cet email est déjà utilisé.");
         }
 
-        // 2. Mapper le DTO en Entité User
         User user = userMapper.toEntity(request);
-
-        // 3. Encoder le mot de passe
         user.setMdp(passwordEncoder.encode(request.getMdp()));
-
-        // 4. Définir les valeurs par défaut
-        user.setEstVerif(true); // Compte vérifié automatiquement
+        user.setEstVerif(false); 
         user.setDateCreation(LocalDateTime.now());
-        user.setRole(User.Role.client); // Rôle client par défaut
+        user.setRole(User.Role.client);
 
-        // 5. Sauvegarder l'utilisateur en BDD
         User savedUser = userRepository.save(user);
 
-        // 6. Générer le JWT
-        String jwtToken = jwtService.generateToken(savedUser);
+        // Génération du token de vérification (ex. valide 24h)
+        String tokenValue = UUID.randomUUID().toString();
+        EmailVerificationToken token = new EmailVerificationToken();
+        token.setUser(savedUser);
+        token.setToken(tokenValue);
+        token.setExpireLe(LocalDateTime.now().plusDays(1));
+        tokenRepository.save(token);
 
-        // 7. Retourner la réponse
-        return userMapper.toAuthResponse(savedUser, jwtToken);
+        // Envoi de l'e-mail de confirmation
+        emailService.envoyerMailVerification(savedUser.getEmail(), tokenValue);
+
+        return "Inscription réussie. Veuillez vérifier votre boîte mail pour activer votre compte.";
     }
 
-    /**
-     * Connexion d'un utilisateur existant
-     */
+    //Connexion d'un utilisateur existant
     public AuthResponse login(LoginRequest request) {
-        // 1. Chercher l'utilisateur par email
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new IllegalArgumentException("Email ou mot de passe incorrect."));
 
-        // 2. Vérifier le mot de passe
         if (!passwordEncoder.matches(request.getMdp(), user.getMdp())) {
             throw new IllegalArgumentException("Email ou mot de passe incorrect.");
         }
 
-        // 3. Générer le JWT
-        String jwtToken = jwtService.generateToken(user);
+        // Blocage si le mail n'a pas été confirmé
+        if (!user.isEstVerif()) {
+            throw new IllegalStateException("Veuillez vérifier votre compte par e-mail avant de vous connecter.");
+        }
 
-        // 4. Retourner la réponse
+        String jwtToken = jwtService.generateToken(user);
         return userMapper.toAuthResponse(user, jwtToken);
+    }
+
+    @Transactional
+    public void verifyEmail(String tokenValue) {
+        EmailVerificationToken token = tokenRepository.findByToken(tokenValue)
+                .orElseThrow(() -> new IllegalArgumentException("Token de vérification invalide."));
+
+        if (token.getExpireLe().isBefore(LocalDateTime.now())) {
+            throw new IllegalArgumentException("Le token de vérification a expiré.");
+        }
+
+        User user = token.getUser();
+        user.setEstVerif(true);
+        userRepository.save(user);
+
+        // Supprime le token après validation pour éviter toute réutilisation
+        tokenRepository.delete(token);
     }
 }
