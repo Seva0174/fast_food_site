@@ -1,4 +1,11 @@
-fast_food/target/
+fast_food_backend/target/
 .vscode/
 *.class
 *.log
+
+fast_food_frontend/node_modules/
+fast_food_frontend/dist/
+fast_food_frontend/dist-ssr/
+fast_food_frontend/.vite/
+fast_food_frontend/.env*
+fast_food_frontend/*.log
