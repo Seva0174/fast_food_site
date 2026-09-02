@@ -70,12 +70,12 @@ CREATE TABLE produit_menu (
 
 CREATE TABLE panier (
     id          BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    UNIQUE(id_user)     BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE
+    id_user     BIGINT UNIQUE NOT NULL REFERENCES users(id) ON DELETE CASCADE
 );
 
 CREATE TABLE adresse (
     id              BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    UNIQUE(id_user)         BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    id_user         BIGINT UNIQUE NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     rue             VARCHAR(255) NOT NULL,
     ville           VARCHAR(150) NOT NULL,
     code_postal     VARCHAR(20)  NOT NULL
@@ -83,7 +83,7 @@ CREATE TABLE adresse (
 
 CREATE TABLE email_verification_tokens (
     id          BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    UNIQUE(id_user)     BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    id_user     BIGINT UNIQUE NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     token       VARCHAR(255) NOT NULL,
     expire_le   TIMESTAMP NOT NULL
 );

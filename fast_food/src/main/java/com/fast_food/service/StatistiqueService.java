@@ -29,11 +29,8 @@ public class StatistiqueService {
     public StatistiquesGlobalesResponse obtenirStatistiquesGlobales() {
         BigDecimal ca = commandeRepository.calculateTotalChiffreAffaires();
         BigDecimal appro = commandeFournisseurRepository.calculateTotalDepensesApprovisionnement();
-        BigDecimal salaires = employeHeureRepository.calculateMasseSalarialeTotale();
-
-        LocalDateTime fin = LocalDateTime.now();
-        LocalDateTime debut = fin.minusDays(7);
-        Long totalCommandes = commandeRepository.countCommandesValidesEntre(debut,fin);
+        BigDecimal salaires = employeHeureRepository.calculateMasseSalarialeTotale();      
+        Long totalCommandes = commandeRepository.countCommandesValides(); 
 
         return statistiqueMapper.toGlobalesResponse(ca, appro, salaires, totalCommandes);
     }
@@ -46,7 +43,7 @@ public class StatistiqueService {
         BigDecimal ca = commandeRepository.calculateChiffreAffairesEntre(debutDateTime, finDateTime);
         BigDecimal appro = commandeFournisseurRepository.calculateDepensesApprovisionnementEntre(debut, fin);
         BigDecimal salaires = employeHeureRepository.calculateMasseSalarialeEntre(debut, fin);
-        Long totalCommandes = commandeRepository.countCommandesValides(); 
+        Long totalCommandes = commandeRepository.countCommandesValidesEntre(debutDateTime,finDateTime);
 
         return statistiqueMapper.toGlobalesResponse(ca, appro, salaires, totalCommandes);
     }

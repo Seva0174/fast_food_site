@@ -51,23 +51,25 @@ public class CommandeService {
             throw new IllegalArgumentException("Votre panier est vide. Impossible de passer la commande.");
         }
 
-        // 2. Verification des stocks
+        // 2. Vérification de dispo + déduction atomique du stock
         for (PanierItem item : panier.getPanierContenu()) {
             ProduitMenu produit = item.getProduitMenu();
 
-            // Vérifier la disponibilité manuelle du produit
             if (Boolean.FALSE.equals(produit.isEstDispo())) {
                 throw new IllegalArgumentException("Le produit '" + produit.getNom() + "' n'est plus disponible au menu.");
             }
 
-            // Vérifier si le stock de matières premières est suffisant pour couvrir la quantité demandée
             List<Recette> recettes = recetteRepository.findByProduitMenu(produit);
             for (Recette recette : recettes) {
-                StockMatierePremiere stock = recette.getMatierePremiere();
                 BigDecimal quantiteNecessaire = recette.getQuantiteRequise()
                         .multiply(BigDecimal.valueOf(item.getQuantite()));
 
-                if (stock.getQuantite().compareTo(quantiteNecessaire) < 0) {
+                int updated = stockRepository.decrementStock(
+                        recette.getMatierePremiere().getId(),
+                        quantiteNecessaire
+                );
+
+                if (updated == 0) {
                     throw new IllegalArgumentException(
                         "Stock insuffisant pour préparer le produit '" + produit.getNom() + "'"
                     );
@@ -75,29 +77,7 @@ public class CommandeService {
             }
         }
 
-        // 3. Deduction des stocks
-        for (PanierItem item : panier.getPanierContenu()) {
-            List<Recette> recettes = recetteRepository.findByProduitMenu(item.getProduitMenu());
-            for (Recette recette : recettes) {
-                StockMatierePremiere stock = recette.getMatierePremiere();
-                BigDecimal quantiteNecessaire = recette.getQuantiteRequise()
-                        .multiply(BigDecimal.valueOf(item.getQuantite()));
-
-                // Soustraction du stock disponible
-                int updated = stockRepository.decrementStock(
-                        stock.getId(),
-                        quantiteNecessaire
-                );
-
-                if (updated == 0) {
-                    throw new IllegalArgumentException(
-                        "Stock insuffisant pour le produit '" + item.getProduitMenu().getNom() + "'"
-                    );
-                }
-            }
-        }
-
-        // 4. Initialiser et sauvegarder la Commande
+        // 3. Initialiser et sauvegarder la commande
         Commande commande = new Commande();
         commande.setUser(user);
         commande.setStatus(Commande.Status.en_attente);
@@ -128,7 +108,7 @@ public class CommandeService {
 
         Commande commandeSauvegardee = commandeRepository.save(commande);
 
-        // 5. Vider le panier
+        // 4. Vider le panier
         panierService.viderPanier(user);
 
         return commandeMapper.toResponse(commandeSauvegardee);
