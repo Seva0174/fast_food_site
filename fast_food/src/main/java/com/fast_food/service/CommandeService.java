@@ -37,6 +37,7 @@ public class CommandeService {
     private final PanierRepository panierRepository;
     private final PanierService panierService;
     private final CommandeMapper commandeMapper;
+    private final EmailService emailService;
 
     // Nouveaux repositories pour la gestion des stocks
     private final RecetteRepository recetteRepository;
@@ -110,6 +111,9 @@ public class CommandeService {
 
         // 4. Vider le panier
         panierService.viderPanier(user);
+
+        // 5. Envoi du récépissé par e-mail
+        emailService.envoyerRecuCommande(commandeSauvegardee);
 
         return commandeMapper.toResponse(commandeSauvegardee);
     }
