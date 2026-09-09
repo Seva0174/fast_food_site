@@ -4,9 +4,8 @@ import { FournisseurPanier } from "./context/ContextePanier";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { MainLayout } from "./components/MainLayout";
 import { Home } from "./pages/Home";
+import { PageAuth } from "./pages/PageAuth";
 
-const Login = () => <h1 className="text-2xl font-bold">Page de Connexion</h1>;
-const Register = () => <h1 className="text-2xl font-bold">Page d'Inscription</h1>;
 const PageCommande = () => <h1 className="text-2xl font-bold">Page de Commande</h1>;
 const AdminDashboard = () => <h1 className="text-2xl font-bold">Panel Administration</h1>;
 
@@ -18,8 +17,8 @@ function App() {
           <Routes>
             <Route element={<MainLayout />}>
               <Route path="/" element={<Home />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
+              <Route path="/login" element={<PageAuth />} />
+              <Route path="/register" element={<PageAuth />} />
               <Route path="/commander" element={<PageCommande />} />
               
               <Route element={<ProtectedRoute allowedRoles={['admin', 'employe']} />}>
