@@ -21,12 +21,10 @@ export const Navbar = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16 items-center">
           
-          {/* Logo */}
           <Link to="/" className="text-xl font-bold text-red-600 flex items-center gap-2">
             FastFood
           </Link>
 
-          {/* Liens Desktop */}
           <div className="hidden md:flex items-center space-x-6">
             <Link to="/" className="text-gray-700 hover:text-red-600 font-medium">Carte</Link>
             
@@ -70,7 +68,6 @@ export const Navbar = () => {
             )}
           </div>
 
-          {/* Bouton Hamburger Mobile */}
           <div className="md:hidden flex items-center">
             <button
               onClick={() => setIsOpen(!isOpen)}
@@ -82,7 +79,6 @@ export const Navbar = () => {
         </div>
       </div>
 
-      {/* Menu Mobile */}
       {isOpen && (
         <div className="md:hidden bg-white border-t border-gray-100 px-4 pt-2 pb-4 space-y-3">
           <Link 

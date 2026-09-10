@@ -1,4 +1,4 @@
-import { createContext, useState, useEffect } from 'react';
+import { createContext, useState} from 'react';
 import { loginApi } from '../api/authApi';
 
 export const AuthContext = createContext();
@@ -10,7 +10,7 @@ export const AuthProvider = ({ children }) => {
   });
 
   const [token, setToken] = useState(() => {
-    return localStorage.getItem('fastfood_token') || null;
+    return localStorage.getItem('token') || null;
   });
 
   const login = async (email, mdp) => {
@@ -27,7 +27,7 @@ export const AuthProvider = ({ children }) => {
     setToken(data.token);
 
     localStorage.setItem('fastfood_user', JSON.stringify(userData));
-    localStorage.setItem('fastfood_token', data.token);
+    localStorage.setItem('token', data.token);
 
     return data;
   };
@@ -36,7 +36,7 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
     setToken(null);
     localStorage.removeItem('fastfood_user');
-    localStorage.removeItem('fastfood_token');
+    localStorage.removeItem('token');
   };
 
   return (

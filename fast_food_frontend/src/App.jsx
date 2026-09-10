@@ -5,8 +5,9 @@ import { ProtectedRoute } from "./components/ProtectedRoute";
 import { MainLayout } from "./components/MainLayout";
 import { Home } from "./pages/Home";
 import { PageAuth } from "./pages/PageAuth";
+import { PageCommande } from "./pages/PageCommande";
 
-const PageCommande = () => <h1 className="text-2xl font-bold">Page de Commande</h1>;
+//const PageCommande = () => <h1 className="text-2xl font-bold">Page de Commande</h1>;
 const AdminDashboard = () => <h1 className="text-2xl font-bold">Panel Administration</h1>;
 
 function App() {
