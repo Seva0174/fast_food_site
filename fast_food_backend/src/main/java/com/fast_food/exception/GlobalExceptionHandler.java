@@ -70,13 +70,14 @@ public class GlobalExceptionHandler {
         List<String> errors = ex.getBindingResult()
                 .getFieldErrors()
                 .stream()
-                .map(error -> error.getField() + " : " + error.getDefaultMessage())
+                .map(error -> error.getDefaultMessage()) // Affiche directement le message d'erreur personnalisé
                 .toList();
 
         response.put("timestamp", LocalDateTime.now());
         response.put("status", HttpStatus.BAD_REQUEST.value());
         response.put("error", "Validation Error");
         response.put("messages", errors);
+        response.put("message", String.join(", ", errors)); // Permet de conserver la compatibilité avec data.message
 
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }

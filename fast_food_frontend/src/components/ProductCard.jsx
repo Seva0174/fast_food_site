@@ -1,16 +1,12 @@
 import { useContext } from 'react';
-import { Plus, Minus } from 'lucide-react';
+import { ShoppingBag } from 'lucide-react';
 import { ContextePanier } from '../context/ContextePanier';
 
 export const ProductCard = ({ produit }) => {
-  const { panier, ajouterAuPanier, retirerDuPanier } = useContext(ContextePanier);
+  const { ajouterAuPanier } = useContext(ContextePanier);
 
   const isDisponible = produit.estDispo ?? produit.est_dispo ?? true;
   const imageUrl = produit.imageUrl || produit.image_url;
-
-  // On cherche si ce produit est déjà dans le panier
-  const articleDansPanier = panier.find((item) => item.id === produit.id);
-  const quantiteDansPanier = articleDansPanier ? articleDansPanier.quantite : 0;
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition flex flex-col justify-between">
@@ -34,42 +30,20 @@ export const ProductCard = ({ produit }) => {
         </div>
       </div>
 
-      <div className="p-4 pt-0 flex items-center justify-between mt-2">
+      <div className="p-4 pt-0 flex items-center justify-between mt-2 gap-2">
         <span className="text-xl font-extrabold text-gray-900">
           {Number(produit.prix).toFixed(2)} €
         </span>
 
-        {/* Si le produit est déjà dans le panier, on affiche - QUANTITÉ + */}
-        {quantiteDansPanier > 0 ? (
-          <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg p-1">
-            <button
-              onClick={() => retirerDuPanier(produit.id)}
-              className="p-1 hover:bg-white rounded text-gray-700 transition shadow-sm"
-              title="Retirer un article"
-            >
-              <Minus className="w-4 h-4" />
-            </button>
-            <span className="font-bold text-gray-800 px-1 text-sm">{quantiteDansPanier}</span>
-            <button
-              onClick={() => ajouterAuPanier(produit)}
-              disabled={!isDisponible}
-              className="p-1 hover:bg-white rounded text-gray-700 transition shadow-sm"
-              title="Ajouter un article"
-            >
-              <Plus className="w-4 h-4" />
-            </button>
-          </div>
-        ) : (
-          /* Sinon bouton + simple */
-          <button
-            onClick={() => ajouterAuPanier(produit)}
-            disabled={!isDisponible}
-            className="bg-red-600 hover:bg-red-700 disabled:bg-gray-300 text-white p-2.5 rounded-lg flex items-center justify-center transition shadow-sm"
-            title="Ajouter au panier"
-          >
-            <Plus className="w-5 h-5" />
-          </button>
-        )}
+        <button
+          onClick={() => ajouterAuPanier(produit)}
+          disabled={!isDisponible}
+          className="bg-red-600 hover:bg-red-700 disabled:bg-gray-300 text-white font-semibold px-4 py-2 rounded-lg flex items-center gap-2 transition shadow-sm text-sm"
+          title="Ajouter au panier"
+        >
+          <ShoppingBag className="w-4 h-4" />
+          <span>Ajouter au panier</span>
+        </button>
       </div>
     </div>
   );

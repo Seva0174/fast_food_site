@@ -2,6 +2,7 @@ fast_food_backend/target/
 .vscode/
 *.class
 *.log
+plan_site_fast_food
 
 fast_food_frontend/node_modules/
 fast_food_frontend/dist/
