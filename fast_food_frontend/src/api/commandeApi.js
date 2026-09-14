@@ -1,4 +1,4 @@
-import axios from './axios';
+import api from './axios';
 
 export const passerCommandeApi = async (adresse) => {
   const payload = {
@@ -7,6 +7,6 @@ export const passerCommandeApi = async (adresse) => {
     cpCodePostal: adresse.cpCodePostal //|| adresse.codePostal,
   };
 
-  const response = await axios.post('/commandes', payload);
+  const response = await api.post('/commandes', payload);
   return response.data;
 };

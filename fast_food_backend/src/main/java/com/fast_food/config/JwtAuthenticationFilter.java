@@ -59,7 +59,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                             : Collections.<SimpleGrantedAuthority>emptyList();
                     
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                            user, 
+                            userEmail, 
                             null,
                             authorities
                     );

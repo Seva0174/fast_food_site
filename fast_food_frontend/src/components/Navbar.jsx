@@ -47,9 +47,16 @@ export const Navbar = () => {
 
             {user ? (
               <div className="flex items-center space-x-4">
-                <span className="text-sm font-medium text-gray-600 flex items-center gap-1">
-                  <User className="w-4 h-4" /> {user.nom || user.email}
-                </span>
+                {/* Lien vers la page profil /user en cliquant sur le nom */}
+                <Link
+                  to="/user"
+                  className="text-sm font-medium text-gray-700 hover:text-red-600 flex items-center gap-1 px-3 py-1.5 rounded-lg hover:bg-gray-100 transition"
+                  title="Mon compte"
+                >
+                  <User className="w-4 h-4 text-red-600" />
+                  <span>{user.nom || user.email}</span>
+                </Link>
+
                 <button 
                   onClick={handleLogout}
                   className="p-2 text-gray-500 hover:text-red-600 rounded-full hover:bg-gray-100"
@@ -96,6 +103,16 @@ export const Navbar = () => {
             Commander
           </Link>
 
+          {user && (
+            <Link 
+              to="/user" 
+              onClick={() => setIsOpen(false)}
+              className="block text-red-600 font-medium py-2"
+            >
+              Mon compte ({user.nom || user.email})
+            </Link>
+          )}
+
           {user?.role && ['admin', 'employe'].includes(user.role) && (
             <Link 
               to="/admin" 
@@ -111,7 +128,7 @@ export const Navbar = () => {
               onClick={() => { handleLogout(); setIsOpen(false); }}
               className="w-full text-left text-red-600 font-medium py-2 border-t border-gray-100"
             >
-              Déconnexion ({user.email})
+              Déconnexion
             </button>
           ) : (
             <Link 

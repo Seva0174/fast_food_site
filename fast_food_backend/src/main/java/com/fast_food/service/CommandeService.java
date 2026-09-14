@@ -17,6 +17,7 @@ import com.fast_food.repositorie.CommandeRepository;
 import com.fast_food.repositorie.PanierRepository;
 import com.fast_food.repositorie.RecetteRepository;
 import com.fast_food.repositorie.StockMatierePremiereRepository;
+import com.fast_food.repositorie.UserRepository;
 import com.fast_food.exception.AccessDeniedException;
 
 import lombok.RequiredArgsConstructor;
@@ -35,6 +36,8 @@ public class CommandeService {
 
     private final CommandeRepository commandeRepository;
     private final PanierRepository panierRepository;
+    private final UserRepository userRepository;
+
     private final PanierService panierService;
     private final CommandeMapper commandeMapper;
     private final EmailService emailService;
@@ -118,6 +121,31 @@ public class CommandeService {
         return commandeMapper.toResponse(commandeSauvegardee);
     }
 
+    // Récupérer les commandes via l'email du token
+    @Transactional(readOnly = true)
+    public List<CommandeResponse> getMesCommandesByEmail(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Utilisateur non trouvé avec l'email : " + email));
+
+        List<Commande> commandes = commandeRepository.findByUserOrderByDateCreationDesc(user);
+        return commandes.stream()
+                .map(commandeMapper::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public CommandeResponse passerCommandeByEmail(String email, CreerCommandeRequest request) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Utilisateur non trouvé avec l'email : " + email));
+        return passerCommande(user, request);
+    }
+
+    @Transactional(readOnly = true)
+    public CommandeResponse getCommandeByIdAndEmail(String email, Long commandeId) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Utilisateur non trouvé avec l'email : " + email));
+        return getCommandeById(user, commandeId);
+    }
     
     //Récupérer l'historique des commandes d'un utilisateur
     @Transactional(readOnly = true)
