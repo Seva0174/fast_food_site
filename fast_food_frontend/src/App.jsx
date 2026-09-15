@@ -6,7 +6,8 @@ import { MainLayout } from "./components/MainLayout";
 import { Home } from "./pages/Home";
 import { PageAuth } from "./pages/PageAuth";
 import { PageCommande } from "./pages/PageCommande";
-import { PageUser } from "./pages/PageUser"; // Import de la page User
+import { PageUser } from "./pages/PageUser"; 
+import { MentionsLegales } from "./pages/MentionsLegales";
 
 const AdminDashboard = () => <h1 className="text-2xl font-bold">Panel Administration</h1>;
 
@@ -21,6 +22,7 @@ function App() {
               <Route path="/" element={<Home />} />
               <Route path="/login" element={<PageAuth />} />
               <Route path="/register" element={<PageAuth />} />
+              <Route path="/mentions-legales" element={<MentionsLegales />} />
 
               {/* Routes réservées aux utilisateurs connectés (tous rôles) */}
               <Route element={<ProtectedRoute />}>
