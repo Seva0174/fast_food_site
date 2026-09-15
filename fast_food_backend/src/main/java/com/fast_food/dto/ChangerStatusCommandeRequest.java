@@ -4,5 +4,5 @@ import lombok.Data;
 
 @Data
 public class ChangerStatusCommandeRequest {
-    private String status; // en_attente, en_preparation, prete, livree, annulee
+    private String status; 
 }

@@ -9,7 +9,6 @@ import com.fast_food.entite.Panier;
 import com.fast_food.entite.PanierItem;
 import com.fast_food.entite.ProduitMenu;
 import com.fast_food.entite.Recette;
-import com.fast_food.entite.StockMatierePremiere;
 import com.fast_food.entite.User;
 import com.fast_food.exception.ResourceNotFoundException;
 import com.fast_food.mapper.CommandeMapper;
@@ -48,6 +47,25 @@ public class CommandeService {
 
     @Transactional
     public CommandeResponse passerCommande(User user, CreerCommandeRequest request) {
+        // 0. Validation du type de retrait et de l'adresse
+        Commande.TypeRetrait typeRetrait;
+        try {
+            typeRetrait = Commande.TypeRetrait.valueOf(request.getTypeRetrait().toLowerCase());
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Type de retrait invalide : " + request.getTypeRetrait());
+        }
+
+        if (typeRetrait == Commande.TypeRetrait.livraison) {
+            if (request.getCpRue() == null || request.getCpRue().isBlank()
+                    || request.getCpVille() == null || request.getCpVille().isBlank()
+                    || request.getCpCodePostal() == null || request.getCpCodePostal().isBlank()) {
+                throw new IllegalArgumentException("L'adresse (rue, ville, code postal) est obligatoire pour une livraison.");
+            }
+            if (!request.getCpCodePostal().matches("^[0-9]{5}$")) {
+                throw new IllegalArgumentException("Le code postal doit contenir exactement 5 chiffres.");
+            }
+        }
+
         // 1. Récupérer le panier
         Panier panier = panierRepository.findByUser(user)
                 .orElseThrow(() -> new ResourceNotFoundException("Aucun panier trouvé pour cet utilisateur."));
@@ -84,10 +102,16 @@ public class CommandeService {
         // 3. Initialiser et sauvegarder la commande
         Commande commande = new Commande();
         commande.setUser(user);
+        commande.setTypeRetrait(typeRetrait);
         commande.setStatus(Commande.Status.en_attente);
-        commande.setCpRue(request.getCpRue());
-        commande.setCpVille(request.getCpVille());
-        commande.setCpCodePostal(request.getCpCodePostal());
+
+        // Si Click & Collect, les champs d'adresse restent null
+        if (typeRetrait == Commande.TypeRetrait.livraison) {
+            commande.setCpRue(request.getCpRue());
+            commande.setCpVille(request.getCpVille());
+            commande.setCpCodePostal(request.getCpCodePostal());
+        }
+
         commande.setDateCreation(LocalDateTime.now());
 
         BigDecimal totalCommande = BigDecimal.ZERO;
@@ -146,8 +170,8 @@ public class CommandeService {
                 .orElseThrow(() -> new ResourceNotFoundException("Utilisateur non trouvé avec l'email : " + email));
         return getCommandeById(user, commandeId);
     }
-    
-    //Récupérer l'historique des commandes d'un utilisateur
+
+    // Récupérer l'historique des commandes d'un utilisateur
     @Transactional(readOnly = true)
     public List<CommandeResponse> getMesCommandes(User user) {
         List<Commande> commandes = commandeRepository.findByUserOrderByDateCreationDesc(user);
@@ -156,7 +180,7 @@ public class CommandeService {
                 .collect(Collectors.toList());
     }
 
-    //Récupérer une commande par son ID (pour le suivi du client)
+    // Récupérer une commande par son ID (pour le suivi du client)
     @Transactional(readOnly = true)
     public CommandeResponse getCommandeById(User user, Long commandeId) {
         Commande commande = commandeRepository.findById(commandeId)
@@ -169,7 +193,7 @@ public class CommandeService {
         return commandeMapper.toResponse(commande);
     }
 
-    //Récupérer toutes les commandes (Cuisinier / Admin)
+    // Récupérer toutes les commandes (Cuisinier / Admin)
     @Transactional(readOnly = true)
     public List<CommandeResponse> getAllCommandes() {
         return commandeRepository.findAllByOrderByDateCreationDesc().stream()
@@ -184,7 +208,7 @@ public class CommandeService {
                 .orElseThrow(() -> new ResourceNotFoundException("Commande non trouvée avec l'id : " + commandeId));
 
         try {
-            Commande.Status nouveauStatus = Commande.Status.valueOf(request.getStatus());
+            Commande.Status nouveauStatus = Commande.Status.valueOf(request.getStatus().toLowerCase());
             commande.setStatus(nouveauStatus);
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException("Statut invalide : " + request.getStatus());

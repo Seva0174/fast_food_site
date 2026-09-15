@@ -91,13 +91,20 @@ CREATE TABLE email_verification_tokens (
 CREATE TABLE commandes (
     id              BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     id_user         BIGINT NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+    type_retrait    VARCHAR(20) NOT NULL DEFAULT 'livraison'
+                        CHECK (type_retrait IN ('livraison', 'click_and_collect')),
     status          VARCHAR(30) NOT NULL DEFAULT 'en_attente'
-                        CHECK (status IN ('en_attente', 'en_preparation', 'prete', 'livree', 'annulee')),
-    cp_rue          VARCHAR(255) NOT NULL,
-    cp_ville        VARCHAR(150) NOT NULL,
-    cp_code_postal  VARCHAR(20)NOT NULL,
+                        CHECK (status IN ('en_attente', 'en_preparation', 'prete', 'livree', 'retiree', 'annulee')),
+    cp_rue          VARCHAR(255),        
+    cp_ville        VARCHAR(150),        
+    cp_code_postal  VARCHAR(20), 
     total           NUMERIC(10,2) NOT NULL DEFAULT 0,
-    date_creation   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    date_creation   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT check_adresse_si_livraison CHECK (
+        type_retrait = 'click_and_collect' OR 
+        (cp_rue IS NOT NULL AND cp_ville IS NOT NULL AND cp_code_postal IS NOT NULL)
+    )
 );
 
 -- =====================================================================

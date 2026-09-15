@@ -1,18 +1,15 @@
 package com.fast_food.dto;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 @Data
 public class CreerCommandeRequest {
-    @NotBlank(message = "La rue est obligatoire")
+
+    @NotNull(message = "Le type de retrait est obligatoire (livraison ou click_and_collect)")
+    private String typeRetrait;
+
     private String cpRue;
-
-    @NotBlank(message = "La ville est obligatoire")
     private String cpVille;
-
-    @NotBlank(message = "Le code postal est obligatoire")
-    @Pattern(regexp = "^[0-9]{5}$", message = "Le code postal doit contenir exactement 5 chiffres")
     private String cpCodePostal;
 }

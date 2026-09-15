@@ -44,9 +44,15 @@ public class CommandeMapper {
 
         CommandeResponse response = new CommandeResponse();
         response.setId(commande.getId());
+        
+        if (commande.getTypeRetrait() != null) {
+            response.setTypeRetrait(commande.getTypeRetrait().name());
+        }
+        
         if (commande.getStatus() != null) {
             response.setStatus(commande.getStatus().name());
         }
+        
         response.setCpRue(commande.getCpRue());
         response.setCpVille(commande.getCpVille());
         response.setCpCodePostal(commande.getCpCodePostal());

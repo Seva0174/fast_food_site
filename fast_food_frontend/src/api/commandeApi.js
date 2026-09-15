@@ -1,10 +1,11 @@
 import api from './axios';
 
-export const passerCommandeApi = async (adresse) => {
+export const passerCommandeApi = async (typeRetrait, adresse) => {
   const payload = {
-    cpRue: adresse.cpRue ,//|| adresse.rue,
-    cpVille: adresse.cpVille ,// || adresse.ville,
-    cpCodePostal: adresse.cpCodePostal //|| adresse.codePostal,
+    typeRetrait,
+    cpRue: typeRetrait === 'livraison' ? adresse.cpRue : null,
+    cpVille: typeRetrait === 'livraison' ? adresse.cpVille : null,
+    cpCodePostal: typeRetrait === 'livraison' ? adresse.cpCodePostal : null,
   };
 
   const response = await api.post('/commandes', payload);

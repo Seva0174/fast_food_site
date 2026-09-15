@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { ContextePanier } from '../context/ContextePanier';
 import { AuthContext } from '../context/AuthProvider';
 import { passerCommandeApi } from '../api/commandeApi';
+import { Truck, Store } from 'lucide-react';
 
 export const PageCommande = () => {
   const { panier, viderPanier, totalPrix, ajouterAuPanier, retirerDuPanier, supprimerDuPanier } =
@@ -10,6 +11,7 @@ export const PageCommande = () => {
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
 
+  const [typeRetrait, setTypeRetrait] = useState('livraison'); // 'livraison' ou 'click_and_collect'
   const [adresse, setAdresse] = useState({
     cpRue: '',
     cpVille: '',
@@ -34,27 +36,24 @@ export const PageCommande = () => {
     setChargement(true);
 
     try {
-      await passerCommandeApi(adresse);
-      viderPanier(); // On vide le panier local après validation réussie
+      await passerCommandeApi(typeRetrait, adresse);
+      viderPanier();
       alert('Commande effectuée avec succès ! Un e-mail de confirmation vous a été envoyé.');
       navigate('/');
     } catch (err) {
-
-        const data = err.response?.data;
-        if (data?.messages && Array.isArray(data.messages)) {
-            setErreur(data.messages.join(' | '));
-        } else if (data?.message) {
-            setErreur(data.message);
-        } else {
-            setErreur("Une erreur est survenue lors de la validation de la commande.");
-        }
-        
-    }finally {
+      const data = err.response?.data;
+      if (data?.messages && Array.isArray(data.messages)) {
+        setErreur(data.messages.join(' | '));
+      } else if (data?.message) {
+        setErreur(data.message);
+      } else {
+        setErreur("Une erreur est survenue lors de la validation de la commande.");
+      }
+    } finally {
       setChargement(false);
     }
   };
 
-  // Redirection / Invitation à se connecter si l'utilisateur n'est pas authentifié
   if (!user) {
     return (
       <div className="max-w-md mx-auto my-12 p-6 bg-white shadow-md rounded-lg text-center border border-gray-100">
@@ -74,6 +73,7 @@ export const PageCommande = () => {
 
   return (
     <div className="max-w-5xl mx-auto p-4 sm:p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
+      {/* Récapitulatif du panier */}
       <div className="bg-white p-6 shadow-md rounded-lg border border-gray-100">
         <h2 className="text-xl font-bold mb-4 text-gray-800 border-b pb-2">
           Récapitulatif de votre commande
@@ -98,7 +98,6 @@ export const PageCommande = () => {
                     </p>
                   </div>
 
-                  {/* Contrôle des quantités */}
                   <div className="flex items-center space-x-2 mr-4">
                     <button
                       type="button"
@@ -117,7 +116,6 @@ export const PageCommande = () => {
                     </button>
                   </div>
 
-                  {/* Sous-total par article */}
                   <div className="text-right">
                     <p className="font-bold text-gray-800">
                       {(item.quantite * item.prix).toFixed(2)} €
@@ -142,9 +140,10 @@ export const PageCommande = () => {
         )}
       </div>
 
+      {/* Mode de retrait & Adresse */}
       <div className="bg-white p-6 shadow-md rounded-lg border border-gray-100">
         <h2 className="text-xl font-bold mb-4 text-gray-800 border-b pb-2">
-          Adresse de livraison
+          Mode de retrait
         </h2>
 
         {erreur && (
@@ -153,53 +152,91 @@ export const PageCommande = () => {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Rue / Adresse
-            </label>
-            <input
-              type="text"
-              name="cpRue"
-              required
-              value={adresse.cpRue}
-              onChange={handleChange}
-              placeholder="ex: 12 Rue de la Paix"
-              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500 border-gray-300"
-            />
+        <form onSubmit={handleSubmit} className="space-y-5">
+          {/* Sélection du mode de retrait */}
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              type="button"
+              onClick={() => setTypeRetrait('livraison')}
+              className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 transition ${
+                typeRetrait === 'livraison'
+                  ? 'border-red-600 bg-red-50 text-red-700 font-bold'
+                  : 'border-gray-200 hover:border-gray-300 text-gray-600'
+              }`}
+            >
+              <Truck className="w-6 h-6 mb-1" />
+              <span className="text-sm">Livraison</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setTypeRetrait('click_and_collect')}
+              className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 transition ${
+                typeRetrait === 'click_and_collect'
+                  ? 'border-red-600 bg-red-50 text-red-700 font-bold'
+                  : 'border-gray-200 hover:border-gray-300 text-gray-600'
+              }`}
+            >
+              <Store className="w-6 h-6 mb-1" />
+              <span className="text-sm">Click & Collect</span>
+            </button>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Code Postal
-              </label>
-              <input
-                type="text"
-                name="cpCodePostal"
-                required
-                value={adresse.cpCodePostal}
-                onChange={handleChange}
-                placeholder="75000"
-                className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500 border-gray-300"
-              />
-            </div>
+          {/* Formulaire d'adresse si Livraison */}
+          {typeRetrait === 'livraison' ? (
+            <div className="space-y-4 pt-2">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Rue / Adresse
+                </label>
+                <input
+                  type="text"
+                  name="cpRue"
+                  required
+                  value={adresse.cpRue}
+                  onChange={handleChange}
+                  placeholder="ex: 12 Rue de la Paix"
+                  className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500 border-gray-300"
+                />
+              </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Ville
-              </label>
-              <input
-                type="text"
-                name="cpVille"
-                required
-                value={adresse.cpVille}
-                onChange={handleChange}
-                placeholder="Paris"
-                className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500 border-gray-300"
-              />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Code Postal
+                  </label>
+                  <input
+                    type="text"
+                    name="cpCodePostal"
+                    required
+                    value={adresse.cpCodePostal}
+                    onChange={handleChange}
+                    placeholder="75000"
+                    className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500 border-gray-300"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Ville
+                  </label>
+                  <input
+                    type="text"
+                    name="cpVille"
+                    required
+                    value={adresse.cpVille}
+                    onChange={handleChange}
+                    placeholder="Paris"
+                    className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500 border-gray-300"
+                  />
+                </div>
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="p-4 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-600 text-center">
+              📍 **Retrait en restaurant** : Vous viendrez récupérer votre commande directement au comptoir une fois qu'elle sera marquée comme "Prête".
+            </div>
+          )}
 
           <button
             type="submit"

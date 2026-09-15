@@ -8,6 +8,7 @@ import lombok.Data;
 @Data
 public class CommandeResponse {
     private Long id;
+    private String typeRetrait;
     private String status;
     private String cpRue;
     private String cpVille;

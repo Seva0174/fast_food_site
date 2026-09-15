@@ -1,7 +1,9 @@
-import { X, Clock, MapPin, CheckCircle, Package, AlertCircle } from 'lucide-react';
+import { X, Clock, MapPin, CheckCircle, Package, AlertCircle, Store, Truck } from 'lucide-react';
 
 export const CommandeDetailModal = ({ commande, onClose }) => {
   if (!commande) return null;
+
+  const isClickAndCollect = commande.typeRetrait === 'click_and_collect' || commande.type_retrait === 'click_and_collect';
 
   const getStatusBadge = (status) => {
     switch (status) {
@@ -13,6 +15,8 @@ export const CommandeDetailModal = ({ commande, onClose }) => {
         return <span className="bg-purple-100 text-purple-800 text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1"><CheckCircle className="w-3.5 h-3.5" /> Prête</span>;
       case 'livree':
         return <span className="bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1"><CheckCircle className="w-3.5 h-3.5" /> Livrée</span>;
+      case 'retiree':
+        return <span className="bg-teal-100 text-teal-800 text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1"><CheckCircle className="w-3.5 h-3.5" /> Retirée en restaurant</span>;
       case 'annulee':
         return <span className="bg-red-100 text-red-800 text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1"><AlertCircle className="w-3.5 h-3.5" /> Annulée</span>;
       default:
@@ -22,17 +26,24 @@ export const CommandeDetailModal = ({ commande, onClose }) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fadeIn">
-      {/* Overlay de fermeture */}
       <div className="absolute inset-0" onClick={onClose} />
 
-      {/* Pop-up Modal */}
       <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl z-10 relative overflow-hidden flex flex-col max-h-[90vh]">
         
         {/* Header Modal */}
         <div className="flex justify-between items-start border-b border-gray-100 pb-4">
           <div>
-            <h3 className="text-xl font-extrabold text-gray-900">
+            <h3 className="text-xl font-extrabold text-gray-900 flex items-center gap-2">
               Commande #{commande.id}
+              {isClickAndCollect ? (
+                <span className="text-xs font-semibold px-2 py-0.5 rounded bg-amber-100 text-amber-800 flex items-center gap-1">
+                  <Store className="w-3 h-3" /> Click & Collect
+                </span>
+              ) : (
+                <span className="text-xs font-semibold px-2 py-0.5 rounded bg-blue-100 text-blue-800 flex items-center gap-1">
+                  <Truck className="w-3 h-3" /> Livraison
+                </span>
+              )}
             </h3>
             <p className="text-xs text-gray-500 mt-1">
               Passée le {new Date(commande.dateCreation || commande.date_creation).toLocaleDateString('fr-FR', {
@@ -52,23 +63,30 @@ export const CommandeDetailModal = ({ commande, onClose }) => {
           </button>
         </div>
 
-        {/* Content scrollable */}
+        {/* Content */}
         <div className="overflow-y-auto py-4 space-y-5 flex-1 pr-1">
           
-          {/* Statut & Adresse */}
+          {/* Statut & Adresse / Retrait */}
           <div className="bg-gray-50 rounded-xl p-4 space-y-3 border border-gray-100">
             <div className="flex justify-between items-center">
               <span className="text-sm font-semibold text-gray-600">Statut actuel :</span>
               {getStatusBadge(commande.status)}
             </div>
 
-            <div className="flex items-start gap-2 pt-2 border-t border-gray-200 text-sm text-gray-600">
-              <MapPin className="w-4 h-4 text-red-600 mt-0.5 shrink-0" />
-              <div>
-                <p className="font-medium text-gray-800">{commande.cp_rue || commande.cpRue}</p>
-                <p>{commande.cp_code_postal || commande.cpCodePostal} {commande.cp_ville || commande.cpVille}</p>
+            {isClickAndCollect ? (
+              <div className="flex items-center gap-2 pt-2 border-t border-gray-200 text-sm text-gray-700">
+                <Store className="w-4 h-4 text-amber-600 shrink-0" />
+                <span>À retirer au comptoir du restaurant</span>
               </div>
-            </div>
+            ) : (
+              <div className="flex items-start gap-2 pt-2 border-t border-gray-200 text-sm text-gray-600">
+                <MapPin className="w-4 h-4 text-red-600 mt-0.5 shrink-0" />
+                <div>
+                  <p className="font-medium text-gray-800">{commande.cp_rue || commande.cpRue}</p>
+                  <p>{commande.cp_code_postal || commande.cpCodePostal} {commande.cp_ville || commande.cpVille}</p>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Articles commandés */}
@@ -93,7 +111,7 @@ export const CommandeDetailModal = ({ commande, onClose }) => {
 
         </div>
 
-        {/* Footer avec Total */}
+        {/* Total */}
         <div className="border-t border-gray-100 pt-4 flex justify-between items-center">
           <span className="text-base font-bold text-gray-700">Montant total</span>
           <span className="text-2xl font-black text-red-600">

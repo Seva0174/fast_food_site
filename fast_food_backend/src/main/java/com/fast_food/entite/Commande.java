@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -38,11 +39,21 @@ public class Commande {
         en_attente,
         en_preparation,
         prete,
+        retiree,
         livree,
         annulee
     }
     @Enumerated(EnumType.STRING)
     private Status status;
+
+    public enum TypeRetrait {
+        livraison,
+        click_and_collect
+    }
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "type_retrait", nullable = false)
+    private TypeRetrait typeRetrait = TypeRetrait.livraison;
 
     private String cpRue;
     private String cpVille;

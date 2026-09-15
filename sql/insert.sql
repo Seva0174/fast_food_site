@@ -154,10 +154,37 @@ INSERT INTO panier_items (id_panier, id_produit, quantite) VALUES
 -- =====================================================================
 -- COMMANDES CLIENTS (historique)
 -- =====================================================================
-INSERT INTO commandes (id_user, status, cp_rue, cp_ville, cp_code_postal, total, date_creation) VALUES
-(2, 'livree',       '12 rue des Lilas',         'Lyon',              '69000', 15.00, '2025-07-10 19:32:00'),
-(3, 'en_preparation','5 avenue de la République','Villeurbanne',      '69100', 21.80, '2025-08-01 20:05:00'),
-(4, 'en_attente',   '3 impasse du Marché',      'Décines-Charpieu',  '69150', 12.90, '2025-08-02 12:10:00');
+-- =====================================================================
+-- COMMANDES CLIENTS (historique)
+-- =====================================================================
+INSERT INTO commandes (id_user, type_retrait, status, cp_rue, cp_ville, cp_code_postal, total, date_creation) VALUES
+-- Commande en Livraison
+(2, 'livraison',        'livree',        '12 rue des Lilas',          'Lyon',              '69000', 15.00, '2025-07-10 19:32:00'),
+(3, 'livraison',        'en_preparation','5 avenue de la République', 'Villeurbanne',      '69100', 23.90, '2025-08-01 20:05:00'),
+
+-- Commande en Click & Collect (Pas d'adresse requise -> NULL)
+(4, 'click_and_collect','en_attente',    NULL,                        NULL,                NULL,    12.90, '2025-08-02 12:10:00'),
+(2, 'click_and_collect','retiree',       NULL,                        NULL,                NULL,    9.50,  '2025-08-02 18:30:00');
+
+INSERT INTO commandes_menu (id_commande, id_produit, quantite, prix) VALUES
+-- commande 1 (Julie - Livraison) : 1 Tacos Double + 1 Soda + 1 Frites
+(1, 2, 1, 9.50),
+(1, 12, 1, 2.00),
+(1, 11, 1, 3.50),
+
+-- commande 2 (Thomas - Livraison) : 1 Bacon Cheese Burger + 1 Wings Buffalo + 1 Soda + 1 Frites
+(2, 5, 1, 11.90),
+(2, 8, 1, 6.50),
+(2, 12, 1, 2.00),
+(2, 11, 1, 3.50),
+
+-- commande 3 (Sofia - Click & Collect) : 1 Tacos XXL
+(3, 3, 1, 12.90),
+
+-- commande 4 (Julie - Click & Collect retirée) : 1 Tacos Double
+(4, 2, 1, 9.50)
+ON CONFLICT DO NOTHING;
+
 
 INSERT INTO commandes_menu (id_commande, id_produit, quantite, prix) VALUES
 -- commande 1 (Julie) : 1 Tacos Double + 1 Soda
