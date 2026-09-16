@@ -3,6 +3,8 @@ package com.fast_food.entite;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import org.springframework.security.core.AuthenticatedPrincipal;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -19,7 +21,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @Table(name = "users")
-public class User {
+public class User implements AuthenticatedPrincipal {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -32,7 +34,7 @@ public class User {
 
     @OneToOne(mappedBy = "user")
     private EmailVerificationToken emailToken;
-    
+
     @OneToMany(mappedBy = "user")
     private List<Panier> panier;
 
@@ -48,4 +50,9 @@ public class User {
     }
     @Enumerated(EnumType.STRING)
     private Role role;
+
+    @Override
+    public String getName() {
+        return this.email;
+    }
 }

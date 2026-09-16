@@ -16,7 +16,7 @@ export const Footer = () => {
             href="mailto:admin123@gmail.com"
             className="text-white hover:underline"
           >
-            admin123@gmail.com
+            admin@tacoburger.fr
           </a>
         </p>
 

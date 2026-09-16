@@ -94,7 +94,7 @@ export const PanierContent = ({ onClose }) => {
                 </button>
                 <span className="px-2 text-xs font-bold text-gray-800">{item.quantite}</span>
                 <button
-                  onClick={() => ajouterAuPanier(item)}
+                  onClick={() => ajouterAuPanier({ id: item.produitId })}
                   className="p-1 hover:bg-white rounded text-gray-600"
                 >
                   <Plus className="w-3.5 h-3.5" />

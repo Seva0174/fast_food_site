@@ -24,7 +24,7 @@ import java.util.Collections;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
-    private final UserRepository userRepository; 
+    private final UserRepository userRepository;
 
     @Override
     protected void doFilterInternal(
@@ -36,7 +36,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         final String authHeader = request.getHeader("Authorization");
         final String jwt;
         final String userEmail;
-        
+
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
@@ -47,28 +47,31 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         try {
             if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                
+
                 // Récupération de l'utilisateur complet en BDD
                 User user = userRepository.findByEmail(userEmail).orElse(null);
 
                 if (user != null) {
                     String role = jwtService.extractClaim(jwt, claims -> claims.get("role", String.class));
-                    
-                    var authorities = role != null 
+
+                    var authorities = role != null
                             ? Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role))
                             : Collections.<SimpleGrantedAuthority>emptyList();
-                    
+
+                    // Le principal est désormais l'entité User elle-même (et non l'email),
+                    // ce qui permet d'utiliser @AuthenticationPrincipal User dans les contrôleurs
+                    // sans que Spring Security ne renvoie null silencieusement.
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                            userEmail, 
+                            user,
                             null,
                             authorities
                     );
-                    
+
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authToken);
                 }
             }
-        } catch(Exception e) {
+        } catch (Exception e) {
             SecurityContextHolder.clearContext();
         }
 
