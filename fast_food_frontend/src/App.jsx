@@ -8,6 +8,7 @@ import { PageAuth } from "./pages/PageAuth";
 import { PageCommande } from "./pages/PageCommande";
 import { PageUser } from "./pages/PageUser"; 
 import { MentionsLegales } from "./pages/MentionsLegales";
+import { AdminGestionCommandes } from "./pages/AdminGestionCommandes";
 
 const AdminDashboard = () => <h1 className="text-2xl font-bold">Panel Administration</h1>;
 
@@ -24,7 +25,7 @@ function App() {
               <Route path="/register" element={<PageAuth />} />
               <Route path="/mentions-legales" element={<MentionsLegales />} />
 
-              {/* Routes réservées aux utilisateurs connectés (tous rôles) */}
+              {/* Routes réservées aux utilisateurs connectés */}
               <Route element={<ProtectedRoute />}>
                 <Route path="/commander" element={<PageCommande />} />
                 <Route path="/user" element={<PageUser />} />
@@ -33,6 +34,7 @@ function App() {
               {/* Routes réservées aux administrateurs et employés */}
               <Route element={<ProtectedRoute allowedRoles={['admin', 'employe']} />}>
                 <Route path="/admin" element={<AdminDashboard />} />
+                <Route path="/commandes" element={<AdminGestionCommandes />} />
               </Route>
             </Route>
           </Routes>

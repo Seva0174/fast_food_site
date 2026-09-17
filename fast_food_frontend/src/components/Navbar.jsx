@@ -2,7 +2,7 @@ import { useState, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthProvider';
 import { ContextePanier } from '../context/ContextePanier';
-import { Menu, X, ShoppingBag, User, LogOut, Shield } from 'lucide-react';
+import { Menu, X, ShoppingBag, User, LogOut, Shield, ClipboardList } from 'lucide-react';
 
 export const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -15,6 +15,9 @@ export const Navbar = () => {
   };
 
   const { totalArticles } = useContext(ContextePanier);
+
+  // Vérification si l'utilisateur est admin ou employé
+  const isStaff = user?.role && ['admin', 'employe'].includes(user.role);
 
   return (
     <nav className="bg-white border-b border-gray-200 sticky top-0 z-50">
@@ -38,7 +41,15 @@ export const Navbar = () => {
               )}
             </Link>
 
-            {user?.role && ['admin', 'employe'].includes(user.role) && (
+            {/* Bouton Commandes réservé aux admins et employés */}
+            {isStaff && (
+              <Link to="/commandes" className="text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1">
+                <ClipboardList className="w-4 h-4" />
+                Commandes
+              </Link>
+            )}
+
+            {isStaff && (
               <Link to="/admin" className="text-purple-600 hover:text-purple-800 font-medium flex items-center gap-1">
                 <Shield className="w-4 h-4" />
                 Admin
@@ -103,6 +114,18 @@ export const Navbar = () => {
             Commander
           </Link>
 
+          {/* Bouton Commandes Mobile */}
+          {isStaff && (
+            <Link 
+              to="/commandes" 
+              onClick={() => setIsOpen(false)}
+              className="block text-blue-600 font-medium py-2 flex items-center gap-1"
+            >
+              <ClipboardList className="w-4 h-4" />
+              Commandes
+            </Link>
+          )}
+
           {user && (
             <Link 
               to="/user" 
@@ -113,7 +136,7 @@ export const Navbar = () => {
             </Link>
           )}
 
-          {user?.role && ['admin', 'employe'].includes(user.role) && (
+          {isStaff && (
             <Link 
               to="/admin" 
               onClick={() => setIsOpen(false)}
