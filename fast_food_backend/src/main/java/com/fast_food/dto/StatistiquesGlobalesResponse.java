@@ -16,4 +16,5 @@ public class StatistiquesGlobalesResponse {
     private BigDecimal masseSalariale;
     private BigDecimal beneficeEstime; // CA - (Approvisionnement + Salaires)
     private Long nombreCommandesTotal;
+    private BigDecimal panierMoyen;
 }

@@ -9,8 +9,7 @@ import { PageCommande } from "./pages/PageCommande";
 import { PageUser } from "./pages/PageUser"; 
 import { MentionsLegales } from "./pages/MentionsLegales";
 import { AdminGestionCommandes } from "./pages/AdminGestionCommandes";
-
-const AdminDashboard = () => <h1 className="text-2xl font-bold">Panel Administration</h1>;
+import AdminPage from "./pages/AdminPage";
 
 function App() {
   return (
@@ -33,7 +32,7 @@ function App() {
 
               {/* Routes réservées aux administrateurs et employés */}
               <Route element={<ProtectedRoute allowedRoles={['admin', 'employe']} />}>
-                <Route path="/admin" element={<AdminDashboard />} />
+                <Route path="/admin" element={<AdminPage />} />
                 <Route path="/commandes" element={<AdminGestionCommandes />} />
               </Route>
             </Route>

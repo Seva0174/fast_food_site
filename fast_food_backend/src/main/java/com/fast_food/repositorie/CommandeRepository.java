@@ -43,4 +43,12 @@ public interface CommandeRepository extends JpaRepository<Commande, Long> {
            "GROUP BY cm.produitMenu.id, cm.produitMenu.nom " +
            "ORDER BY SUM(cm.quantite) DESC")
     List<Object[]> findTopProduitsVendus();
+
+    //Recupre le nb de cmd pour tt les jours des la semaines
+    @Query(value = "SELECT CAST(EXTRACT(ISODOW FROM date_creation) AS INTEGER) AS jour_num, " +
+            "COUNT(id) AS total " +
+            "FROM commandes " +
+            "WHERE status != 'annulee' " +
+            "GROUP BY jour_num ORDER BY jour_num", nativeQuery = true)
+    List<Object[]> countCommandesParJourSemaine();
 }

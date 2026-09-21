@@ -1,5 +1,6 @@
 package com.fast_food.controller;
 
+import com.fast_food.dto.CommandesParJourResponse;
 import com.fast_food.dto.StatistiquesGlobalesResponse;
 import com.fast_food.dto.VenteProduitStatResponse;
 import com.fast_food.service.StatistiqueService;
@@ -36,5 +37,10 @@ public class StatistiqueController {
     @GetMapping("/ventes-produits")
     public ResponseEntity<List<VenteProduitStatResponse>> obtenirTopProduitsVendus() {
         return ResponseEntity.ok(statistiqueService.obtenirTopProduitsVendus());
+    }
+
+    @GetMapping("/commandes-par-jour")
+    public ResponseEntity<List<CommandesParJourResponse>> obtenirCommandesParJourSemaine() {
+        return ResponseEntity.ok(statistiqueService.obtenirCommandesParJourSemaine());
     }
 }
