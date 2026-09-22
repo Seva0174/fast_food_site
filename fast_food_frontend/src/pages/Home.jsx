@@ -94,18 +94,33 @@ export const Home = () => {
           ))}
         </div>
 
-        {/* Grille des produits */}
-        <div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-6">Notre Carte</h2>
-          {filteredProduits.length === 0 ? (
-            <p className="text-gray-500 italic">Aucun produit disponible dans cette catégorie.</p>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredProduits.map((produit) => (
-                <ProductCard key={produit.id} produit={produit} />
-              ))}
-            </div>
-          )}
+        {/* Grille des produits groupée par catégorie */}
+        <div className="space-y-10">
+          {categories
+            .filter((cat) => selectedCategory === null || cat.id === selectedCategory)
+            .map((cat) => {
+              // Filtrer les produits de la catégorie courante
+              const produitsDeLaCategorie = produits.filter((p) => {
+                const catId = p.categorie?.id || p.idCategorie || p.id_categorie;
+                return catId === cat.id;
+              });
+
+              // Si aucun produit dans cette catégorie, ne pas afficher le titre
+              if (produitsDeLaCategorie.length === 0) return null;
+
+              return (
+                <section key={cat.id} className="space-y-4">
+                  <h2 className="text-2xl font-bold text-gray-800 border-b pb-2">
+                    {cat.nom}
+                  </h2>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {produitsDeLaCategorie.map((produit) => (
+                      <ProductCard key={produit.id} produit={produit} />
+                    ))}
+                  </div>
+                </section>
+              );
+            })}
         </div>
       </div>
 

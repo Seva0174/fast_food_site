@@ -7,7 +7,7 @@
 - commande **Click & collect** ou **Livraison**
 - Gestion des stocks avec gestion des **épuisement**
 - Adaptation du site **mobile** et **PC**
-- Panel **admin** avec stat
+- Panel **admin** avec states :
     - vente
     - prix des commandes des matières
     - salarié avec leur heures et salaire
@@ -29,8 +29,8 @@
 - [x]  bouton pour passer une commande
 - [x]  Bouton page d’accueil
 - [x]  bouton pour page user
-- [ ]  bouton admin
-- [ ]  bouton pour coté employe
+- [x]  bouton admin
+- [x]  bouton pour coté employe
 
 ### Footer:
 
@@ -68,17 +68,40 @@
 
 ### Page admin:
 
-- [ ]  Sous page gestion des stocks
 - [ ]  Sous page gestion des employé
-- [ ]  Sous page commande fournisseur
-- [ ]  Sous page Statistique
+    - [ ]  Afficher nom + salaire
+    - [ ]  ajouter un employé avec un mail special  “***@tacoburger.fr”**
+    - [ ]  Virer un employé
+    - [ ]  modifier salaire
+    - [ ]  Voir planning employé
+    - [ ]  gérer les horaires d’un employé
+    - [ ]  Gestion des droits (admin employe et client)
+- [ ]  Sous page commande fournisseur + stocks
+    - [ ]  Afficher les matieres premieres et leurs quantité en stock
+    - [ ]  Voir le catalogue d’un fournisseur
+    - [ ]  commander chez un fournisseur
+    - [ ]  suivie des commandes fournisseur (avec changement de status)
+    - [ ]  Ajouter un catalogue
+- [x]  Sous page Statistique :
+    - [x]  Chiffres d’affaire
+    - [x]  nombre de commande selon jour ou semaine
+    - [x]  prix d’un panier moyen
+    - [x]  Dépenses Approvisionnement
+    - [x]  Masse salarial
+    - [x]  Top des ventes
+    - [x]  adapté les stats selon une periode ou global
 - [ ]  Sous page Gestion de la carte du fast food
+    - [x]  Afficher tout les produits
+    - [x]  Ajouter un produit a la carte
+    - [x]  Enlever un produit de la carte
+    - [x]  Modifier un produit de la carte (prix, nom …)
+    - [x]  rendre un produit disponible ou pas
 
 ### Page employé :
 
-- [ ]  afficher les commandes
-- [ ]  modifier le status de la commande
-- [ ]  Donné l’accès au admin
+- [x]  afficher les commandes
+- [x]  modifier le status de la commande
+- [x]  Donné l’accès au admin
 
 ## Tecno:
 
@@ -88,17 +111,20 @@
 - **BDD:** PostgreSQL
 - **Docker**
 - **Service Mail:** Mailhog
-- **Service de payement:** Stripe (mode test)
 - **Gestion de version** git et maven
 
 ## A faire :
 
-- Corriger le bug du panier pas sychronisé
-- Finir les fonctionnalité Client
-- Ajouter fonctionnalité Employé et Admin
+- Finir fonctionnalité  Admin
+- Tester toute les fonctionnalités
 - Corriger les bug :
-    - bug de synchronisation du panier front ↔back
-    - problème de token user au lieu de token email
+    - problème de token user au lieu de token email ?
+    - Bug du calcul du CA ?
+    - bug sur la quantité des produits a la validation d’une commande ?
+    - bug sur la modification du nombre de produit du panier dans la page commande
+    - crash d’application quand token user expire
+    - Problème d’historique des commande user ?
+    - bug produit dans le panier puis supprimer de la carte produit puis passer la commande ?
 - Rendre plus beau le front
 - Docker
 
@@ -126,28 +152,3 @@
     - changer statut commande
 9. Rendre beau le frontend
 10. Dockeriser
-
-## Ce qui est fait :
-
-- Le plan
-- Schema de la base de donnée sur draw.io
-- Creé la base de donné postgreSQL
-- Configuration initiale du projet Spring avec aplication proprieties
-- Modélisation des Entités JPA & Repositories
-- Sécurité & Authenticité (JWT) (pour User pour commencer)
-- Gestion du Menu (Carte & Catégories)
-- Gestion du Panier & des Commandes
-- Module Approvisionnement (/api/admin/fournisseurs)
-- Module Employés & Saisie des heures
-- Module Statistiques
-- Authentification par mails
-- recipicer de confirmation d'une commande
-- Backend — Sécurité & CORS
-- Configuration react router et axios
-- Créer la page d'accueil avec l'affichage de la carte et des produits (en connectant l'API backend pour récupérer les produits et catégories).
-- Créer le contexte de panier (PanierContext) pour que l'utilisateur puisse ajouter/supprimer des produits localement (dans le navigateur), sans avoir besoin d'être connecté !
-- Page de connexions/inscriptions
-- Page validation de commandes:
-    - se connecter si besoin
-    - recap du pannier
-    - adresse de livraison

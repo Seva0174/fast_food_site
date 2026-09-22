@@ -16,9 +16,12 @@ export const adminApi = {
 
   // Gestion des Produits / Carte
   getProduits: () => api.get('/produits'),
-  creerProduit: (data) => api.post('/admin/produits', data),
-  modifierProduit: (id, data) => api.put(`/admin/produits/${id}`, data),
-
+  getCategories: () => api.get('/categories'),
+  creerProduit: (data) => api.post('/produits', data),
+  modifierProduit: (id, data) => api.put(`/produits/${id}`, data),
+  toggleDisponibilite: (id) => api.patch(`/produits/${id}/disponibilite`),
+  supprimerProduit: (id) => api.delete(`/produits/${id}`),
+  
   // Employés & Salaires
   getEmployes: () => api.get('/admin/employes'),
   creerEmploye: (data) => api.post('/admin/employes', data),

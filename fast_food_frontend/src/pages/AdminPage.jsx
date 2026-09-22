@@ -3,15 +3,16 @@ import { adminApi } from '../api/adminApi';
 import { StatsGlobalesCards } from '../components/StatsGlobalesCards';
 import { GraphiqueCommandesJour } from '../components/GraphiqueCommandesJour';
 import { TopVentesTable } from '../components/TopVentesTable';
+import { VueCarteAdmin } from '../components/VueCarteAdmin';
 
 export function AdminPage() {
   const [ongletActif, setOngletActif] = useState('statistiques');
-
+  
   return (
     <div className="min-h-screen bg-gray-100 p-6">
       <div className="max-w-7xl mx-auto space-y-6">
-        {/* En-tête Navigation */}
-        <div className="flex border-b border-gray-200 bg-white rounded-t-lg px-4 pt-3">
+        {/* Navigation par onglets */}
+        <div className="flex border-b border-gray-200 bg-white rounded-t-lg px-4 pt-3 gap-2">
           <button
             onClick={() => setOngletActif('statistiques')}
             className={`py-2 px-4 border-b-2 font-medium text-sm transition-colors ${
@@ -22,17 +23,60 @@ export function AdminPage() {
           >
             Statistiques
           </button>
-          {/* Tu peux ajouter tes autres onglets ici (ex: Commandes, Stock, Personnel...) */}
+          <button
+            onClick={() => setOngletActif('carte')}
+            className={`py-2 px-4 border-b-2 font-medium text-sm transition-colors ${
+              ongletActif === 'carte'
+                ? 'border-red-500 text-red-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            Carte & Produits
+          </button>
+          <button
+            onClick={() => setOngletActif('commandes')}
+            className={`py-2 px-4 border-b-2 font-medium text-sm transition-colors ${
+              ongletActif === 'commandes'
+                ? 'border-red-500 text-red-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            Commandes
+          </button>
+          <button
+            onClick={() => setOngletActif('stock')}
+            className={`py-2 px-4 border-b-2 font-medium text-sm transition-colors ${
+              ongletActif === 'stock'
+                ? 'border-red-500 text-red-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            Stock
+          </button>
+          <button
+            onClick={() => setOngletActif('personnel')}
+            className={`py-2 px-4 border-b-2 font-medium text-sm transition-colors ${
+              ongletActif === 'personnel'
+                ? 'border-red-500 text-red-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            Personnel
+          </button>
         </div>
 
-        {/* Contenu principal */}
+        {/* Affichage conditionnel des vues */}
         {ongletActif === 'statistiques' && <VueStatistiques />}
+        {ongletActif === 'carte' &&  <VueCarteAdmin/>}
+        {ongletActif === 'commandes' && <VueCommandes />}
+        {ongletActif === 'stock' && <VueStock />}
+        {ongletActif === 'personnel' && <VuePersonnel />}
       </div>
     </div>
   );
 }
 
-/* --- ONGLET STATISTIQUES --- */
+/* --- 1. ONGLET STATISTIQUES --- */
 function VueStatistiques() {
   const [stats, setStats] = useState(null);
   const [topProduits, setTopProduits] = useState([]);
@@ -40,7 +84,6 @@ function VueStatistiques() {
   const [loading, setLoading] = useState(true);
   const [erreur, setErreur] = useState(null);
 
-  // Gestion de la période de filtre
   const [modePeriode, setModePeriode] = useState('global');
   const [dateDebut, setDateDebut] = useState('');
   const [dateFin, setDateFin] = useState('');
@@ -144,11 +187,9 @@ function VueStatistiques() {
         )}
       </div>
 
-      {/* Traitement des états de chargement et d'erreur */}
       {loading && <p className="text-gray-500">Chargement des statistiques...</p>}
       {erreur && <p className="text-red-500 font-medium">{erreur}</p>}
 
-      {/* Sections modulaires */}
       {!loading && !erreur && (
         <>
           <StatsGlobalesCards stats={stats} />
@@ -156,6 +197,39 @@ function VueStatistiques() {
           <TopVentesTable topProduits={topProduits} />
         </>
       )}
+    </div>
+  );
+}
+
+/* --- 2. ONGLET COMMANDES --- */
+function VueCommandes() {
+  return (
+    <div className="bg-white p-6 rounded-lg border shadow-sm space-y-4">
+      <h2 className="text-xl font-bold text-gray-800">Gestion des Commandes</h2>
+      <p className="text-gray-600">Historique et gestion des commandes en cours.</p>
+      {/* Insère ici la logique / tableau de tes commandes */}
+    </div>
+  );
+}
+
+/* --- 3. ONGLET STOCK --- */
+function VueStock() {
+  return (
+    <div className="bg-white p-6 rounded-lg border shadow-sm space-y-4">
+      <h2 className="text-xl font-bold text-gray-800">Gestion du Stock</h2>
+      <p className="text-gray-600">Suivi des ingrédients, approvisionnements et alertes de stock.</p>
+      {/* Insère ici la logique / tableau de ton stock */}
+    </div>
+  );
+}
+
+/* --- 4. ONGLET PERSONNEL --- */
+function VuePersonnel() {
+  return (
+    <div className="bg-white p-6 rounded-lg border shadow-sm space-y-4">
+      <h2 className="text-xl font-bold text-gray-800">Gestion du Personnel</h2>
+      <p className="text-gray-600">Liste de l'équipe, salaires et plannings.</p>
+      {/* Insère ici la logique / tableau de ton personnel */}
     </div>
   );
 }

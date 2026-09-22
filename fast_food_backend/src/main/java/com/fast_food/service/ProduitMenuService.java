@@ -25,10 +25,9 @@ public class ProduitMenuService {
     private final CategorieRepository categorieRepository;
     private final ProduitMenuMapper produitMenuMapper;
 
-    // Récupérer tous les produits (Admin)
     @Transactional(readOnly = true)
     public List<ProduitMenuResponse> getAllProduits() {
-        return produitMenuRepository.findAll().stream()
+        return produitMenuRepository.findAllByOrderByCategorieIdAscIdAsc().stream()
                 .map(produitMenuMapper::toProduitMenuResponse)
                 .collect(Collectors.toList());
     }
@@ -48,8 +47,7 @@ public class ProduitMenuService {
             throw new ResourceNotFoundException("Catégorie introuvable avec l'ID : " + categorieId);
         }
         
-        // Note: Assure-toi d'avoir défini la méthode 'findByCategorieId' dans ProduitMenuRepository
-        return produitMenuRepository.findByCategorieId(categorieId).stream()
+        return produitMenuRepository.findByCategorieIdOrderByIdAsc(categorieId).stream()
                 .map(produitMenuMapper::toProduitMenuResponse)
                 .collect(Collectors.toList());
     }
