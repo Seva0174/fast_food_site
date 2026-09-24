@@ -17,8 +17,8 @@ public class EmployeRequest {
     @Email(message = "Format d'email invalide")
     private String email;
 
-    @NotBlank(message = "Le mot de passe est obligatoire")
-    private String mdp; // Optionnel : si vide, un mot de passe par défaut sera généré
+    //@NotBlank(message = "Le mot de passe est obligatoire")
+    private String mdp; 
 
     @NotNull(message = "Le rôle d'accès système est obligatoire")
     private User.Role roleSysteme; // admin, client, employe

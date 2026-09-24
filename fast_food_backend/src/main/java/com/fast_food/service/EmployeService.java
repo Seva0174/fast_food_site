@@ -69,7 +69,6 @@ public class EmployeService {
             throw new IllegalArgumentException("Un compte utilisateur existe déjà avec cet email.");
         }
 
-        // Sécurité backend : interdire l'attribution du rôle client pour une fiche employé
         if (request.getRoleSysteme() == User.Role.client) {
             throw new IllegalArgumentException("Un employé ne peut pas avoir le rôle système client.");
         }
