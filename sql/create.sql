@@ -49,6 +49,7 @@ CREATE TABLE fournisseur (
 
 CREATE TABLE employe (
     id              BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id_user         BIGINT UNIQUE NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     nom             VARCHAR(150) NOT NULL,
     role            VARCHAR(50)  NOT NULL,
     salaire_heure   NUMERIC(8,2) NOT NULL
@@ -185,3 +186,4 @@ CREATE INDEX idx_recette_produit               ON recette(id_produit);
 CREATE INDEX idx_recette_matiere               ON recette(id_matiere);
 CREATE INDEX idx_cf_details_commande           ON commandes_fournisseurs_details(id_commande_fournisseur);
 CREATE INDEX idx_cf_details_stock              ON commandes_fournisseurs_details(id_stock);
+CREATE INDEX idx_employe_user ON employe(id_user);

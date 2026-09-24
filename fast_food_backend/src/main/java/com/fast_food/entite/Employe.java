@@ -1,37 +1,34 @@
 package com.fast_food.entite;
 
-import java.math.BigDecimal;
-import java.util.List;
-
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import java.math.BigDecimal;
 
 @Entity
-@Setter
 @Getter
+@Setter
+@Table(name = "employe")
 public class Employe {
+
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)    
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    
-    @OneToMany(mappedBy = "employe")
-    private List<EmployeHeure> heures;
-    
+
+    @OneToOne
+    @JoinColumn(name = "id_user", nullable = false, unique = true)
+    private User user;
+
+    private String nom;
+
     public enum Role {
         CUISINIER,
-        MANAGER,
-        CAISIER
+        CAISSIER,
+        MANAGER
     }
+
     @Enumerated(EnumType.STRING)
-    private Role role;
-    
-    private String nom;
+    private Role role; // Poste RH au sein du restaurant
+
     private BigDecimal salaire_heure;
 }

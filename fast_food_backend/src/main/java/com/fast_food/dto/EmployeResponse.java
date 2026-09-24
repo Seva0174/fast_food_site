@@ -1,18 +1,18 @@
 package com.fast_food.dto;
 
-import java.math.BigDecimal;
-import lombok.AllArgsConstructor;
+import com.fast_food.entite.User;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
+
+import java.math.BigDecimal;
 
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 @Builder
 public class EmployeResponse {
     private Long id;
     private String nom;
-    private String role;
+    private String email;
+    private User.Role roleSysteme; // Role utilisateur (admin, client, employe)
+    private String role;           // Poste de travail
     private BigDecimal salaireHeure;
 }

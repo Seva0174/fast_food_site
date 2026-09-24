@@ -3,12 +3,13 @@
 -- Mots de passe stockés en clair ici uniquement pour la démo :
 -- =====================================================================
 INSERT INTO users (email, mdp, nom, role, est_verif, date_creation) VALUES
-('admin@tacoburger.fr',     '$2a$10$TOccMYVM3IdwUaMat/lMnuYqFKGipUGpNuUxdQjB82TxzvfWmilzO', 'Amine Belkacem', 'admin',   TRUE, '2025-01-10 09:00:00'), --password
+('admin@tacoburger.fr',     '$2a$10$TOccMYVM3IdwUaMat/lMnuYqFKGipUGpNuUxdQjB82TxzvfWmilzO', 'Amine Belkacem', 'admin',   TRUE, '2025-01-10 09:00:00'), 
 ('julie.martin@mail.fr',    '$2a$10$TOccMYVM3IdwUaMat/lMnuYqFKGipUGpNuUxdQjB82TxzvfWmilzO', 'Julie Martin',   'client',  TRUE, '2025-02-14 12:30:00'),
 ('thomas.dubois@mail.fr',   '$2a$10$TOccMYVM3IdwUaMat/lMnuYqFKGipUGpNuUxdQjB82TxzvfWmilzO', 'Thomas Dubois',  'client',  TRUE, '2025-03-01 18:45:00'),
 ('sofia.garcia@mail.fr',    '$2a$10$TOccMYVM3IdwUaMat/lMnuYqFKGipUGpNuUxdQjB82TxzvfWmilzO', 'Sofia Garcia',   'client',  FALSE,'2025-06-20 10:15:00'),
-('karim.said@tacoburger.fr','$2a$10$TOccMYVM3IdwUaMat/lMnuYqFKGipUGpNuUxdQjB82TxzvfWmilzO', 'Karim Saidi',    'employe', TRUE, '2025-01-15 08:00:00');
-
+('karim.said@tacoburger.fr','$2a$10$TOccMYVM3IdwUaMat/lMnuYqFKGipUGpNuUxdQjB82TxzvfWmilzO', 'Karim Saidi',    'employe', TRUE, '2025-01-15 08:00:00'),
+('lea.fontaine@tacoburger.fr', '$2a$10$TOccMYVM3IdwUaMat/lMnuYqFKGipUGpNuUxdQjB82TxzvfWmilzO', 'Léa Fontaine', 'employe', TRUE, '2025-01-20 08:00:00'), 
+('nabil.kaced@tacoburger.fr',  '$2a$10$TOccMYVM3IdwUaMat/lMnuYqFKGipUGpNuUxdQjB82TxzvfWmilzO', 'Nabil Kaced',  'employe', TRUE, '2025-01-10 08:00:00');
 -- =====================================================================
 -- ADRESSES
 -- =====================================================================
@@ -205,10 +206,10 @@ INSERT INTO commandes_menu (id_commande, id_produit, quantite, prix) VALUES
 -- =====================================================================
 -- EMPLOYÉS ET HEURES TRAVAILLÉES
 -- =====================================================================
-INSERT INTO employe (nom, role, salaire_heure) VALUES
-('Karim Saidi',  'cuisinier', 12.50),
-('Léa Fontaine', 'caissiere', 11.88),
-('Nabil Kaced',  'manager',   15.00);
+INSERT INTO employe (id_user, nom, role, salaire_heure) VALUES
+(5, 'Karim Saidi',  'CUISINIER', 12.50), 
+(6, 'Léa Fontaine', 'CAISSIER',  11.88), 
+(7, 'Nabil Kaced',  'MANAGER',   15.00); 
 
 INSERT INTO employe_heure (id_employe, nb_heure, date) VALUES
 (1, 8.0, '2025-08-01'),

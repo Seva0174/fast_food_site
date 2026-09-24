@@ -11,6 +11,11 @@ public class EmployeMapper {
     public EmployeResponse toResponse(Employe entity) {
         if (entity == null) return null;
 
+        String roleStr = null;
+        if (entity.getRole() != null) {
+            roleStr = entity.getRole().toString();
+        }
+
         return EmployeResponse.builder()
                 .id(entity.getId())
                 .nom(entity.getNom())
