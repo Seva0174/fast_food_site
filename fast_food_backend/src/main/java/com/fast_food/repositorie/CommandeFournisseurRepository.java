@@ -4,6 +4,7 @@ import com.fast_food.entite.CommandeFournisseur;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -20,4 +21,6 @@ public interface CommandeFournisseurRepository extends JpaRepository<CommandeFou
         "WHERE d.commandeFournisseur.status IN ('expediee', 'recue') " +
         "AND d.commandeFournisseur.dateCommande BETWEEN :debut AND :fin")
     BigDecimal calculateDepensesApprovisionnementEntre(@Param("debut") LocalDate debut, @Param("fin") LocalDate fin);
+
+    List<CommandeFournisseur> findByFournisseurId(Long idFournisseur);
 }

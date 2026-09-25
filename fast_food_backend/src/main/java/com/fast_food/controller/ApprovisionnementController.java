@@ -5,8 +5,10 @@ import com.fast_food.service.ApprovisionnementService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -29,16 +31,30 @@ public class ApprovisionnementController {
         return ResponseEntity.status(HttpStatus.CREATED).body(approvisionnementService.createFournisseur(request));
     }
 
-    // --- CATALOGUE ---
-
-    @PostMapping("/catalogue")
-    public ResponseEntity<CatalogueFournisseurResponse> ajouterArticleCatalogue(@Valid @RequestBody CatalogueFournisseurRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(approvisionnementService.ajouterArticleCatalogue(request));
+    @DeleteMapping("/fournisseurs/{id}")
+    public ResponseEntity<Void> deleteFournisseur(@PathVariable Long id) {
+        approvisionnementService.deleteFournisseur(id);
+        return ResponseEntity.noContent().build();
     }
+
+    // --- CATALOGUE ---
 
     @GetMapping("/fournisseurs/{idFournisseur}/catalogue")
     public ResponseEntity<List<CatalogueFournisseurResponse>> getCatalogueByFournisseur(@PathVariable Long idFournisseur) {
         return ResponseEntity.ok(approvisionnementService.getCatalogueByFournisseur(idFournisseur));
+    }
+
+    @PostMapping(value = "/fournisseurs/{idFournisseur}/catalogue/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<List<CatalogueFournisseurResponse>> importerCatalogueCsv(
+            @PathVariable Long idFournisseur,
+            @RequestParam("file") MultipartFile file) {
+        return ResponseEntity.ok(approvisionnementService.importerCatalogueCsv(idFournisseur, file));
+    }
+
+    @DeleteMapping("/fournisseurs/{idFournisseur}/catalogue")
+    public ResponseEntity<Void> reinitialiserCatalogue(@PathVariable Long idFournisseur) {
+        approvisionnementService.reinitialiserCatalogue(idFournisseur);
+        return ResponseEntity.noContent().build();
     }
 
     // --- COMMANDES FOURNISSEURS ---
@@ -58,5 +74,11 @@ public class ApprovisionnementController {
             @PathVariable Long id,
             @Valid @RequestBody ChangerStatutCommandeFournisseurRequest request) {
         return ResponseEntity.ok(approvisionnementService.changerStatutCommande(id, request.getStatus()));
+    }
+
+    @GetMapping("/commandes/{id}/details")
+    public ResponseEntity<List<CommandeDetailDTO>> getDetailsCommande(@PathVariable Long id) {
+        List<CommandeDetailDTO> details = approvisionnementService.getDetailsCommande(id);
+        return ResponseEntity.ok(details);
     }
 }

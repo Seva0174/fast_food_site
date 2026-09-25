@@ -1,6 +1,7 @@
 package com.fast_food.repositorie;
 
 import java.math.BigDecimal;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -12,6 +13,9 @@ import com.fast_food.entite.StockMatierePremiere;
 
 @Repository
 public interface StockMatierePremiereRepository extends JpaRepository<StockMatierePremiere,Long>{
+    
+    Optional<StockMatierePremiere> findByNomIgnoreCase(String nom);
+
     @Modifying
     @Query("""
         UPDATE StockMatierePremiere s

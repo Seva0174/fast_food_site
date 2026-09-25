@@ -68,20 +68,24 @@
 
 ### Page admin:
 
-- [ ]  Sous page gestion des employé
-    - [ ]  Afficher nom + salaire
-    - [ ]  ajouter un employé avec un mail special  “***@tacoburger.fr”**
-    - [ ]  Virer un employé
-    - [ ]  modifier salaire
-    - [ ]  Voir planning employé
-    - [ ]  gérer les horaires d’un employé
-    - [ ]  Gestion des droits (admin employe et client)
-- [ ]  Sous page commande fournisseur + stocks
-    - [ ]  Afficher les matieres premieres et leurs quantité en stock
-    - [ ]  Voir le catalogue d’un fournisseur
-    - [ ]  commander chez un fournisseur
-    - [ ]  suivie des commandes fournisseur (avec changement de status)
-    - [ ]  Ajouter un catalogue
+- [x]  Sous page gestion des employé
+    - [x]  Afficher nom + salaire + metier + mail
+    - [x]  ajouter un employé avec un mail special  “***@tacoburger.fr” ?**
+    - [x]  Virer un employé
+    - [x]  modifier salaire
+    - [x]  sauvegarde du nombre d’heure d’un jour
+    - [x]  gérer les horaires d’un employé
+    - [x]  Calcul salaire mensuel d’un employee
+    - [x]  Gestion des droits
+- [x]  Sous page commande fournisseur + stocks
+    - [x]  Voir le catalogue d’un fournisseur
+    - [x]  commander chez un fournisseur
+    - [x]  Ajouter un catalogue csv
+    - [x]  suivie des commandes fournisseur (avec changement de status)
+    - [x]  Voir détail des commandes fournisseurs
+- [ ]  Sous page stocks et composition produit de la carte
+    - [ ]  Afficher les matieres premieres +quantité en stock
+    - [ ]  pouvoir modifier la compsition d’un produit de la carte
 - [x]  Sous page Statistique :
     - [x]  Chiffres d’affaire
     - [x]  nombre de commande selon jour ou semaine
@@ -90,7 +94,7 @@
     - [x]  Masse salarial
     - [x]  Top des ventes
     - [x]  adapté les stats selon une periode ou global
-- [ ]  Sous page Gestion de la carte du fast food
+- [x]  Sous page Gestion de la carte du fast food
     - [x]  Afficher tout les produits
     - [x]  Ajouter un produit a la carte
     - [x]  Enlever un produit de la carte
@@ -115,8 +119,9 @@
 
 ## A faire :
 
+- Ajouter l'onglet des stocks 
+- Système de personalisation des matieres premiere dans un produit de la carte
 - Finir fonctionnalité  Admin
-- Tester toute les fonctionnalités
 - Corriger les bug :
     - problème de token user au lieu de token email ?
     - Bug du calcul du CA ?
@@ -125,7 +130,10 @@
     - crash d’application quand token user expire
     - Problème d’historique des commande user ?
     - bug produit dans le panier puis supprimer de la carte produit puis passer la commande ?
-- Rendre plus beau le front
+    - bug lors de creation de compte qui est entre employé ou admin
+    - verifier le systeme de changement de status de commande
+- Tester toute les fonctionnalités pour trouver les bug
+- Rendre plus beau le front et factoriser en composant reutilisable
 - Docker
 
 ## Plan

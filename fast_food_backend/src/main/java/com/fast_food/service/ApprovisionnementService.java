@@ -8,7 +8,12 @@ import com.fast_food.repositorie.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -41,27 +46,100 @@ public class ApprovisionnementService {
         return fournisseurMapper.toResponse(fournisseurRepository.save(f));
     }
 
-    // --- CATALOGUE FOURNISSEUR ---
-
-    public CatalogueFournisseurResponse ajouterArticleCatalogue(CatalogueFournisseurRequest request) {
-        Fournisseur fournisseur = fournisseurRepository.findById(request.getIdFournisseur())
+    @Transactional
+    public void deleteFournisseur(Long idFournisseur) {
+        Fournisseur fournisseur = fournisseurRepository.findById(idFournisseur)
                 .orElseThrow(() -> new ResourceNotFoundException("Fournisseur non trouvé"));
 
-        StockMatierePremiere stock = stockMatierePremiereRepository.findById(request.getIdStock())
-                .orElseThrow(() -> new ResourceNotFoundException("Matière première non trouvée"));
+        // 1. Purger les articles du catalogue
+        List<CatalogueFournisseur> catalogue = catalogueFournisseurRepository.findByFournisseurId(idFournisseur);
+        catalogueFournisseurRepository.deleteAll(catalogue);
 
-        CatalogueFournisseur article = new CatalogueFournisseur();
-        article.setFournisseur(fournisseur);
-        article.setStock(stock);
-        article.setPrixUnitaire(request.getPrixUnitaire());
+        // 2. Supprimer les commandes associées s'il y en a
+        List<CommandeFournisseur> commandes = commandeFournisseurRepository.findByFournisseurId(idFournisseur);
+        for (CommandeFournisseur cmd : commandes) {
+            List<CommandeFournisseurDetail> details = commandeFournisseurDetailRepository.findByCommandeFournisseurId(cmd.getId());
+            commandeFournisseurDetailRepository.deleteAll(details);
+        }
+        commandeFournisseurRepository.deleteAll(commandes);
 
-        return catalogueFournisseurMapper.toResponse(catalogueFournisseurRepository.save(article));
+        // 3. Supprimer le fournisseur
+        fournisseurRepository.delete(fournisseur);
     }
+
+    // --- CATALOGUE FOURNISSEUR ---
 
     public List<CatalogueFournisseurResponse> getCatalogueByFournisseur(Long idFournisseur) {
         return catalogueFournisseurRepository.findByFournisseurId(idFournisseur).stream()
                 .map(catalogueFournisseurMapper::toResponse)
                 .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public List<CatalogueFournisseurResponse> importerCatalogueCsv(Long idFournisseur, MultipartFile file) {
+        Fournisseur fournisseur = fournisseurRepository.findById(idFournisseur)
+                .orElseThrow(() -> new ResourceNotFoundException("Fournisseur non trouvé"));
+
+        if (file.isEmpty()) {
+            throw new IllegalArgumentException("Le fichier CSV fourni est vide");
+        }
+
+        // Supprimer l'ancien catalogue du fournisseur avant le réimport
+        List<CatalogueFournisseur> ancienCatalogue = catalogueFournisseurRepository.findByFournisseurId(idFournisseur);
+        catalogueFournisseurRepository.deleteAll(ancienCatalogue);
+
+        List<CatalogueFournisseur> nouveauxArticles = new ArrayList<>();
+
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8))) {
+            String line;
+            boolean isFirstLine = true;
+
+            while ((line = reader.readLine()) != null) {
+                if (line.trim().isEmpty()) continue;
+
+                // Sauter l'en-tête (ex: nom;prix) s'il existe
+                if (isFirstLine && (line.toLowerCase().contains("nom") || line.toLowerCase().contains("prix"))) {
+                    isFirstLine = false;
+                    continue;
+                }
+                isFirstLine = false;
+
+                String[] data = line.split("[;,]");
+                if (data.length < 2) continue;
+
+                String nomMatiere = data[0].trim();
+                BigDecimal prixUnitaire = new BigDecimal(data[1].trim().replace(",", "."));
+
+                // Trouver ou créer la matière première dans le stock de la cuisine
+                StockMatierePremiere stock = stockMatierePremiereRepository.findByNomIgnoreCase(nomMatiere)
+                        .orElseGet(() -> {
+                            StockMatierePremiere nouvelleMatiere = new StockMatierePremiere();
+                            nouvelleMatiere.setNom(nomMatiere);
+                            nouvelleMatiere.setQuantite(BigDecimal.ZERO);
+                            return stockMatierePremiereRepository.save(nouvelleMatiere);
+                        });
+
+                CatalogueFournisseur article = new CatalogueFournisseur();
+                article.setFournisseur(fournisseur);
+                article.setStock(stock);
+                article.setPrixUnitaire(prixUnitaire);
+
+                nouveauxArticles.add(catalogueFournisseurRepository.save(article));
+            }
+
+        } catch (Exception e) {
+            throw new RuntimeException("Erreur lors de la lecture du fichier CSV : " + e.getMessage(), e);
+        }
+
+        return nouveauxArticles.stream()
+                .map(catalogueFournisseurMapper::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public void reinitialiserCatalogue(Long idFournisseur) {
+        List<CatalogueFournisseur> catalogue = catalogueFournisseurRepository.findByFournisseurId(idFournisseur);
+        catalogueFournisseurRepository.deleteAll(catalogue);
     }
 
     // --- COMMANDES D'ACHAT ---
@@ -131,5 +209,23 @@ public class ApprovisionnementService {
             List<CommandeFournisseurDetail> details = commandeFournisseurDetailRepository.findByCommandeFournisseurId(cmd.getId());
             return commandeFournisseurMapper.toResponse(cmd, details);
         }).collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<CommandeDetailDTO> getDetailsCommande(Long idCommande) {
+        if (!commandeFournisseurRepository.existsById(idCommande)) {
+            throw new ResourceNotFoundException("Commande non trouvée avec l'ID : " + idCommande);
+        }
+
+        return commandeFournisseurDetailRepository.findByCommandeFournisseurId(idCommande)
+                .stream()
+                .map(d -> new CommandeDetailDTO(
+                    (d.getStock() != null && d.getStock().getNom() != null) 
+                            ? d.getStock().getNom() 
+                            : "Article inconnu",
+                    d.getQuantite() != null ? d.getQuantite().intValue() : 0,
+                    d.getPrixUnitaire()
+                ))
+                .collect(Collectors.toList());
     }
 }
