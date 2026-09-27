@@ -228,4 +228,9 @@ public class ApprovisionnementService {
                 ))
                 .collect(Collectors.toList());
     }
+
+    @Transactional(readOnly = true)
+    public List<StockMatierePremiere> getAllMatieresPremieres() {
+        return stockMatierePremiereRepository.findAll();
+    }
 }

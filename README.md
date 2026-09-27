@@ -85,7 +85,6 @@
     - [x]  Voir détail des commandes fournisseurs
 - [ ]  Sous page stocks et composition produit de la carte
     - [ ]  Afficher les matieres premieres +quantité en stock
-    - [ ]  pouvoir modifier la compsition d’un produit de la carte
 - [x]  Sous page Statistique :
     - [x]  Chiffres d’affaire
     - [x]  nombre de commande selon jour ou semaine
@@ -100,6 +99,7 @@
     - [x]  Enlever un produit de la carte
     - [x]  Modifier un produit de la carte (prix, nom …)
     - [x]  rendre un produit disponible ou pas
+    - [x]  pouvoir modifier la compsition d’un produit de la carte
 
 ### Page employé :
 
@@ -119,8 +119,8 @@
 
 ## A faire :
 
-- Ajouter l'onglet des stocks 
-- Système de personalisation des matieres premiere dans un produit de la carte
+- Ajouter l'onglet des stocks
+- Ajuster la mesure des ingrédient dans une recette selon l’ingredient
 - Finir fonctionnalité  Admin
 - Corriger les bug :
     - problème de token user au lieu de token email ?

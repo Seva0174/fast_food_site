@@ -12,6 +12,9 @@ export const adminApi = {
   creerFournisseur: (data) => api.post('/admin/approvisionnement/fournisseurs', data),
   supprimerFournisseur: (id) => api.delete(`/admin/approvisionnement/fournisseurs/${id}`),
 
+  // Matières Premières / Stock
+  getMatieresPremieres: () => api.get('/admin/approvisionnement/matieres-premieres'),
+
   getCatalogueFournisseur: (idFournisseur) => api.get(`/admin/approvisionnement/fournisseurs/${idFournisseur}/catalogue`),
   uploadCatalogueCsv: (idFournisseur, file) => {
     const formData = new FormData();

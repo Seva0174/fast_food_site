@@ -1,6 +1,7 @@
 package com.fast_food.controller;
 
 import com.fast_food.dto.*;
+import com.fast_food.entite.StockMatierePremiere;
 import com.fast_food.service.ApprovisionnementService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -80,5 +81,13 @@ public class ApprovisionnementController {
     public ResponseEntity<List<CommandeDetailDTO>> getDetailsCommande(@PathVariable Long id) {
         List<CommandeDetailDTO> details = approvisionnementService.getDetailsCommande(id);
         return ResponseEntity.ok(details);
+    }
+
+
+    // --- MATIÈRES PREMIÈRES / STOCK ---
+
+    @GetMapping("/matieres-premieres")
+    public ResponseEntity<List<StockMatierePremiere>> getAllMatieresPremieres() {
+        return ResponseEntity.ok(approvisionnementService.getAllMatieresPremieres());
     }
 }

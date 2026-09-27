@@ -3,6 +3,7 @@ package com.fast_food.repositorie;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.stereotype.Repository;
 
 import com.fast_food.entite.ProduitMenu;
@@ -12,4 +13,6 @@ import com.fast_food.entite.Recette;
 public interface RecetteRepository extends JpaRepository<Recette, Long>{
     List<Recette> findByProduitMenu(ProduitMenu produit);
     
+    @Modifying
+    void deleteByProduitMenu(ProduitMenu produitMenu);
 }

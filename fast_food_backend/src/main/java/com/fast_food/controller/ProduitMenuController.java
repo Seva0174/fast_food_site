@@ -17,6 +17,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.fast_food.dto.ProduitMenuRequest;
 import com.fast_food.dto.ProduitMenuResponse;
+import com.fast_food.entite.StockMatierePremiere;
+import com.fast_food.service.ApprovisionnementService;
 import com.fast_food.service.ProduitMenuService;
 
 import jakarta.validation.Valid;
@@ -28,7 +30,7 @@ import lombok.RequiredArgsConstructor;
 public class ProduitMenuController {
 
     private final ProduitMenuService produitMenuService;
-
+    
     // Récupérer tous les produits ou filtrer par catégorie (Public)
     // Exemple : GET /api/produits ou GET /api/produits?categorieId=2
     @GetMapping

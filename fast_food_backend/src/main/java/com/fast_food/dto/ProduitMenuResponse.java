@@ -1,6 +1,7 @@
 package com.fast_food.dto;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 import lombok.Data;
 
@@ -13,4 +14,5 @@ public class ProduitMenuResponse {
     private String imageUrl;
     private Boolean estDispo;
     private CategorieResponse categorie;
+    private List<RecetteItemResponse> recette;
 }

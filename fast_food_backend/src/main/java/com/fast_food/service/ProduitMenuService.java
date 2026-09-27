@@ -1,5 +1,6 @@
 package com.fast_food.service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -8,12 +9,17 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.fast_food.dto.ProduitMenuRequest;
 import com.fast_food.dto.ProduitMenuResponse;
+import com.fast_food.dto.RecetteItemResponse;
 import com.fast_food.entite.Categorie;
 import com.fast_food.entite.ProduitMenu;
+import com.fast_food.entite.Recette;
+import com.fast_food.entite.StockMatierePremiere;
 import com.fast_food.exception.ResourceNotFoundException;
 import com.fast_food.mapper.ProduitMenuMapper;
 import com.fast_food.repositorie.CategorieRepository;
 import com.fast_food.repositorie.ProduitMenuRepository;
+import com.fast_food.repositorie.RecetteRepository;
+import com.fast_food.repositorie.StockMatierePremiereRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -23,24 +29,24 @@ public class ProduitMenuService {
 
     private final ProduitMenuRepository produitMenuRepository;
     private final CategorieRepository categorieRepository;
+    private final RecetteRepository recetteRepository; 
+    private final StockMatierePremiereRepository stockMatierePremiereRepository; 
     private final ProduitMenuMapper produitMenuMapper;
 
     @Transactional(readOnly = true)
     public List<ProduitMenuResponse> getAllProduits() {
         return produitMenuRepository.findAllByOrderByCategorieIdAscIdAsc().stream()
-                .map(produitMenuMapper::toProduitMenuResponse)
+                .map(this::mapToResponseWithRecette)
                 .collect(Collectors.toList());
     }
 
-    // Récupérer un produit par son ID
     @Transactional(readOnly = true)
     public ProduitMenuResponse getProduitById(Long id) {
         ProduitMenu produit = produitMenuRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Produit introuvable avec l'ID : " + id));
-        return produitMenuMapper.toProduitMenuResponse(produit);
+        return mapToResponseWithRecette(produit);
     }
 
-    // Récupérer les produits par catégorie
     @Transactional(readOnly = true)
     public List<ProduitMenuResponse> getProduitsByCategorie(Long categorieId) {
         if (!categorieRepository.existsById(categorieId)) {
@@ -48,25 +54,28 @@ public class ProduitMenuService {
         }
         
         return produitMenuRepository.findByCategorieIdOrderByIdAsc(categorieId).stream()
-                .map(produitMenuMapper::toProduitMenuResponse)
+                .map(this::mapToResponseWithRecette)
                 .collect(Collectors.toList());
     }
 
-    // Créer un produit (Réservé Admin)
+    // Créer un produit avec sa recette (Admin)
     @Transactional
     public ProduitMenuResponse createProduit(ProduitMenuRequest request) {
-        // Vérification de l'existence de la catégorie
         Categorie categorie = categorieRepository.findById(request.getIdCategorie())
                 .orElseThrow(() -> new ResourceNotFoundException("Catégorie introuvable avec l'ID : " + request.getIdCategorie()));
 
         ProduitMenu produit = produitMenuMapper.toEntity(request);
-        produit.setCategorie(categorie); // On attache l'entité managée complète
+        produit.setCategorie(categorie);
 
         ProduitMenu savedProduit = produitMenuRepository.save(produit);
-        return produitMenuMapper.toProduitMenuResponse(savedProduit);
+
+        // Sauvegarder la recette si fournie
+        enregistrerRecette(savedProduit, request);
+
+        return mapToResponseWithRecette(savedProduit);
     }
 
-    // Modifier un produit (Réservé Admin)
+    // Modifier un produit et sa recette (Admin)
     @Transactional
     public ProduitMenuResponse updateProduit(Long id, ProduitMenuRequest request) {
         ProduitMenu produit = produitMenuRepository.findById(id)
@@ -85,10 +94,47 @@ public class ProduitMenuService {
         produit.setCategorie(categorie);
 
         ProduitMenu updatedProduit = produitMenuRepository.save(produit);
-        return produitMenuMapper.toProduitMenuResponse(updatedProduit);
+
+        // Réinitialiser et enregistrer la nouvelle recette
+        recetteRepository.deleteByProduitMenu(updatedProduit);
+        enregistrerRecette(updatedProduit, request);
+
+        return mapToResponseWithRecette(updatedProduit);
     }
 
-    // Basculer la disponibilité d'un produit (Rupture / Retour en stock)
+    private void enregistrerRecette(ProduitMenu produit, ProduitMenuRequest request) {
+        if (request.getRecette() != null && !request.getRecette().isEmpty()) {
+            List<Recette> recettes = new ArrayList<>();
+            for (var item : request.getRecette()) {
+                StockMatierePremiere matiere = stockMatierePremiereRepository.findById(item.getIdMatiere())
+                        .orElseThrow(() -> new ResourceNotFoundException("Matière première introuvable : " + item.getIdMatiere()));
+
+                Recette r = new Recette();
+                r.setProduitMenu(produit);
+                r.setMatierePremiere(matiere);
+                r.setQuantiteRequise(item.getQuantiteRequise());
+                recettes.add(r);
+            }
+            recetteRepository.saveAll(recettes);
+        }
+    }
+
+    private ProduitMenuResponse mapToResponseWithRecette(ProduitMenu produit) {
+        ProduitMenuResponse response = produitMenuMapper.toProduitMenuResponse(produit);
+        List<Recette> recettes = recetteRepository.findByProduitMenu(produit);
+
+        List<RecetteItemResponse> recetteResponses = recettes.stream().map(r -> {
+            RecetteItemResponse item = new RecetteItemResponse();
+            item.setIdMatiere(r.getMatierePremiere().getId());
+            item.setNomMatiere(r.getMatierePremiere().getNom());
+            item.setQuantiteRequise(r.getQuantiteRequise());
+            return item;
+        }).collect(Collectors.toList());
+
+        response.setRecette(recetteResponses);
+        return response;
+    }
+
     @Transactional
     public ProduitMenuResponse toggleDisponibilite(Long id) {
         ProduitMenu produit = produitMenuRepository.findById(id)
@@ -96,15 +142,14 @@ public class ProduitMenuService {
 
         produit.setEstDispo(!produit.isEstDispo());
         ProduitMenu updatedProduit = produitMenuRepository.save(produit);
-        return produitMenuMapper.toProduitMenuResponse(updatedProduit);
+        return mapToResponseWithRecette(updatedProduit);
     }
 
-    // Supprimer un produit (Réservé Admin)
     @Transactional
     public void deleteProduit(Long id) {
-        if (!produitMenuRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Produit introuvable avec l'ID : " + id);
-        }
-        produitMenuRepository.deleteById(id);
+        ProduitMenu produit = produitMenuRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Produit introuvable avec l'ID : " + id));
+        recetteRepository.deleteByProduitMenu(produit);
+        produitMenuRepository.delete(produit);
     }
 }

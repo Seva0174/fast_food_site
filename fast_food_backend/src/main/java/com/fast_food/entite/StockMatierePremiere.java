@@ -3,6 +3,8 @@ package com.fast_food.entite;
 import java.math.BigDecimal;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -20,6 +22,7 @@ public class StockMatierePremiere {
     private Long id;
 
     @OneToMany(mappedBy = "matierePremiere")
+    @JsonIgnore // Empêche de sérialiser les recettes en boucle lors du chargement des matières premières
     private List<Recette> recettes;
 
     private String nom;
