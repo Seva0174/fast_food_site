@@ -83,8 +83,10 @@
     - [x]  Ajouter un catalogue csv
     - [x]  suivie des commandes fournisseur (avec changement de status)
     - [x]  Voir détail des commandes fournisseurs
-- [ ]  Sous page stocks et composition produit de la carte
-    - [ ]  Afficher les matieres premieres +quantité en stock
+- [x]  Sous page stocks et composition produit de la carte
+    - [x]  Afficher les matieres premieres +quantité en stock
+    - [x]  ajouter/supprimer une matiere premiere
+    - [x]  Securiser la supression par rapport au catalogue ou carte des produits ou commandes fournisseur
 - [x]  Sous page Statistique :
     - [x]  Chiffres d’affaire
     - [x]  nombre de commande selon jour ou semaine
@@ -119,9 +121,7 @@
 
 ## A faire :
 
-- Ajouter l'onglet des stocks
-- Ajuster la mesure des ingrédient dans une recette selon l’ingredient
-- Finir fonctionnalité  Admin
+- Ajuster la mesure des ingrédient dans une recette selon l’ingredient sur la page d’ajoute de produit a la carte, catalogue …
 - Corriger les bug :
     - problème de token user au lieu de token email ?
     - Bug du calcul du CA ?

@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { VueStatistiques } from '../components/VueStatistiques';
 import { VueCarteAdmin } from '../components/VueCarteAdmin';
-import { VueCommandesAdmin } from '../components/VueCommandesAdmin';
 import { VueStockAdmin } from '../components/VueStockAdmin';
 import { VuePersonnel } from '../components/VuePersonnel';
 
@@ -34,16 +33,6 @@ export function AdminPage() {
             Carte & Produits
           </button>
           <button
-            onClick={() => setOngletActif('commandes')}
-            className={`py-2 px-4 border-b-2 font-medium text-sm transition-colors ${
-              ongletActif === 'commandes'
-                ? 'border-red-500 text-red-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            Commandes
-          </button>
-          <button
             onClick={() => setOngletActif('stock')}
             className={`py-2 px-4 border-b-2 font-medium text-sm transition-colors ${
               ongletActif === 'stock'
@@ -68,7 +57,6 @@ export function AdminPage() {
         {/* Rendu des vues isolées */}
         {ongletActif === 'statistiques' && <VueStatistiques />}
         {ongletActif === 'carte' && <VueCarteAdmin />}
-        {ongletActif === 'commandes' && <VueCommandesAdmin />}
         {ongletActif === 'stock' && <VueStockAdmin />}
         {ongletActif === 'personnel' && <VuePersonnel />}
       </div>

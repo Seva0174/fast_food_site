@@ -1,3 +1,4 @@
+import { VueStockActuel } from './VueStockActuel';
 import { useState, useEffect, useCallback } from 'react';
 import { adminApi } from '../api/adminApi';
 import { Truck, Upload, Plus, Minus, Trash2, CheckCircle2, AlertCircle, ShoppingCart, Eye, X } from 'lucide-react';
@@ -229,6 +230,14 @@ export function VueStockAdmin() {
             }`}
           >
             Fournisseurs & Commandes
+          </button>
+          <button
+            onClick={() => setSousOnglet('stocks_actuels')}
+            className={`px-4 py-1.5 text-xs font-semibold rounded-md transition ${
+              sousOnglet === 'stocks_actuels' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            Stocks actuels
           </button>
         </div>
       </div>
@@ -526,6 +535,10 @@ export function VueStockAdmin() {
             </div>
           </div>
         </div>
+      )}
+
+      {sousOnglet === 'stocks_actuels' && (
+        <VueStockActuel />
       )}
     </div>
   );

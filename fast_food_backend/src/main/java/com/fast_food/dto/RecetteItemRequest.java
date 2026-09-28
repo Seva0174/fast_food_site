@@ -13,4 +13,6 @@ public class RecetteItemRequest {
     @NotNull
     @Positive
     private BigDecimal quantiteRequise;
+
+    private String uniteMesure;
 }

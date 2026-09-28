@@ -229,8 +229,53 @@ public class ApprovisionnementService {
                 .collect(Collectors.toList());
     }
 
+    //   ---- STOCK -----
+
     @Transactional(readOnly = true)
     public List<StockMatierePremiere> getAllMatieresPremieres() {
         return stockMatierePremiereRepository.findAll();
+    }
+
+    @Transactional
+    public StockMatierePremiere modifierStock(Long id, BigDecimal nouvelleQuantite, String uniteMesure) {
+        StockMatierePremiere stock = stockMatierePremiereRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Matière première introuvable avec l'ID : " + id));
+        
+        if (nouvelleQuantite != null) {
+            stock.setQuantite(nouvelleQuantite);
+        }
+        if (uniteMesure != null && !uniteMesure.isBlank()) {
+            stock.setUniteMesure(uniteMesure);
+        }
+        return stockMatierePremiereRepository.save(stock);
+    }
+
+    // Ajouter en fin de classe dans ApprovisionnementService.java
+
+    @Transactional
+    public StockMatierePremiere creerMatierePremiere(CreerMatierePremiereRequest request) {
+        if (stockMatierePremiereRepository.findByNomIgnoreCase(request.getNom()).isPresent()) {
+            throw new IllegalArgumentException("Une matière première avec ce nom existe déjà.");
+        }
+
+        StockMatierePremiere matiere = new StockMatierePremiere();
+        matiere.setNom(request.getNom().trim());
+        matiere.setQuantite(request.getQuantite());
+        matiere.setUniteMesure(request.getUniteMesure() != null ? request.getUniteMesure() : "unite");
+
+        return stockMatierePremiereRepository.save(matiere);
+    }
+
+    @Transactional
+    public void supprimerMatierePremiere(Long id) {
+        StockMatierePremiere matiere = stockMatierePremiereRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Matière première introuvable avec l'ID : " + id));
+
+        try {
+            stockMatierePremiereRepository.delete(matiere);
+            stockMatierePremiereRepository.flush(); // Force l'exécution du DELETE SQL immédiatement pour intercepter les exceptions FK
+        } catch (org.springframework.dao.DataIntegrityViolationException e) {
+            throw new IllegalArgumentException("Impossible de supprimer cette matière première car elle est liée à des recettes ou à des commandes d'achat.");
+        }
     }
 }

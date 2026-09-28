@@ -38,8 +38,9 @@ CREATE TABLE categorie (
 
 CREATE TABLE stock_matiere_premiere (
     id          BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    nom         VARCHAR(150) NOT NULL,
-    quantite    NUMERIC(12,3) NOT NULL DEFAULT 0  
+    nom         VARCHAR(150) NOT NULL UNIQUE,
+    quantite    NUMERIC(12,3) NOT NULL DEFAULT 0,
+    unite_mesure VARCHAR(20) NOT NULL DEFAULT 'unite'
 );
 
 CREATE TABLE fournisseur (

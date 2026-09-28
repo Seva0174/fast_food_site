@@ -14,7 +14,10 @@ export const adminApi = {
 
   // Matières Premières / Stock
   getMatieresPremieres: () => api.get('/admin/approvisionnement/matieres-premieres'),
-
+  creerMatierePremiere: (data) => api.post('/admin/approvisionnement/matieres-premieres', data),
+  modifierStock: (id, data) => api.put(`/admin/approvisionnement/matieres-premieres/${id}`, data),
+  supprimerMatierePremiere: (id) => api.delete(`/admin/approvisionnement/matieres-premieres/${id}`),
+  
   getCatalogueFournisseur: (idFournisseur) => api.get(`/admin/approvisionnement/fournisseurs/${idFournisseur}/catalogue`),
   uploadCatalogueCsv: (idFournisseur, file) => {
     const formData = new FormData();

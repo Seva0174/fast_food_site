@@ -8,4 +8,5 @@ public class RecetteItemResponse {
     private Long idMatiere;
     private String nomMatiere;
     private BigDecimal quantiteRequise;
+    private String uniteMesure;
 }

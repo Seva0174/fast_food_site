@@ -1,6 +1,5 @@
 -- =====================================================================
 -- UTILISATEURS
--- Mots de passe stockés en clair ici uniquement pour la démo :
 -- =====================================================================
 INSERT INTO users (email, mdp, nom, role, est_verif, date_creation) VALUES
 ('admin@tacoburger.fr',     '$2a$10$TOccMYVM3IdwUaMat/lMnuYqFKGipUGpNuUxdQjB82TxzvfWmilzO', 'Amine Belkacem', 'admin',   TRUE, '2025-01-10 09:00:00'), 
@@ -10,12 +9,13 @@ INSERT INTO users (email, mdp, nom, role, est_verif, date_creation) VALUES
 ('karim.said@tacoburger.fr','$2a$10$TOccMYVM3IdwUaMat/lMnuYqFKGipUGpNuUxdQjB82TxzvfWmilzO', 'Karim Saidi',    'employe', TRUE, '2025-01-15 08:00:00'),
 ('lea.fontaine@tacoburger.fr', '$2a$10$TOccMYVM3IdwUaMat/lMnuYqFKGipUGpNuUxdQjB82TxzvfWmilzO', 'Léa Fontaine', 'employe', TRUE, '2025-01-20 08:00:00'), 
 ('nabil.kaced@tacoburger.fr',  '$2a$10$TOccMYVM3IdwUaMat/lMnuYqFKGipUGpNuUxdQjB82TxzvfWmilzO', 'Nabil Kaced',  'employe', TRUE, '2025-01-10 08:00:00');
+
 -- =====================================================================
 -- ADRESSES
 -- =====================================================================
 INSERT INTO adresse (id_user, rue, ville, code_postal) VALUES
-(2, '12 rue des Lilas',        'Lyon',    '69000'),
-(3, '5 avenue de la République','Villeurbanne', '69100'),
+(2, '12 rue des Lilas',        'Lyon',             '69000'),
+(3, '5 avenue de la République','Villeurbanne',     '69100'),
 (4, '3 impasse du Marché',     'Décines-Charpieu', '69150');
 
 -- =====================================================================
@@ -69,21 +69,21 @@ INSERT INTO produit_menu (id_categorie, description, prix, image_url, nom, est_d
 -- =====================================================================
 -- MATIÈRES PREMIÈRES EN STOCK
 -- =====================================================================
-INSERT INTO stock_matiere_premiere (nom, quantite) VALUES
-('Galette tacos',            300.000),
-('Pain burger',               250.000),
-('Steak haché 150g',          180.000),
-('Filet de poulet',           220.000),
-('Ailes de poulet',           400.000),
-('Cheddar (tranches)',        500.000),
-('Sauce fromagère (L)',       25.000),
-('Sauce BBQ (L)',             18.000),
-('Sauce buffalo (L)',         15.000),
-('Pommes de terre (kg)',      150.000),
-('Salade (kg)',               20.000),
-('Tomates (kg)',              25.000),
-('Oignons (kg)',              20.000),
-('Bacon (kg)',                 30.000);
+INSERT INTO stock_matiere_premiere (nom, quantite, unite_mesure) VALUES
+('Galette tacos',            300.000, 'unite'),
+('Pain burger',               250.000, 'unite'),
+('Steak haché 150g',          180.000, 'unite'),
+('Filet de poulet',           220.000, 'kg'),
+('Ailes de poulet',           400.000, 'kg'),
+('Cheddar (tranches)',        500.000, 'tranche'),
+('Sauce fromagère (L)',       25.000,  'L'),
+('Sauce BBQ (L)',             18.000,  'L'),
+('Sauce buffalo (L)',         15.000,  'L'),
+('Pommes de terre (kg)',      150.000, 'kg'),
+('Salade (kg)',               20.000,  'kg'),
+('Tomates (kg)',              25.000,  'kg'),
+('Oignons (kg)',              20.000,  'kg'),
+('Bacon (kg)',                 30.000,  'kg');
 
 -- =====================================================================
 -- FOURNISSEURS
@@ -94,13 +94,12 @@ INSERT INTO fournisseur (nom) VALUES
 ('Sysco France');
 
 -- =====================================================================
--- CATALOGUE FOURNISSEUR (prix proposé par chaque fournisseur pour chaque
--- matière première)
+-- CATALOGUE FOURNISSEUR
 -- =====================================================================
 INSERT INTO catalogue_fournisseur (id_fournisseur, id_stock, prix_unitaire) VALUES
 (1, 1,  0.35),  -- Metro - Galette tacos
-(1, 10, 0.90),  -- Metro - Pommes de terre (kg)
-(1, 11, 1.80),  -- Metro - Salade (kg)
+(1, 10, 0.90),  -- Metro - Pommes de terre
+(1, 11, 1.80),  -- Metro - Salade
 (2, 3,  6.50),  -- Boucherie - Steak haché
 (2, 4,  7.20),  -- Boucherie - Filet de poulet
 (2, 5,  5.90),  -- Boucherie - Ailes de poulet
@@ -112,7 +111,7 @@ INSERT INTO catalogue_fournisseur (id_fournisseur, id_stock, prix_unitaire) VALU
 (3, 9,  3.50);  -- Sysco - Sauce buffalo
 
 -- =====================================================================
--- RECETTES (matières premières nécessaires pour chaque produit du menu)
+-- RECETTES
 -- =====================================================================
 INSERT INTO recette (id_produit, id_matiere, quantite_requise) VALUES
 -- Tacos Simple (produit 1)
@@ -153,55 +152,34 @@ INSERT INTO panier_items (id_panier, id_produit, quantite) VALUES
 (2, 9, 1);   -- Thomas : 1 Wings Party
 
 -- =====================================================================
--- COMMANDES CLIENTS (historique)
--- =====================================================================
--- =====================================================================
--- COMMANDES CLIENTS (historique)
+-- COMMANDES CLIENTS
 -- =====================================================================
 INSERT INTO commandes (id_user, type_retrait, status, cp_rue, cp_ville, cp_code_postal, total, date_creation) VALUES
 -- Commande en Livraison
 (2, 'livraison',        'livree',        '12 rue des Lilas',          'Lyon',              '69000', 15.00, '2025-07-10 19:32:00'),
 (3, 'livraison',        'en_preparation','5 avenue de la République', 'Villeurbanne',      '69100', 23.90, '2025-08-01 20:05:00'),
 
--- Commande en Click & Collect (Pas d'adresse requise -> NULL)
+-- Commande en Click & Collect
 (4, 'click_and_collect','en_attente',    NULL,                        NULL,                NULL,    12.90, '2025-08-02 12:10:00'),
 (2, 'click_and_collect','retiree',       NULL,                        NULL,                NULL,    9.50,  '2025-08-02 18:30:00');
 
 INSERT INTO commandes_menu (id_commande, id_produit, quantite, prix) VALUES
--- commande 1 (Julie - Livraison) : 1 Tacos Double + 1 Soda + 1 Frites
+-- commande 1 (Julie - Livraison)
 (1, 2, 1, 9.50),
 (1, 12, 1, 2.00),
 (1, 11, 1, 3.50),
 
--- commande 2 (Thomas - Livraison) : 1 Bacon Cheese Burger + 1 Wings Buffalo + 1 Soda + 1 Frites
+-- commande 2 (Thomas - Livraison)
 (2, 5, 1, 11.90),
 (2, 8, 1, 6.50),
 (2, 12, 1, 2.00),
 (2, 11, 1, 3.50),
 
--- commande 3 (Sofia - Click & Collect) : 1 Tacos XXL
+-- commande 3 (Sofia - Click & Collect)
 (3, 3, 1, 12.90),
 
--- commande 4 (Julie - Click & Collect retirée) : 1 Tacos Double
-(4, 2, 1, 9.50)
-ON CONFLICT DO NOTHING;
-
-
-INSERT INTO commandes_menu (id_commande, id_produit, quantite, prix) VALUES
--- commande 1 (Julie) : 1 Tacos Double + 1 Soda
-(1, 2, 1, 9.50),
-(1, 12, 1, 2.00),
-(1, 11, 1, 3.50),
--- commande 2 (Thomas) : 1 Bacon Cheese Burger + 1 Wings Buffalo + 1 Soda
-(2, 5, 1, 11.90),
-(2, 8, 1, 6.50),
-(2, 12, 1, 2.00),
-(2, 11, 1, 3.50) -- ajustement + frites
-ON CONFLICT DO NOTHING;
-
-INSERT INTO commandes_menu (id_commande, id_produit, quantite, prix) VALUES
--- commande 3 (Sofia) : 1 Tacos XXL
-(3, 3, 1, 12.90);
+-- commande 4 (Julie - Click & Collect retirée)
+(4, 2, 1, 9.50);
 
 -- =====================================================================
 -- EMPLOYÉS ET HEURES TRAVAILLÉES
@@ -218,7 +196,7 @@ INSERT INTO employe_heure (id_employe, nb_heure, date) VALUES
 (3, 9.0, '2025-08-01');
 
 -- =====================================================================
--- COMMANDES FOURNISSEURS (réapprovisionnement)
+-- COMMANDES FOURNISSEURS
 -- =====================================================================
 INSERT INTO commandes_fournisseurs (id_fournisseur, date_commande, date_reception, status) VALUES
 (2, '2025-07-28', '2025-07-30', 'recue'),

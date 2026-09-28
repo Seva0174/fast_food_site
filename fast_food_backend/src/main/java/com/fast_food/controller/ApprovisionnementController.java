@@ -90,4 +90,22 @@ public class ApprovisionnementController {
     public ResponseEntity<List<StockMatierePremiere>> getAllMatieresPremieres() {
         return ResponseEntity.ok(approvisionnementService.getAllMatieresPremieres());
     }
+
+    @PutMapping("/matieres-premieres/{id}")
+    public ResponseEntity<StockMatierePremiere> modifierStock(
+            @PathVariable Long id,
+            @Valid @RequestBody ModifierStockRequest request) {
+        return ResponseEntity.ok(approvisionnementService.modifierStock(id, request.getQuantite(), request.getUniteMesure()));
+    }
+
+    @PostMapping("/matieres-premieres")
+    public ResponseEntity<StockMatierePremiere> creerMatierePremiere(@Valid @RequestBody CreerMatierePremiereRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(approvisionnementService.creerMatierePremiere(request));
+    }
+
+    @DeleteMapping("/matieres-premieres/{id}")
+    public ResponseEntity<Void> supprimerMatierePremiere(@PathVariable Long id) {
+        approvisionnementService.supprimerMatierePremiere(id);
+        return ResponseEntity.noContent().build();
+    }
 }

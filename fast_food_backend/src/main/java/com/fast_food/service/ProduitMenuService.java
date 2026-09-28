@@ -109,6 +109,12 @@ public class ProduitMenuService {
                 StockMatierePremiere matiere = stockMatierePremiereRepository.findById(item.getIdMatiere())
                         .orElseThrow(() -> new ResourceNotFoundException("Matière première introuvable : " + item.getIdMatiere()));
 
+                // Mise à jour de l'unité de mesure si spécifiée dans la requête
+                if (item.getUniteMesure() != null && !item.getUniteMesure().isBlank()) {
+                    matiere.setUniteMesure(item.getUniteMesure());
+                    stockMatierePremiereRepository.save(matiere);
+                }
+
                 Recette r = new Recette();
                 r.setProduitMenu(produit);
                 r.setMatierePremiere(matiere);
@@ -128,6 +134,7 @@ public class ProduitMenuService {
             item.setIdMatiere(r.getMatierePremiere().getId());
             item.setNomMatiere(r.getMatierePremiere().getNom());
             item.setQuantiteRequise(r.getQuantiteRequise());
+            item.setUniteMesure(r.getMatierePremiere().getUniteMesure());
             return item;
         }).collect(Collectors.toList());
 
