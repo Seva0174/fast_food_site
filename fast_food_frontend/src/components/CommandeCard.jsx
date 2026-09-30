@@ -17,6 +17,7 @@ const STATUTS_RETRAIT = [
 ];
 
 export const CommandeCard = ({ commande, onChangerStatut, onVoirDetail, enCours }) => {
+  console.log("Commande reçue :", commande);
   const isClickAndCollect =
     commande.typeRetrait === 'click_and_collect' ||
     commande.type_retrait === 'click_and_collect';
@@ -57,7 +58,7 @@ export const CommandeCard = ({ commande, onChangerStatut, onVoirDetail, enCours 
 
         <div className="text-xs text-gray-600 mt-2 space-y-1">
           <p className="font-semibold text-gray-800">
-            Client : {commande.nomClient || commande.userEmail || `ID User: ${commande.id_user || ''}`}
+            Client : {commande.nomClient || commande.userEmail || 'Inconnu'}
           </p>
           <p>{nbArticles} article(s) • Total : <span className="font-bold text-red-600">{Number(commande.total).toFixed(2)} €</span></p>
         </div>

@@ -11,13 +11,10 @@ import {
   Store 
 } from 'lucide-react';
 
-const TOUS_LES_STATUTS = [
+const STATUTS_EN_COURS = [
   { value: 'en_attente', label: 'En attente' },
   { value: 'en_preparation', label: 'En préparation' },
   { value: 'prete', label: 'Prête' },
-  { value: 'livree', label: 'Livrée' },
-  { value: 'retiree', label: 'Retirée' },
-  { value: 'annulee', label: 'Annulée' },
 ];
 
 export const AdminGestionCommandes = () => {
@@ -26,8 +23,8 @@ export const AdminGestionCommandes = () => {
   const [erreur, setErreur] = useState('');
   const [commandeSelectionnee, setCommandeSelectionnee] = useState(null);
 
-  // Filtres & Tri
-  const [filtreStatut, setFiltreStatut] = useState('tous');
+  // Filtres & Tri (Par défaut: "en_cours")
+  const [filtreStatut, setFiltreStatut] = useState('en_cours');
   const [filtreTypeRetrait, setFiltreTypeRetrait] = useState('tous');
   const [ordreTri, setOrdreTri] = useState('desc');
   const [recherche, setRecherche] = useState('');
@@ -67,11 +64,39 @@ export const AdminGestionCommandes = () => {
     }
   };
 
+  const estCommandeEnCours = (commande) => {
+    const type = commande.typeRetrait || commande.type_retrait;
+    const statut = commande.status;
+
+    if (type === 'click_and_collect') {
+      return statut !== 'annulee' && statut !== 'retiree';
+    } else if (type === 'livraison') {
+      return statut !== 'annulee' && statut !== 'livree';
+    }
+    return statut !== 'annulee' && statut !== 'livree' && statut !== 'retiree';
+  };
+
+  const estCommandeTerminee = (commande) => {
+    return ['annulee', 'livree', 'retiree'].includes(commande.status);
+  };
+
   const commandesTraitees = commandes
     .filter((commande) => {
-      const matchStatut = filtreStatut === 'tous' || commande.status === filtreStatut;
+      // Filtrage par Statut
+      let matchStatut = false;
+      if (filtreStatut === 'en_cours') {
+        matchStatut = estCommandeEnCours(commande);
+      } else if (filtreStatut === 'terminees') {
+        matchStatut = estCommandeTerminee(commande);
+      } else {
+        matchStatut = commande.status === filtreStatut;
+      }
+
+      // Filtrage par Type de retrait
       const type = commande.typeRetrait || commande.type_retrait;
       const matchType = filtreTypeRetrait === 'tous' || type === filtreTypeRetrait;
+
+      // Filtrage par Recherche
       const matchRecherche =
         commande.id.toString().includes(recherche) ||
         commande.userEmail?.toLowerCase().includes(recherche.toLowerCase()) ||
@@ -84,6 +109,10 @@ export const AdminGestionCommandes = () => {
       const dateB = new Date(b.dateCreation || b.date_creation).getTime();
       return ordreTri === 'desc' ? dateB - dateA : dateA - dateB;
     });
+
+  // Compteurs pour les badges des filtres
+  const totalEnCours = commandes.filter(estCommandeEnCours).length;
+  const totalTerminees = commandes.filter(estCommandeTerminee).length;
 
   return (
     <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
@@ -167,19 +196,24 @@ export const AdminGestionCommandes = () => {
           </div>
         </div>
 
+        {/* Boutons de Filtres par statut */}
         <div className="flex items-center gap-2 overflow-x-auto pt-2 border-t border-gray-100 pb-1">
           <Filter className="w-4 h-4 text-gray-400 shrink-0" />
+          
+          {/* 1. Bouton "En cours" (Actif par défaut) */}
           <button
-            onClick={() => setFiltreStatut('tous')}
+            onClick={() => setFiltreStatut('en_cours')}
             className={`px-3 py-1.5 text-xs font-semibold rounded-full whitespace-nowrap transition ${
-              filtreStatut === 'tous'
+              filtreStatut === 'en_cours'
                 ? 'bg-red-600 text-white'
                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             }`}
           >
-            Tous ({commandes.length})
+            En cours ({totalEnCours})
           </button>
-          {TOUS_LES_STATUTS.map((st) => {
+
+          {/* 2. Statuts spécifiques actifs */}
+          {STATUTS_EN_COURS.map((st) => {
             const count = commandes.filter((c) => c.status === st.value).length;
             return (
               <button
@@ -195,6 +229,18 @@ export const AdminGestionCommandes = () => {
               </button>
             );
           })}
+
+          {/* 3. Bouton regroupé "Terminées" (Annulées, Livrées, Retirées) */}
+          <button
+            onClick={() => setFiltreStatut('terminees')}
+            className={`px-3 py-1.5 text-xs font-semibold rounded-full whitespace-nowrap transition ${
+              filtreStatut === 'terminees'
+                ? 'bg-red-600 text-white'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
+          >
+            Terminées / Historique ({totalTerminees})
+          </button>
         </div>
       </div>
 

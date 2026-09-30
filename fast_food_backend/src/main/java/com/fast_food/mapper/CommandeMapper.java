@@ -44,8 +44,11 @@ public class CommandeMapper {
 
         CommandeResponse response = new CommandeResponse();
         response.setId(commande.getId());
-        
-        if (commande.getTypeRetrait() != null) {
+
+        if (commande.getUser() != null) {
+            response.setNomClient(commande.getUser().getNom());
+        }
+            if (commande.getTypeRetrait() != null) {
             response.setTypeRetrait(commande.getTypeRetrait().name());
         }
         

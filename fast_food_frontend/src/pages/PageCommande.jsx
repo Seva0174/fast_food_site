@@ -234,7 +234,7 @@ export const PageCommande = () => {
             </div>
           ) : (
             <div className="p-4 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-600 text-center">
-              📍 **Retrait en restaurant** : Vous viendrez récupérer votre commande directement au comptoir une fois qu'elle sera marquée comme "Prête".
+                **Retrait en restaurant** : Vous viendrez récupérer votre commande directement au comptoir une fois qu'elle sera marquée comme "Prête".
             </div>
           )}
 
