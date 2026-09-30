@@ -213,8 +213,12 @@ public class CommandeService {
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException("Statut invalide : " + request.getStatus());
         }
-
         Commande commandeSauvegardee = commandeRepository.save(commande);
+
+        if (commandeSauvegardee.getStatus() == Commande.Status.prete) {
+            emailService.envoyerMailChangementStatut(commandeSauvegardee);
+        }
+
         return commandeMapper.toResponse(commandeSauvegardee);
     }
 }

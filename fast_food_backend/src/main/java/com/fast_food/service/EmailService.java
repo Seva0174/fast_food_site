@@ -78,4 +78,43 @@ public class EmailService {
             System.err.println("Échec de l'envoi de la confirmation de commande : " + e.getMessage());
         }
     }
+
+    @Async
+    public void envoyerMailChangementStatut(Commande commande) {
+        if (commande.getUser() == null || commande.getUser().getEmail() == null) {
+            return;
+        }
+
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, false, "UTF-8");
+
+            helper.setTo(commande.getUser().getEmail());
+            
+            String sujet = "";
+            String contenuHtml = "";
+
+            // Personnalisation selon le type de retrait et le statut
+            if (commande.getTypeRetrait() == Commande.TypeRetrait.click_and_collect) {
+                sujet = "Votre commande #" + commande.getId() + " est prête !";
+                contenuHtml = "<h2>Bonne nouvelle !</h2>"
+                        + "<p>Votre commande en <strong>Click & Collect</strong> numéro <strong>#" + commande.getId() + "</strong> est désormais <strong>prête à être récupérée</strong> en restaurant.</p>"
+                        + "<p>À très bientôt chez Fast Food !</p>";
+            } else if (commande.getTypeRetrait() == Commande.TypeRetrait.livraison) {
+                sujet = "Votre commande #" + commande.getId() + " est en cours de livraison !";
+                contenuHtml = "<h2>Livraison de votre commande en cours !</h2>"
+                        + "<p>Votre commande numéro <strong>#" + commande.getId() + "</strong>. est en cours de livraison a votre adresse suivante: </p>"
+                        + "<p>" + commande.getCpRue() + ", " + commande.getCpCodePostal() + " " + commande.getCpVille() + "</p>";
+            }
+
+            if (!sujet.isEmpty()) {
+                helper.setSubject(sujet);
+                helper.setText(contenuHtml, true);
+                mailSender.send(message);
+            }
+
+        } catch (MessagingException e) {
+            System.err.println("Échec de l'envoi de l'e-mail de statut pour la commande #" + commande.getId() + " : " + e.getMessage());
+        }
+    }
 }

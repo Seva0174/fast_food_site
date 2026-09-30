@@ -4,6 +4,7 @@
 - Système de compte via par **mail** (avec verif du mail)
 - Commander :
     - confirmation d'une commande envoie par mail
+    - mail quand la commande est prete ou en cours de livraison
 - commande **Click & collect** ou **Livraison**
 - Gestion des stocks avec gestion des **épuisement**
 - Adaptation du site **mobile** et **PC**
@@ -108,6 +109,7 @@
 - [x]  afficher les commandes
 - [x]  modifier le status de la commande
 - [x]  Donné l’accès au admin
+- [x]  envoyer un mail quand une commande est recupérable ou en cours de livraison
 
 ## Tecno:
 
@@ -121,19 +123,21 @@
 
 ## A faire :
 
-- Ajuster la mesure des ingrédient dans une recette selon l’ingredient sur la page d’ajoute de produit a la carte, catalogue …
+- Enlever les commande deja faite dans le panel de commandes
 - Corriger les bug :
     - problème de token user au lieu de token email ?
+    - Ajouter le nom du User sur les carte de commande dans “/commandes”
     - Bug du calcul du CA ?
+    - le préremplissage de l’adresse fonctionne pas entre “/user” et “/commander”
     - bug sur la quantité des produits a la validation d’une commande ?
     - bug sur la modification du nombre de produit du panier dans la page commande
     - crash d’application quand token user expire
     - Problème d’historique des commande user ?
     - bug produit dans le panier puis supprimer de la carte produit puis passer la commande ?
     - bug lors de creation de compte qui est entre employé ou admin
-    - verifier le systeme de changement de status de commande
+    - Verification des stats de vente des produits (attention au commande annulation → decrementation ?)
 - Tester toute les fonctionnalités pour trouver les bug
-- Rendre plus beau le front et factoriser en composant reutilisable
+- Rendre plus beau le front et factoriser le fronten composant réutilisable
 - Docker
 
 ## Plan
