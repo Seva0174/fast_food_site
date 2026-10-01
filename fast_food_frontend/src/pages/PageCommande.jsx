@@ -1,4 +1,4 @@
-import { useState, useContext } from 'react';
+import { useState, useContext,useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { ContextePanier } from '../context/ContextePanier';
 import { AuthContext } from '../context/AuthProvider';
@@ -10,6 +10,25 @@ export const PageCommande = () => {
     useContext(ContextePanier);
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
+
+  // Préremplissage automatique de l'adresse enregistrée depuis LocalStorage
+  useEffect(() => {
+    if (user?.id) {
+      const savedAdresse = localStorage.getItem(`adresse_user_${user.id}`);
+      if (savedAdresse) {
+        try {
+          const parsedAdresse = JSON.parse(savedAdresse);
+          setAdresse({
+            cpRue: parsedAdresse.rue || '',
+            cpVille: parsedAdresse.ville || '',
+            cpCodePostal: parsedAdresse.codePostal || '',
+          });
+        } catch (err) {
+          console.error("Erreur de lecture de l'adresse enregistrée:", err);
+        }
+      }
+    }
+  }, [user]);
 
   const [typeRetrait, setTypeRetrait] = useState('livraison'); // 'livraison' ou 'click_and_collect'
   const [adresse, setAdresse] = useState({
@@ -83,7 +102,7 @@ export const PageCommande = () => {
           <div className="text-center py-8">
             <p className="text-gray-500 mb-4">Votre panier est actuellement vide.</p>
             <Link to="/" className="text-yellow-600 font-semibold hover:underline">
-              ← Retourner au menu
+              Retourner au menu
             </Link>
           </div>
         ) : (

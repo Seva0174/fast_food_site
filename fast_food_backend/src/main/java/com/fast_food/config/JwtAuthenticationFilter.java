@@ -58,9 +58,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                             ? Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role))
                             : Collections.<SimpleGrantedAuthority>emptyList();
 
-                    // Le principal est désormais l'entité User elle-même (et non l'email),
-                    // ce qui permet d'utiliser @AuthenticationPrincipal User dans les contrôleurs
-                    // sans que Spring Security ne renvoie null silencieusement.
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                             user,
                             null,

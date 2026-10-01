@@ -123,21 +123,14 @@
 
 ## A faire :
 
-- Enlever les commande deja faite dans le panel de commandes
 - Corriger les bug :
-    - problème de token user au lieu de token email ?
-    - Ajouter le nom du User sur les carte de commande dans “/commandes”
-    - Bug du calcul du CA ?
-    - le préremplissage de l’adresse fonctionne pas entre “/user” et “/commander”
-    - bug sur la quantité des produits a la validation d’une commande ?
-    - bug sur la modification du nombre de produit du panier dans la page commande
-    - crash d’application quand token user expire
-    - Problème d’historique des commande user ?
+    - crash d’application (voir log spring) quand token user expire
     - bug produit dans le panier puis supprimer de la carte produit puis passer la commande ?
-    - bug lors de creation de compte qui est entre employé ou admin
+    - bug lors de création de compte qui est entre employé ou admin
+    - bug sur la quantité des produits a la validation d’une commande ?
     - Verification des stats de vente des produits (attention au commande annulation → decrementation ?)
 - Tester toute les fonctionnalités pour trouver les bug
-- Rendre plus beau le front et factoriser le fronten composant réutilisable
+- Rendre plus beau le front et factoriser le fronted composant réutilisable
 - Docker
 
 ## Plan

@@ -16,7 +16,7 @@ const CLE_PANIER_INVITE = 'panier_invite';
 const mapPanierResponse = (panierResponse) => {
   if (!panierResponse || !panierResponse.items) return [];
   return panierResponse.items.map((item) => ({
-    id: item.id, // id de la ligne panier_items (utilisateur connecté uniquement)
+    id: item.id, // id de la ligne panier_items
     produitId: item.produitId,
     nom: item.nomProduit,
     prix: item.prixUnitaire,
@@ -37,19 +37,15 @@ export const FournisseurPanier = ({ children }) => {
   const dejaSynchronise = useRef(false);
   const etaitAuthentifie = useRef(isAuthenticated);
 
-  // Connexion (ou arrivée sur le site déjà connecté) : fusionne le panier invité
-  // avec celui du backend, une seule fois.
+  // Charger ou synchroniser le panier au statut connecté
   useEffect(() => {
     if (isAuthenticated && !dejaSynchronise.current) {
       dejaSynchronise.current = true;
-      synchroniserPanierInvite();
+      chargerOuSynchroniserPanier();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated]);
 
-  // Déconnexion : on efface tout panier précédent (invité ou backend) et on
-  // repart d'un panier invité vide. Ne se déclenche que sur une vraie transition
-  // connecté -> déconnecté, jamais au premier rendu.
+  // Réinitialisation lors de la déconnexion
   useEffect(() => {
     if (!isAuthenticated && etaitAuthentifie.current) {
       localStorage.removeItem(CLE_PANIER_INVITE);
@@ -59,57 +55,83 @@ export const FournisseurPanier = ({ children }) => {
     etaitAuthentifie.current = isAuthenticated;
   }, [isAuthenticated]);
 
-  const synchroniserPanierInvite = async () => {
+  const chargerOuSynchroniserPanier = async () => {
     setChargement(true);
     try {
       const panierInvite = chargerPanierInviteLocal();
-      localStorage.removeItem(CLE_PANIER_INVITE);
+      
+      if (panierInvite.length > 0) {
+        // Fusionner le panier invité vers le backend
+        localStorage.removeItem(CLE_PANIER_INVITE);
+        let panierBackend = mapPanierResponse(await getPanierApi());
 
-      let panierBackend = mapPanierResponse(await getPanierApi());
-
-      for (const item of panierInvite) {
-        panierBackend = mapPanierResponse(
-          await ajouterProduitApi(item.produitId, item.quantite)
-        );
+        for (const item of panierInvite) {
+          panierBackend = mapPanierResponse(
+            await ajouterProduitApi(item.produitId, item.quantite)
+          );
+        }
+        setPanier(panierBackend);
+      } else {
+        // Récupérer le panier existant depuis le backend
+        const res = await getPanierApi();
+        setPanier(mapPanierResponse(res));
       }
-
-      setPanier(panierBackend);
     } catch (error) {
-      console.error('Erreur lors de la synchronisation du panier invité :', error);
+      console.error('Erreur lors du chargement/synchronisation du panier :', error);
     } finally {
       setChargement(false);
     }
   };
 
-  // Ajoute un produit au panier (ou augmente sa quantité si déjà présent)
-  const ajouterAuPanier = async (produit) => {
+  // Ajoute un produit au panier ou incrémente sa quantité
+  const ajouterAuPanier = async (produitOuId) => {
+    // Extraire l'id du produit selon le type de paramètre transmis
+    let produitId = null;
+    let itemId = null;
+
+    if (typeof produitOuId === 'object' && produitOuId !== null) {
+      produitId = produitOuId.produitId || produitOuId.id;
+      itemId = produitOuId.id;
+    } else {
+      produitId = produitOuId;
+    }
+
     if (isAuthenticated) {
       try {
-        const data = await ajouterProduitApi(produit.id, 1);
-        setPanier(mapPanierResponse(data));
+        // Recherche si l'élément fait déjà partie du panier en état React
+        const itemExistant = panier.find(
+          (i) => i.id === itemId || i.produitId === produitId
+        );
+
+        let res;
+        if (itemExistant) {
+          res = await modifierQuantiteApi(itemExistant.id, itemExistant.quantite + 1);
+        } else {
+          res = await ajouterProduitApi(produitId, 1);
+        }
+        setPanier(mapPanierResponse(res));
       } catch (error) {
         console.error("Erreur lors de l'ajout au panier :", error);
       }
       return;
     }
 
-    // Mode invité : mise à jour du state ET persistance dans le même geste,
-    // jamais via un effet réactif (pour éviter toute course avec la déconnexion).
+    // Mode invité
     setPanier((prev) => {
-      const existant = prev.find((item) => item.produitId === produit.id);
+      const existant = prev.find((item) => item.produitId === produitId);
       const nouveau = existant
         ? prev.map((item) =>
-            item.produitId === produit.id
+            item.produitId === produitId
               ? { ...item, quantite: item.quantite + 1 }
               : item
           )
         : [
             ...prev,
             {
-              id: produit.id,
-              produitId: produit.id,
-              nom: produit.nom,
-              prix: produit.prix,
+              id: produitId,
+              produitId: produitId,
+              nom: produitOuId.nom || 'Produit',
+              prix: produitOuId.prix || 0,
               quantite: 1,
             },
           ];
@@ -118,17 +140,19 @@ export const FournisseurPanier = ({ children }) => {
     });
   };
 
-  // Diminue la quantité d'un item, ou le retire si la quantité tombe à 0
+  // Diminue la quantité d'un item ou le retire si quantite <= 1
   const retirerDuPanier = async (itemId) => {
-    const item = panier.find((i) => i.id === itemId);
+    const item = panier.find((i) => i.id === itemId || i.produitId === itemId);
     if (!item) return;
+
+    const targetId = item.id;
 
     if (isAuthenticated) {
       try {
         const data =
           item.quantite <= 1
-            ? await supprimerItemApi(itemId)
-            : await modifierQuantiteApi(itemId, item.quantite - 1);
+            ? await supprimerItemApi(targetId)
+            : await modifierQuantiteApi(targetId, item.quantite - 1);
         setPanier(mapPanierResponse(data));
       } catch (error) {
         console.error('Erreur lors de la mise à jour du panier :', error);
@@ -139,9 +163,9 @@ export const FournisseurPanier = ({ children }) => {
     setPanier((prev) => {
       const nouveau =
         item.quantite <= 1
-          ? prev.filter((i) => i.id !== itemId)
+          ? prev.filter((i) => i.id !== targetId)
           : prev.map((i) =>
-              i.id === itemId ? { ...i, quantite: i.quantite - 1 } : i
+              i.id === targetId ? { ...i, quantite: i.quantite - 1 } : i
             );
       localStorage.setItem(CLE_PANIER_INVITE, JSON.stringify(nouveau));
       return nouveau;
@@ -150,9 +174,12 @@ export const FournisseurPanier = ({ children }) => {
 
   // Supprime totalement un item du panier
   const supprimerDuPanier = async (itemId) => {
+    const item = panier.find((i) => i.id === itemId || i.produitId === itemId);
+    const targetId = item ? item.id : itemId;
+
     if (isAuthenticated) {
       try {
-        const data = await supprimerItemApi(itemId);
+        const data = await supprimerItemApi(targetId);
         setPanier(mapPanierResponse(data));
       } catch (error) {
         console.error('Erreur lors de la suppression du produit :', error);
@@ -161,7 +188,7 @@ export const FournisseurPanier = ({ children }) => {
     }
 
     setPanier((prev) => {
-      const nouveau = prev.filter((item) => item.id !== itemId);
+      const nouveau = prev.filter((i) => i.id !== targetId);
       localStorage.setItem(CLE_PANIER_INVITE, JSON.stringify(nouveau));
       return nouveau;
     });

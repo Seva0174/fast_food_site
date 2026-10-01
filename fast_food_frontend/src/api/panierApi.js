@@ -7,8 +7,16 @@ export const getPanierApi = async () => {
 };
 
 // Ajoute un produit au panier (ou augmente sa quantité s'il y est déjà)
-export const ajouterProduitApi = async (produitId, quantite = 1) => {
-  const response = await api.post('/panier/items', { id: produitId, quantite });
+export const ajouterProduitApi = async (produit, quantite = 1) => {
+  // Récupère l'ID du produit selon qu'on passe un nombre ou un objet (ProduitMenu ou PanierItem)
+  const produitId = typeof produit === 'object' 
+    ? (produit.produitId || produit.id) 
+    : produit;
+
+  const response = await api.post('/panier/items', { 
+    id: produitId, 
+    quantite: quantite 
+  });
   return response.data;
 };
 
