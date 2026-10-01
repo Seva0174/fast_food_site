@@ -18,6 +18,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.List;
 
 @Component
 @RequiredArgsConstructor
@@ -43,27 +44,22 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         jwt = authHeader.substring(7);
-        userEmail = jwtService.extractUsername(jwt);
 
         try {
+            userEmail = jwtService.extractUsername(jwt);
             if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-
-                // Récupération de l'utilisateur complet en BDD
                 User user = userRepository.findByEmail(userEmail).orElse(null);
-
-                if (user != null) {
-                    String role = jwtService.extractClaim(jwt, claims -> claims.get("role", String.class));
-
-                    var authorities = role != null
-                            ? Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role))
-                            : Collections.<SimpleGrantedAuthority>emptyList();
+                
+                if (user != null && jwtService.isTokenValid(jwt, user)) {
+                    List<SimpleGrantedAuthority> authorities = user.getRole() != null
+                            ? List.of(new SimpleGrantedAuthority(user.getRole().name()))
+                            : Collections.emptyList();
 
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                             user,
                             null,
                             authorities
                     );
-
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authToken);
                 }

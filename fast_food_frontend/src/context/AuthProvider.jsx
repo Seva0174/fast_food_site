@@ -1,12 +1,17 @@
-import { createContext, useState} from 'react';
+import { createContext, useState } from 'react';
 import { loginApi } from '../api/authApi';
 
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(() => {
-    const savedUser = localStorage.getItem('fastfood_user');
-    return savedUser ? JSON.parse(savedUser) : null;
+    try {
+      const savedUser = localStorage.getItem('fastfood_user');
+      return savedUser ? JSON.parse(savedUser) : null;
+    } catch {
+      localStorage.removeItem('fastfood_user');
+      return null;
+    }
   });
 
   const [token, setToken] = useState(() => {

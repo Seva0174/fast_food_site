@@ -7,7 +7,6 @@ const api = axios.create({
   },
 });
 
-// Intercepteur : ajoute automatiquement le token JWT aux entêtes s'il existe
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
@@ -17,6 +16,22 @@ api.interceptors.request.use(
     return config;
   },
   (error) => Promise.reject(error)
+);
+
+// Intercepteur : redirige vers /login si le token est expiré ou invalide (401 ou 403)
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('fastfood_user');
+
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login';
+      }
+    }
+    return Promise.reject(error);
+  }
 );
 
 export default api;
