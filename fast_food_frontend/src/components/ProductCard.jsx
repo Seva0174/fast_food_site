@@ -15,7 +15,7 @@ export const ProductCard = ({ produit }) => {
           {imageUrl ? (
             <img src={imageUrl} alt={produit.nom} className="w-full h-full object-cover" />
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-4xl">🍔</div>
+            <div className="w-full h-full flex items-center justify-center text-4xl"></div>
           )}
           {!isDisponible && (
             <div className="absolute inset-0 bg-black/60 flex items-center justify-center text-white font-bold">

@@ -16,8 +16,9 @@ export const Navbar = () => {
 
   const { totalArticles } = useContext(ContextePanier);
 
-  // Vérification si l'utilisateur est admin ou employé
-  const isStaff = user?.role && ['admin', 'employe'].includes(user.role);
+  const userRole = user?.role?.toLowerCase().replace('role_', '');
+  const isStaff = ['admin', 'employe'].includes(userRole);
+  const isAdmin = userRole === 'admin';
 
   return (
     <nav className="bg-white border-b border-gray-200 sticky top-0 z-50">
@@ -49,7 +50,8 @@ export const Navbar = () => {
               </Link>
             )}
 
-            {isStaff && (
+            {/* Bouton Admin réservé UNIQUEMENT aux admins */}
+            {isAdmin && (
               <Link to="/admin" className="text-purple-600 hover:text-purple-800 font-medium flex items-center gap-1">
                 <Shield className="w-4 h-4" />
                 Admin
@@ -58,7 +60,6 @@ export const Navbar = () => {
 
             {user ? (
               <div className="flex items-center space-x-4">
-                {/* Lien vers la page profil /user en cliquant sur le nom */}
                 <Link
                   to="/user"
                   className="text-sm font-medium text-gray-700 hover:text-red-600 flex items-center gap-1 px-3 py-1.5 rounded-lg hover:bg-gray-100 transition"
@@ -97,6 +98,7 @@ export const Navbar = () => {
         </div>
       </div>
 
+      {/* Menu Mobile */}
       {isOpen && (
         <div className="md:hidden bg-white border-t border-gray-100 px-4 pt-2 pb-4 space-y-3">
           <Link 
@@ -136,12 +138,14 @@ export const Navbar = () => {
             </Link>
           )}
 
-          {isStaff && (
+          {/* Bouton Admin Mobile */}
+          {isAdmin && (
             <Link 
               to="/admin" 
               onClick={() => setIsOpen(false)}
-              className="block text-purple-600 font-medium py-2"
+              className="block text-purple-600 font-medium py-2 flex items-center gap-1"
             >
+              <Shield className="w-4 h-4" />
               Panel Admin
             </Link>
           )}

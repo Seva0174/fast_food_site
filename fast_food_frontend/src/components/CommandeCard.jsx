@@ -17,7 +17,6 @@ const STATUTS_RETRAIT = [
 ];
 
 export const CommandeCard = ({ commande, onChangerStatut, onVoirDetail, enCours }) => {
-  console.log("Commande reçue :", commande);
   const isClickAndCollect =
     commande.typeRetrait === 'click_and_collect' ||
     commande.type_retrait === 'click_and_collect';

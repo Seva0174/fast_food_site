@@ -124,11 +124,9 @@
 ## A faire :
 
 - Corriger les bug :
-    - crash d’application (voir log spring) quand token user expire
-    - bug produit dans le panier puis supprimer de la carte produit puis passer la commande ?
-    - bug lors de création de compte qui est entre employé ou admin
     - bug sur la quantité des produits a la validation d’une commande ?
     - Verification des stats de vente des produits (attention au commande annulation → decrementation ?)
+    - bug select qui s’affiche mal (on fois qu’une partie du 1er choix) la 1ere fois
 - Tester toute les fonctionnalités pour trouver les bug
 - Rendre plus beau le front et factoriser le fronted composant réutilisable
 - Docker
