@@ -4,9 +4,12 @@ import com.fast_food.dto.ChangerStatusCommandeRequest;
 import com.fast_food.dto.CreerCommandeRequest;
 import com.fast_food.dto.CommandeResponse;
 import com.fast_food.entite.Commande;
+import com.fast_food.entite.CommandeItemOption;
 import com.fast_food.entite.CommandeMenu;
+import com.fast_food.entite.OptionItem;
 import com.fast_food.entite.Panier;
 import com.fast_food.entite.PanierItem;
+import com.fast_food.entite.PanierItemOption;
 import com.fast_food.entite.ProduitMenu;
 import com.fast_food.entite.Recette;
 import com.fast_food.entite.User;
@@ -41,13 +44,12 @@ public class CommandeService {
     private final CommandeMapper commandeMapper;
     private final EmailService emailService;
 
-    // Nouveaux repositories pour la gestion des stocks
     private final RecetteRepository recetteRepository;
     private final StockMatierePremiereRepository stockRepository;
 
     @Transactional
     public CommandeResponse passerCommande(User user, CreerCommandeRequest request) {
-        // 0. Validation du type de retrait et de l'adresse
+        // 0. Validation du type de retrait
         Commande.TypeRetrait typeRetrait;
         try {
             typeRetrait = Commande.TypeRetrait.valueOf(request.getTypeRetrait().toLowerCase());
@@ -59,21 +61,21 @@ public class CommandeService {
             if (request.getCpRue() == null || request.getCpRue().isBlank()
                     || request.getCpVille() == null || request.getCpVille().isBlank()
                     || request.getCpCodePostal() == null || request.getCpCodePostal().isBlank()) {
-                throw new IllegalArgumentException("L'adresse (rue, ville, code postal) est obligatoire pour une livraison.");
+                throw new IllegalArgumentException("L'adresse est obligatoire pour une livraison.");
             }
             if (!request.getCpCodePostal().matches("^[0-9]{5}$")) {
                 throw new IllegalArgumentException("Le code postal doit contenir exactement 5 chiffres.");
             }
         }
 
-        // 1. Récupérer le panier
+        // 1. Récupération du panier
         Panier panier = panierRepository.findByUser(user)
                 .orElseThrow(() -> new ResourceNotFoundException("Aucun panier trouvé pour cet utilisateur."));
         if (panier.getPanierContenu() == null || panier.getPanierContenu().isEmpty()) {
             throw new IllegalArgumentException("Votre panier est vide. Impossible de passer la commande.");
         }
 
-        // 2. Vérification de dispo + déduction atomique du stock
+        // 2. Déstockage atomique (Recette de base + Options)
         for (PanierItem item : panier.getPanierContenu()) {
             ProduitMenu produit = item.getProduitMenu();
 
@@ -81,31 +83,41 @@ public class CommandeService {
                 throw new IllegalArgumentException("Le produit '" + produit.getNom() + "' n'est plus disponible au menu.");
             }
 
+            // 2.a. Déstockage des ingrédients de la recette de base
             List<Recette> recettes = recetteRepository.findByProduitMenu(produit);
             for (Recette recette : recettes) {
                 BigDecimal quantiteNecessaire = recette.getQuantiteRequise()
                         .multiply(BigDecimal.valueOf(item.getQuantite()));
 
-                int updated = stockRepository.decrementStock(
-                        recette.getMatierePremiere().getId(),
-                        quantiteNecessaire
-                );
-
+                int updated = stockRepository.decrementStock(recette.getMatierePremiere().getId(), quantiteNecessaire);
                 if (updated == 0) {
-                    throw new IllegalArgumentException(
-                        "Stock insuffisant pour préparer le produit '" + produit.getNom() + "'"
-                    );
+                    throw new IllegalArgumentException("Stock insuffisant pour " + recette.getMatierePremiere().getNom());
+                }
+            }
+
+            // 2.b. Déstockage des matières premières liées aux options choisies
+            if (item.getOptions() != null) {
+                for (PanierItemOption pio : item.getOptions()) {
+                    OptionItem option = pio.getOptionItem();
+                    if (option.getMatierePremiere() != null && option.getQuantiteDeduite() != null) {
+                        BigDecimal qteOptionTotale = option.getQuantiteDeduite()
+                                .multiply(BigDecimal.valueOf(item.getQuantite()));
+
+                        int updatedOpt = stockRepository.decrementStock(option.getMatierePremiere().getId(), qteOptionTotale);
+                        if (updatedOpt == 0) {
+                            throw new IllegalArgumentException("Stock insuffisant pour l'option : " + option.getNom());
+                        }
+                    }
                 }
             }
         }
 
-        // 3. Initialiser et sauvegarder la commande
+        // 3. Création de la commande
         Commande commande = new Commande();
         commande.setUser(user);
         commande.setTypeRetrait(typeRetrait);
         commande.setStatus(Commande.Status.en_attente);
 
-        // Si Click & Collect, les champs d'adresse restent null
         if (typeRetrait == Commande.TypeRetrait.livraison) {
             commande.setCpRue(request.getCpRue());
             commande.setCpVille(request.getCpVille());
@@ -118,15 +130,40 @@ public class CommandeService {
         List<CommandeMenu> itemsCommande = new ArrayList<>();
 
         for (PanierItem item : panier.getPanierContenu()) {
-            BigDecimal prixUnitaire = item.getProduitMenu().getPrix();
-            BigDecimal sousTotal = prixUnitaire.multiply(BigDecimal.valueOf(item.getQuantite()));
-            totalCommande = totalCommande.add(sousTotal);
+            BigDecimal prixUnitaireProduit = item.getProduitMenu().getPrix();
+            BigDecimal surcoutOptions = BigDecimal.ZERO;
+
+            List<CommandeItemOption> optionsCommande = new ArrayList<>();
+
+            // Traitement et historisation des options
+            if (item.getOptions() != null) {
+                for (PanierItemOption pio : item.getOptions()) {
+                    OptionItem opt = pio.getOptionItem();
+                    surcoutOptions = surcoutOptions.add(opt.getSurcout() != null ? opt.getSurcout() : BigDecimal.ZERO);
+
+                    CommandeItemOption cio = new CommandeItemOption();
+                    cio.setOptionItem(opt);
+                    cio.setNomOption(opt.getNom());
+                    cio.setSurcout(opt.getSurcout());
+                    optionsCommande.add(cio);
+                }
+            }
+
+            BigDecimal prixTotalUnitaireItem = prixUnitaireProduit.add(surcoutOptions);
+            BigDecimal sousTotalItem = prixTotalUnitaireItem.multiply(BigDecimal.valueOf(item.getQuantite()));
+            totalCommande = totalCommande.add(sousTotalItem);
 
             CommandeMenu commandeMenu = new CommandeMenu();
             commandeMenu.setCommandeInfo(commande);
             commandeMenu.setProduitMenu(item.getProduitMenu());
             commandeMenu.setQuantite(item.getQuantite());
-            commandeMenu.setPrix(prixUnitaire);
+            commandeMenu.setPrix(prixTotalUnitaireItem);
+
+            // Liaison bi-directionnelle avec les options historisées
+            for (CommandeItemOption cio : optionsCommande) {
+                cio.setCommandeMenu(commandeMenu);
+            }
+            commandeMenu.setOptions(optionsCommande);
 
             itemsCommande.add(commandeMenu);
         }
@@ -136,25 +173,20 @@ public class CommandeService {
 
         Commande commandeSauvegardee = commandeRepository.save(commande);
 
-        // 4. Vider le panier
+        // 4. Vider le panier & envoi reçu email
         panierService.viderPanier(user);
-
-        // 5. Envoi du récépissé par e-mail
         emailService.envoyerRecuCommande(commandeSauvegardee);
 
         return commandeMapper.toResponse(commandeSauvegardee);
     }
 
-    // Récupérer les commandes via l'email du token
     @Transactional(readOnly = true)
     public List<CommandeResponse> getMesCommandesByEmail(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("Utilisateur non trouvé avec l'email : " + email));
 
         List<Commande> commandes = commandeRepository.findByUserOrderByDateCreationDesc(user);
-        return commandes.stream()
-                .map(commandeMapper::toResponse)
-                .collect(Collectors.toList());
+        return commandes.stream().map(commandeMapper::toResponse).collect(Collectors.toList());
     }
 
     @Transactional
@@ -171,16 +203,12 @@ public class CommandeService {
         return getCommandeById(user, commandeId);
     }
 
-    // Récupérer l'historique des commandes d'un utilisateur
     @Transactional(readOnly = true)
     public List<CommandeResponse> getMesCommandes(User user) {
         List<Commande> commandes = commandeRepository.findByUserOrderByDateCreationDesc(user);
-        return commandes.stream()
-                .map(commandeMapper::toResponse)
-                .collect(Collectors.toList());
+        return commandes.stream().map(commandeMapper::toResponse).collect(Collectors.toList());
     }
 
-    // Récupérer une commande par son ID (pour le suivi du client)
     @Transactional(readOnly = true)
     public CommandeResponse getCommandeById(User user, Long commandeId) {
         Commande commande = commandeRepository.findById(commandeId)
@@ -193,7 +221,6 @@ public class CommandeService {
         return commandeMapper.toResponse(commande);
     }
 
-    // Récupérer toutes les commandes (Cuisinier / Admin)
     @Transactional(readOnly = true)
     public List<CommandeResponse> getAllCommandes() {
         return commandeRepository.findAllByOrderByDateCreationDesc().stream()
@@ -201,7 +228,6 @@ public class CommandeService {
                 .collect(Collectors.toList());
     }
 
-    // Mettre à jour le statut d'une commande (Réservé Admin / Employé)
     @Transactional
     public CommandeResponse changerStatus(Long commandeId, ChangerStatusCommandeRequest request) {
         Commande commande = commandeRepository.findById(commandeId)

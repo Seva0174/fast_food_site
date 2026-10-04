@@ -1,10 +1,10 @@
 package com.fast_food.entite;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -19,24 +19,24 @@ import lombok.Setter;
 @Entity
 @Getter
 @Setter
-@Table(name = "commandes_menu")
-public class CommandeMenu {
+@Table(name = "option_groupe")
+public class OptionGroupe {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name ="id_produit")
+    @JoinColumn(name = "id_produit")
     private ProduitMenu produitMenu;
 
-    @ManyToOne
-    @JoinColumn(name = "id_commande")
-    private Commande commandeInfo;
+    private String nom;
 
+    @Column(name = "min_selection")
+    private int minSelection = 1;
 
-    @OneToMany(mappedBy = "commandeMenu", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<CommandeItemOption> options = new ArrayList<>();
+    @Column(name = "max_selection")
+    private int maxSelection = 1;
 
-    private int quantite;
-    private BigDecimal prix;
+    @OneToMany(mappedBy = "groupe", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<OptionItem> options = new ArrayList<>();
 }

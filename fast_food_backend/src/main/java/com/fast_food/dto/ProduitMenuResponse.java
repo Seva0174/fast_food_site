@@ -15,4 +15,5 @@ public class ProduitMenuResponse {
     private Boolean estDispo;
     private CategorieResponse categorie;
     private List<RecetteItemResponse> recette;
+    private List<OptionGroupeResponse> groupesOptions;
 }

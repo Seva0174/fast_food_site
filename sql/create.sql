@@ -1,3 +1,7 @@
+DROP TABLE IF EXISTS commande_item_options CASCADE;
+DROP TABLE IF EXISTS panier_item_options CASCADE;
+DROP TABLE IF EXISTS option_item CASCADE;
+DROP TABLE IF EXISTS option_groupe CASCADE;
 DROP TABLE IF EXISTS commandes_fournisseurs_details CASCADE;
 DROP TABLE IF EXISTS recette CASCADE;
 DROP TABLE IF EXISTS catalogue_fournisseur CASCADE;
@@ -167,6 +171,45 @@ CREATE TABLE commandes_fournisseurs_details (
 );
 
 -- =====================================================================
+-- TABLES DE POUR LA COMPOSITION D'UN PRODUIT
+-- =====================================================================
+
+-- Groupes d'options pour un produit (ex: "Choix de la viande", "Sauces")
+CREATE TABLE option_groupe (
+    id              BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id_produit      BIGINT NOT NULL REFERENCES produit_menu(id) ON DELETE CASCADE,
+    nom             VARCHAR(100) NOT NULL, -- ex: "Choix Viande", "Sauce"
+    min_selection   INTEGER NOT NULL DEFAULT 1, -- 0 si optionnel
+    max_selection   INTEGER NOT NULL DEFAULT 1
+);
+
+-- Choix disponibles dans un groupe
+CREATE TABLE option_item (
+    id                  BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id_groupe           BIGINT NOT NULL REFERENCES option_groupe(id) ON DELETE CASCADE,
+    id_matiere          BIGINT NOT NULL REFERENCES stock_matiere_premiere(id) ON DELETE RESTRICT,
+    nom                 VARCHAR(100) NOT NULL, -- ex: "Poulet", "Sauce Algérienne"
+    quantite_deduite    NUMERIC(10,3) NOT NULL DEFAULT 1, -- quantité consommée en stock
+    surcout             NUMERIC(8,2) NOT NULL DEFAULT 0.00 -- supplément prix éventuel
+);
+
+-- Options sélectionnées dans le panier
+CREATE TABLE panier_item_options (
+    id                  BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id_panier_item      BIGINT NOT NULL REFERENCES panier_items(id) ON DELETE CASCADE,
+    id_option_item      BIGINT NOT NULL REFERENCES option_item(id) ON DELETE RESTRICT
+);
+
+-- Options enregistrées lors de la validation de la commande
+CREATE TABLE commande_item_options (
+    id                  BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id_commande_menu    BIGINT NOT NULL REFERENCES commandes_menu(id) ON DELETE CASCADE,
+    id_option_item      BIGINT NOT NULL REFERENCES option_item(id) ON DELETE RESTRICT,
+    nom_option          VARCHAR(100) NOT NULL, -- Sauvegarde du nom au moment de la commande
+    surcout             NUMERIC(8,2) NOT NULL DEFAULT 0.00
+);
+
+-- =====================================================================
 -- INDEX UTILES SUR LES CLÉS ÉTRANGÈRES
 -- =====================================================================
 
@@ -188,3 +231,10 @@ CREATE INDEX idx_recette_matiere               ON recette(id_matiere);
 CREATE INDEX idx_cf_details_commande           ON commandes_fournisseurs_details(id_commande_fournisseur);
 CREATE INDEX idx_cf_details_stock              ON commandes_fournisseurs_details(id_stock);
 CREATE INDEX idx_employe_user ON employe(id_user);
+CREATE INDEX idx_option_groupe_produit         ON option_groupe(id_produit);
+CREATE INDEX idx_option_item_groupe            ON option_item(id_groupe);
+CREATE INDEX idx_option_item_matiere           ON option_item(id_matiere);
+CREATE INDEX idx_panier_item_options_item      ON panier_item_options(id_panier_item);
+CREATE INDEX idx_panier_item_options_option    ON panier_item_options(id_option_item);
+CREATE INDEX idx_commande_item_options_menu    ON commande_item_options(id_commande_menu);
+CREATE INDEX idx_commande_item_options_option  ON commande_item_options(id_option_item);

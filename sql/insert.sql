@@ -41,7 +41,7 @@ INSERT INTO categorie (nom) VALUES
 INSERT INTO produit_menu (id_categorie, description, prix, image_url, nom, est_dispo) VALUES
 -- Tacos (categorie 1)
 (1, 'Tacos simple viande au choix, sauce fromagère et frites incluses',        7.50, '/img/tacos_simple.jpg',   'Tacos Simple',        TRUE),
-(1, 'Tacos double viande, sauce fromagère, crudités et frites',                9.50, '/img/tacos_double.jpg',   'Tacos Double',        TRUE),
+(1, 'Tacos double viande au choix, sauce fromagère, frites et sauces',          9.50, '/img/tacos_double.jpg',   'Tacos Double',        TRUE),
 (1, 'Tacos XXL 3 viandes, cheddar fondu et sauce au choix',                    12.90,'/img/tacos_xxl.jpg',      'Tacos XXL',           TRUE),
 
 -- Burgers (categorie 2)
@@ -70,20 +70,30 @@ INSERT INTO produit_menu (id_categorie, description, prix, image_url, nom, est_d
 -- MATIÈRES PREMIÈRES EN STOCK
 -- =====================================================================
 INSERT INTO stock_matiere_premiere (nom, quantite, unite_mesure) VALUES
-('Galette tacos',            300.000, 'unite'),
-('Pain burger',               250.000, 'unite'),
-('Steak haché 150g',          180.000, 'unite'),
-('Filet de poulet',           220.000, 'kg'),
-('Ailes de poulet',           400.000, 'kg'),
-('Cheddar (tranches)',        500.000, 'tranche'),
-('Sauce fromagère (L)',       25.000,  'L'),
-('Sauce BBQ (L)',             18.000,  'L'),
-('Sauce buffalo (L)',         15.000,  'L'),
-('Pommes de terre (kg)',      150.000, 'kg'),
-('Salade (kg)',               20.000,  'kg'),
-('Tomates (kg)',              25.000,  'kg'),
-('Oignons (kg)',              20.000,  'kg'),
-('Bacon (kg)',                 30.000,  'kg');
+('Galette tacos',            300.000, 'unite'),   -- 1
+('Pain burger',               250.000, 'unite'),   -- 2
+('Steak haché 150g',          180.000, 'unite'),   -- 3
+('Filet de poulet',           220.000, 'kg'),      -- 4
+('Ailes de poulet',           400.000, 'kg'),      -- 5
+('Cheddar (tranches)',        500.000, 'tranche'), -- 6
+('Sauce fromagère (L)',       25.000,  'L'),       -- 7
+('Sauce BBQ (L)',             18.000,  'L'),       -- 8
+('Sauce buffalo (L)',         15.000,  'L'),       -- 9
+('Pommes de terre (kg)',      150.000, 'kg'),      -- 10
+('Salade (kg)',               20.000,  'kg'),      -- 11
+('Tomates (kg)',              25.000,  'kg'),      -- 12
+('Oignons (kg)',              20.000,  'kg'),      -- 13
+('Bacon (kg)',                 30.000,  'kg'),      -- 14
+-- Ingrédients ajoutés pour les options/tacos
+('Viande Hachée Tacos (kg)',  50.000,  'kg'),      -- 15
+('Cordon Bleu',               100.000, 'unite'),   -- 16
+('Merguez',                   120.000, 'unite'),   -- 17
+('Nuggets Poulet',            200.000, 'unite'),   -- 18
+('Sauce Algérienne (L)',      10.000,  'L'),       -- 19
+('Sauce Samouraï (L)',        10.000,  'L'),       -- 20
+('Mayonnaise (L)',            15.000,  'L'),       -- 21
+('Ketchup (L)',               15.000,  'L'),       -- 22
+('Supplément Raclette (kg)',  10.000,  'kg');      -- 23
 
 -- =====================================================================
 -- FOURNISSEURS
@@ -111,31 +121,88 @@ INSERT INTO catalogue_fournisseur (id_fournisseur, id_stock, prix_unitaire) VALU
 (3, 9,  3.50);  -- Sysco - Sauce buffalo
 
 -- =====================================================================
--- RECETTES
+-- RECETTES DE BASE
 -- =====================================================================
 INSERT INTO recette (id_produit, id_matiere, quantite_requise) VALUES
--- Tacos Simple (produit 1)
+-- Tacos Simple (produit 1) : Socle de base (Galette + Frites + Sauce Fromagère)
 (1, 1, 1.000),   -- galette
-(1, 3, 0.150),   -- steak haché
+(1, 10, 0.150),  -- frites intégrées
 (1, 7, 0.050),   -- sauce fromagère
--- Tacos Double (produit 2)
+
+-- Tacos Double (produit 2) : Socle de base
 (2, 1, 1.000),
-(2, 3, 0.300),
+(2, 10, 0.200),
 (2, 7, 0.070),
+
 -- Burger Classic (produit 4)
 (4, 2, 1.000),   -- pain burger
 (4, 3, 0.150),   -- steak haché
 (4, 6, 1.000),   -- cheddar
 (4, 11, 0.030),  -- salade
 (4, 12, 0.020),  -- tomates
+
 -- Bacon Cheese Burger (produit 5)
 (5, 2, 1.000),
 (5, 3, 0.300),
 (5, 6, 2.000),
 (5, 14, 0.040),
+
 -- Wings BBQ x6 (produit 7)
 (7, 5, 0.600),   -- ailes de poulet
 (7, 8, 0.040);   -- sauce BBQ
+
+-- =====================================================================
+-- GROUPES D'OPTIONS (option_groupe)
+-- =====================================================================
+INSERT INTO option_groupe (id_produit, nom, min_selection, max_selection) VALUES
+-- Tacos Simple (produit 1)
+(1, 'Choix de la Viande (1 max)', 1, 1),
+(1, 'Sauces (2 max)',              1, 2),
+(1, 'Suppléments',                 0, 3),
+
+-- Tacos Double (produit 2)
+(2, 'Choix des Viandes (2 exactes)', 2, 2),
+(2, 'Sauces (2 max)',                 1, 2),
+(2, 'Suppléments',                    0, 3),
+
+-- Classic Burger (produit 4)
+(4, 'Suppléments Ingrédients', 0, 2);
+
+-- =====================================================================
+-- CHOIX D'OPTIONS (option_item)
+-- =====================================================================
+INSERT INTO option_item (id_groupe, id_matiere, nom, quantite_deduite, surcout) VALUES
+-- Groupe 1 : Viande Tacos Simple (groupe 1)
+(1, 15, 'Viande Hachée',  0.150, 0.00),
+(1, 4,  'Poulet',         0.150, 0.00),
+(1, 16, 'Cordon Bleu',    1.000, 0.00),
+(1, 17, 'Merguez',        2.000, 0.00),
+(1, 18, 'Nuggets (x3)',   3.000, 0.00),
+
+-- Groupe 2 : Sauces Tacos Simple (groupe 2)
+(2, 19, 'Sauce Algérienne', 0.020, 0.00),
+(2, 20, 'Sauce Samouraï',   0.020, 0.00),
+(2, 21, 'Mayonnaise',       0.020, 0.00),
+(2, 22, 'Ketchup',          0.020, 0.00),
+
+-- Groupe 3 : Suppléments Tacos Simple (groupe 3)
+(3, 6,  'Extra Cheddar',    1.000, 1.00),
+(3, 23, 'Supplément Raclette', 0.050, 1.50),
+(3, 14, 'Extra Bacon',      0.030, 1.50),
+
+-- Groupe 4 : Viandes Tacos Double (groupe 4)
+(4, 15, 'Viande Hachée',  0.150, 0.00),
+(4, 4,  'Poulet',         0.150, 0.00),
+(4, 16, 'Cordon Bleu',    1.000, 0.00),
+(4, 17, 'Merguez',        2.000, 0.00),
+
+-- Groupe 5 : Sauces Tacos Double (groupe 5)
+(5, 19, 'Sauce Algérienne', 0.020, 0.00),
+(5, 20, 'Sauce Samouraï',   0.020, 0.00),
+
+-- Groupe 6 : Suppléments Classic Burger (groupe 6)
+(6, 6,  'Extra Cheddar',    1.000, 1.00),
+(6, 14, 'Extra Bacon',      0.030, 1.50);
 
 -- =====================================================================
 -- PANIERS EN COURS
@@ -145,29 +212,36 @@ INSERT INTO panier (id_user) VALUES
 (3);
 
 INSERT INTO panier_items (id_panier, id_produit, quantite) VALUES
-(1, 2, 1),   -- Julie : 1 Tacos Double
-(1, 11, 1),  -- Julie : 1 Frites
-(1, 12, 2),  -- Julie : 2 Sodas
-(2, 5, 1),   -- Thomas : 1 Bacon Cheese Burger
-(2, 9, 1);   -- Thomas : 1 Wings Party
+(1, 2, 1),   -- Julie : 1 Tacos Double (item 1)
+(1, 11, 1),  -- Julie : 1 Frites (item 2)
+(1, 12, 2),  -- Julie : 2 Sodas (item 3)
+(2, 5, 1),   -- Thomas : 1 Bacon Cheese Burger (item 4)
+(2, 9, 1);   -- Thomas : 1 Wings Party (item 5)
+
+-- Options associées à l'item 1 du panier (Tacos Double de Julie)
+INSERT INTO panier_item_options (id_panier_item, id_option_item) VALUES
+(1, 10), -- Viande Hachée
+(1, 11), -- Poulet
+(1, 14); -- Sauce Algérienne
 
 -- =====================================================================
 -- COMMANDES CLIENTS
 -- =====================================================================
 INSERT INTO commandes (id_user, type_retrait, status, cp_rue, cp_ville, cp_code_postal, total, date_creation) VALUES
--- Commande en Livraison
+-- Commande 1
 (2, 'livraison',        'livree',        '12 rue des Lilas',          'Lyon',              '69000', 15.00, '2025-07-10 19:32:00'),
+-- Commande 2
 (3, 'livraison',        'en_preparation','5 avenue de la République', 'Villeurbanne',      '69100', 23.90, '2025-08-01 20:05:00'),
-
--- Commande en Click & Collect
+-- Commande 3
 (4, 'click_and_collect','en_attente',    NULL,                        NULL,                NULL,    12.90, '2025-08-02 12:10:00'),
+-- Commande 4
 (2, 'click_and_collect','retiree',       NULL,                        NULL,                NULL,    9.50,  '2025-08-02 18:30:00');
 
 INSERT INTO commandes_menu (id_commande, id_produit, quantite, prix) VALUES
 -- commande 1 (Julie - Livraison)
-(1, 2, 1, 9.50),
-(1, 12, 1, 2.00),
-(1, 11, 1, 3.50),
+(1, 2, 1, 9.50),  -- item 1
+(1, 12, 1, 2.00), -- item 2
+(1, 11, 1, 3.50), -- item 3
 
 -- commande 2 (Thomas - Livraison)
 (2, 5, 1, 11.90),
@@ -180,6 +254,12 @@ INSERT INTO commandes_menu (id_commande, id_produit, quantite, prix) VALUES
 
 -- commande 4 (Julie - Click & Collect retirée)
 (4, 2, 1, 9.50);
+
+-- Options historisées pour l'item 1 de la commande 1
+INSERT INTO commande_item_options (id_commande_menu, id_option_item, nom_option, surcout) VALUES
+(1, 10, 'Viande Hachée', 0.00),
+(1, 11, 'Poulet',        0.00),
+(1, 14, 'Sauce Algérienne', 0.00);
 
 -- =====================================================================
 -- EMPLOYÉS ET HEURES TRAVAILLÉES

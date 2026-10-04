@@ -1,5 +1,7 @@
 package com.fast_food.mapper;
 
+import java.util.stream.Collectors;
+
 import org.springframework.stereotype.Component;
 import com.fast_food.dto.ProduitMenuRequest;
 import com.fast_food.dto.ProduitMenuResponse;
@@ -10,10 +12,12 @@ import com.fast_food.entite.ProduitMenu;
 public class ProduitMenuMapper {
 
     private final CategorieMapper categorieMapper;
+    private final OptionMapper optionMapper;
 
     // Injection par constructeur du CategorieMapper
-    public ProduitMenuMapper(CategorieMapper categorieMapper) {
+    public ProduitMenuMapper(CategorieMapper categorieMapper, OptionMapper optionMapper) {
         this.categorieMapper = categorieMapper;
+        this.optionMapper = optionMapper;
     }
 
     public ProduitMenu toEntity(ProduitMenuRequest pmr) {
@@ -60,6 +64,14 @@ public class ProduitMenuMapper {
         // Mapping de l'entité Categorie vers CategorieResponse
         if (pm.getCategorie() != null) {
             pmr.setCategorie(categorieMapper.toCategorieResponse(pm.getCategorie())); 
+        }
+
+        if (pm.getGroupesOptions() != null) {
+            pmr.setGroupesOptions(
+                pm.getGroupesOptions().stream()
+                  .map(optionMapper::toGroupeResponse)
+                  .collect(Collectors.toList())
+            );
         }
 
         return pmr;

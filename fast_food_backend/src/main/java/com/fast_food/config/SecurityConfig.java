@@ -28,23 +28,22 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                // Endpoints publics (Auth, Menu)
+                // Endpoints publics (Auth, Menu, Options en lecture)
                 .requestMatchers("/api/auth/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/categories/**", "/api/produits/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/categories/**", "/api/produits/**", "/api/options/produit/**").permitAll()
 
                 // Panier & Commandes Client
                 .requestMatchers("/api/panier/**").authenticated()
                 .requestMatchers("/api/commandes/admin/**").hasAnyRole("admin", "employe")
-                
                 .requestMatchers("/api/commandes", "/api/commandes/**").authenticated()
-                
+
                 // Endpoints Admin & Approvisionnement
                 .requestMatchers("/api/admin/**").hasRole("admin")
+                .requestMatchers("/api/options/**").hasRole("admin")
                 .requestMatchers(HttpMethod.POST, "/api/categories/**", "/api/produits/**").hasRole("admin")
                 .requestMatchers(HttpMethod.PUT, "/api/categories/**", "/api/produits/**").hasRole("admin")
                 .requestMatchers(HttpMethod.PATCH, "/api/categories/**", "/api/produits/**").hasRole("admin")
                 .requestMatchers(HttpMethod.DELETE, "/api/categories/**", "/api/produits/**").hasRole("admin")
-                
 
                 // Tout le reste requiert une authentification
                 .anyRequest().authenticated()

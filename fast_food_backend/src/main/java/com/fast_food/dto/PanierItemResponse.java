@@ -1,6 +1,7 @@
 package com.fast_food.dto;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 import lombok.Data;
 
@@ -12,4 +13,5 @@ public class PanierItemResponse {
     private BigDecimal prixUnitaire;
     private int quantite;
     private BigDecimal sousTotal;
+    private List<PanierItemOptionResponse> options;
 }

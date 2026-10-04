@@ -15,5 +15,9 @@ TRUNCATE TABLE
     stock_matiere_premiere,
     categorie,
     fournisseur,
+    option_groupe,
+    option_item,
+    panier_item_options,
+    commande_item_options,
     users
 RESTART IDENTITY CASCADE;

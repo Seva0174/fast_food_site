@@ -96,13 +96,14 @@
     - [x]  Masse salarial
     - [x]  Top des ventes
     - [x]  adapté les stats selon une periode ou global
-- [x]  Sous page Gestion de la carte du fast food
+- [ ]  Sous page Gestion de la carte du fast food
     - [x]  Afficher tout les produits
     - [x]  Ajouter un produit a la carte
     - [x]  Enlever un produit de la carte
     - [x]  Modifier un produit de la carte (prix, nom …)
     - [x]  rendre un produit disponible ou pas
     - [x]  pouvoir modifier la compsition d’un produit de la carte
+    - [ ]  gerer la compostion d’un produit par un client
 
 ### Page employé :
 
@@ -123,10 +124,16 @@
 
 ## A faire :
 
+- Ajouter choix de composition d’un produit par un client
 - Corriger les bug :
-    - bug sur la quantité des produits a la validation d’une commande ?
-    - Verification des stats de vente des produits (attention au commande annulation → decrementation ?)
-    - bug select qui s’affiche mal (on fois qu’une partie du 1er choix) la 1ere fois
+    - Vérifier la bonne gestion des stocks après :
+        - commande fournisseur
+        - commande passé
+        - gerer les annulation de commandes
+        - gestion des choix de compostion d’un produit par un client
+    - afficher dans admin les produit_carte, commande_fournisseur, stock_matiere_1ere, employe EN TRIER SELON l ID
+    - bug select qui s’affiche mal (pas entierement)
+    - Enlever les tacos car il faut faire la composition en direct
 - Tester toute les fonctionnalités pour trouver les bug
 - Rendre plus beau le front et factoriser le fronted composant réutilisable
 - Docker

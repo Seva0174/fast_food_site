@@ -1,0 +1,29 @@
+package com.fast_food.entite;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.Setter;
+
+@Entity
+@Getter
+@Setter
+@Table(name = "panier_item_options")
+public class PanierItemOption {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @ManyToOne
+    @JoinColumn(name = "id_panier_item")
+    private PanierItem panierItem;
+
+    @ManyToOne
+    @JoinColumn(name = "id_option_item")
+    private OptionItem optionItem;
+}

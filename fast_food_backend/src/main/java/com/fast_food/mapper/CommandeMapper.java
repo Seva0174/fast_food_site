@@ -1,12 +1,15 @@
 package com.fast_food.mapper;
 
+import com.fast_food.dto.CommandeItemOptionResponse;
 import com.fast_food.dto.CommandeItemResponse;
 import com.fast_food.dto.CommandeResponse;
 import com.fast_food.entite.Commande;
+import com.fast_food.entite.CommandeItemOption;
 import com.fast_food.entite.CommandeMenu;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -34,6 +37,18 @@ public class CommandeMapper {
             response.setSousTotal(item.getPrix().multiply(BigDecimal.valueOf(item.getQuantite())));
         }
 
+        // Mapping des options
+        List<CommandeItemOptionResponse> optionResponses = new ArrayList<>();
+        if (item.getOptions() != null) {
+            for (CommandeItemOption cio : item.getOptions()) {
+                CommandeItemOptionResponse optDto = new CommandeItemOptionResponse();
+                optDto.setNomOption(cio.getNomOption());
+                optDto.setSurcoutHistorise(cio.getSurcout());
+                optionResponses.add(optDto);
+            }
+        }
+        response.setOptions(optionResponses);
+
         return response;
     }
 
@@ -48,7 +63,8 @@ public class CommandeMapper {
         if (commande.getUser() != null) {
             response.setNomClient(commande.getUser().getNom());
         }
-            if (commande.getTypeRetrait() != null) {
+        
+        if (commande.getTypeRetrait() != null) {
             response.setTypeRetrait(commande.getTypeRetrait().name());
         }
         
