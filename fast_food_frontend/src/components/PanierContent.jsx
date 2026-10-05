@@ -1,12 +1,12 @@
 import { useContext } from 'react';
 import { ContextePanier } from '../context/ContextePanier';
-import { Plus, Minus, Trash2, ShoppingBag, X } from 'lucide-react';
+import { Plus, Minus, Trash2, ShoppingBag, X, Pencil } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
-export const PanierContent = ({ onClose }) => {
+export const PanierContent = ({ onClose, onEditItem }) => {
   const {
     panier,
-    ajouterAuPanier,
+    incrementerQuantite,
     retirerDuPanier,
     supprimerDuPanier,
     viderPanier,
@@ -41,7 +41,7 @@ export const PanierContent = ({ onClose }) => {
 
   return (
     <div className="flex flex-col h-full">
-      {/* En-tête avec disposition nette */}
+      {/* En-tête */}
       <div className="p-4 border-b border-gray-200 flex justify-between items-center bg-white">
         <div className="flex items-center gap-2">
           <ShoppingBag className="w-5 h-5 text-red-600" />
@@ -57,7 +57,6 @@ export const PanierContent = ({ onClose }) => {
             Vider
           </button>
 
-          {/* Bouton Fermer (s'affiche uniquement si onClose est transmis, ex: Mobile) */}
           {onClose && (
             <button
               onClick={onClose}
@@ -94,16 +93,29 @@ export const PanierContent = ({ onClose }) => {
                 </button>
                 <span className="px-2 text-xs font-bold text-gray-800">{item.quantite}</span>
                 <button
-                  onClick={() => ajouterAuPanier({ id: item.produitId })}
+                  onClick={() => incrementerQuantite(item.id)}
                   className="p-1 hover:bg-white rounded text-gray-600"
                 >
                   <Plus className="w-3.5 h-3.5" />
                 </button>
               </div>
 
+              {/* Bouton pour modifier les options de l'item */}
+              {onEditItem && (
+                <button
+                  onClick={() => onEditItem(item)}
+                  className="p-1 text-gray-400 hover:text-blue-600 transition"
+                  title="Modifier les options"
+                >
+                  <Pencil className="w-4 h-4" />
+                </button>
+              )}
+
+              {/* Bouton supprimer */}
               <button
                 onClick={() => supprimerDuPanier(item.id)}
                 className="p-1 text-gray-400 hover:text-red-600 transition"
+                title="Supprimer"
               >
                 <Trash2 className="w-4 h-4" />
               </button>

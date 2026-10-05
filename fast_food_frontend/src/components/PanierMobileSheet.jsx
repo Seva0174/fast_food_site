@@ -2,7 +2,7 @@ import { useState, useContext } from 'react';
 import { ContextePanier } from '../context/ContextePanier';
 import { PanierContent } from './PanierContent';
 
-export const PanierMobileSheet = () => {
+export const PanierMobileSheet = ({ onEditItem }) => {
   const [isOpen, setIsOpen] = useState(false);
   const { totalArticles, totalPrix } = useContext(ContextePanier);
 
@@ -35,7 +35,7 @@ export const PanierMobileSheet = () => {
 
           {/* Contenu du tiroir */}
           <div className="bg-white rounded-t-3xl max-h-[85vh] h-[550px] flex flex-col overflow-hidden shadow-2xl relative">
-            <PanierContent onClose={() => setIsOpen(false)} />
+            <PanierContent onEditItem={onEditItem} onClose={() => setIsOpen(false)} />
           </div>
         </div>
       )}

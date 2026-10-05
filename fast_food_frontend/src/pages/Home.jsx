@@ -1,19 +1,32 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { getCategories, getProduits } from '../api/menuApi';
 import { ProductCard } from '../components/ProductCard';
 import { PanierSidebarDesktop } from '../components/PanierSidebarDesktop';
 import { PanierMobileSheet } from '../components/PanierMobileSheet';
+import { ProductOptionModal } from '../components/ProductOptionModal';
+import { ContextePanier } from '../context/ContextePanier';
 
 export const Home = () => {
+  const { ajouterAuPanier, modifierItemPanier } = useContext(ContextePanier);
   const [categories, setCategories] = useState([]);
   const [produits, setProduits] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [modalProduit, setModalProduit] = useState(null);
+  const [itemEnCoursDeModification, setItemEnCoursDeModification] = useState(null);
 
-  // Détection dynamique de la taille de l'écran (Seuil lg = 1024px)
   const [isDesktop, setIsDesktop] = useState(
     typeof window !== 'undefined' ? window.innerWidth >= 1024 : true
   );
+
+  const handleModifierItem = (itemPanier) => {
+  // Retrouver le produit complet à partir de la liste des produits
+    const produitComplet = produits.find((p) => p.id === (itemPanier.produitId || itemPanier.id));
+    if (produitComplet) {
+      setItemEnCoursDeModification(itemPanier);
+      setModalProduit(produitComplet);
+    }
+  };
 
   useEffect(() => {
     const handleResize = () => setIsDesktop(window.innerWidth >= 1024);
@@ -40,20 +53,12 @@ export const Home = () => {
     fetchData();
   }, []);
 
-  const filteredProduits = selectedCategory
-    ? produits.filter((p) => {
-        const catId = p.idCategorie || p.categorie?.id || p.id_categorie;
-        return catId === selectedCategory;
-      })
-    : produits;
-
   if (loading) {
     return <div className="text-center py-12 text-gray-500">Chargement de la carte...</div>;
   }
 
   return (
     <div className="flex gap-8 items-start">
-      {/* Contenu principal (Carte des produits) */}
       <div className="flex-1 space-y-8 min-w-0">
         <div className="bg-gradient-to-r from-red-600 to-orange-500 text-white rounded-2xl p-6 sm:p-10 shadow-lg flex flex-col md:flex-row items-center justify-between gap-6">
           <div>
@@ -66,7 +71,7 @@ export const Home = () => {
           </div>
         </div>
 
-        {/* Filtres des catégories */}
+        {/* Filtres */}
         <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none">
           <button
             onClick={() => setSelectedCategory(null)}
@@ -94,18 +99,16 @@ export const Home = () => {
           ))}
         </div>
 
-        {/* Grille des produits groupée par catégorie */}
+        {/* Grille */}
         <div className="space-y-10">
           {categories
             .filter((cat) => selectedCategory === null || cat.id === selectedCategory)
             .map((cat) => {
-              // Filtrer les produits de la catégorie courante
               const produitsDeLaCategorie = produits.filter((p) => {
                 const catId = p.categorie?.id || p.idCategorie || p.id_categorie;
                 return catId === cat.id;
               });
 
-              // Si aucun produit dans cette catégorie, ne pas afficher le titre
               if (produitsDeLaCategorie.length === 0) return null;
 
               return (
@@ -115,7 +118,11 @@ export const Home = () => {
                   </h2>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     {produitsDeLaCategorie.map((produit) => (
-                      <ProductCard key={produit.id} produit={produit} />
+                      <ProductCard 
+                        key={produit.id} 
+                        produit={produit} 
+                        onOpenModal={(p) => setModalProduit(p)} 
+                      />
                     ))}
                   </div>
                 </section>
@@ -124,8 +131,32 @@ export const Home = () => {
         </div>
       </div>
 
-      {/* Affichage conditionnel selon la taille de l'écran */}
-      {isDesktop ? <PanierSidebarDesktop /> : <PanierMobileSheet />}
+      {isDesktop ? (
+        <PanierSidebarDesktop onEditItem={handleModifierItem} />
+      ) : (
+        <PanierMobileSheet onEditItem={handleModifierItem} />
+      )}
+
+      {/* Modal de personnalisation positionnée globalement */}
+      <ProductOptionModal
+        key={modalProduit?.id || 'modal-fermee'}
+        produit={modalProduit}
+        itemPanier={itemEnCoursDeModification}
+        isOpen={!!modalProduit}
+        onClose={() => {
+          setModalProduit(null);
+          setItemEnCoursDeModification(null);
+        }}
+        onConfirm={(produit, options) => {
+          if (itemEnCoursDeModification) {
+            modifierItemPanier(itemEnCoursDeModification.id, options);
+          } else {
+            ajouterAuPanier(produit, options);
+          }
+          setModalProduit(null);
+          setItemEnCoursDeModification(null);
+        }}
+      />
     </div>
   );
 };

@@ -1,12 +1,12 @@
-import { useState, useContext,useEffect } from 'react';
+import { useState, useContext, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { ContextePanier } from '../context/ContextePanier';
 import { AuthContext } from '../context/AuthProvider';
 import { passerCommandeApi } from '../api/commandeApi';
-import { Truck, Store } from 'lucide-react';
+import { Truck, Store, ArrowLeft } from 'lucide-react';
 
 export const PageCommande = () => {
-  const { panier, viderPanier, totalPrix, ajouterAuPanier, retirerDuPanier, supprimerDuPanier } =
+  const { panier, viderPanier, totalPrix, incrementerQuantite, retirerDuPanier, supprimerDuPanier } =
     useContext(ContextePanier);
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
@@ -94,9 +94,15 @@ export const PageCommande = () => {
     <div className="max-w-5xl mx-auto p-4 sm:p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
       {/* Récapitulatif du panier */}
       <div className="bg-white p-6 shadow-md rounded-lg border border-gray-100">
-        <h2 className="text-xl font-bold mb-4 text-gray-800 border-b pb-2">
-          Récapitulatif de votre commande
-        </h2>
+        <div className="flex justify-between items-center mb-4 border-b pb-2">
+          <h2 className="text-xl font-bold text-gray-800">
+            Récapitulatif de votre commande
+          </h2>
+          <Link to="/" className="text-xs text-red-600 hover:underline flex items-center gap-1">
+            <ArrowLeft className="w-3.5 h-3.5" />
+            Modifier mes choix
+          </Link>
+        </div>
 
         {panier.length === 0 ? (
           <div className="text-center py-8">
@@ -109,10 +115,21 @@ export const PageCommande = () => {
           <div className="space-y-4">
             <div className="divide-y divide-gray-100 max-h-80 overflow-y-auto pr-1">
               {panier.map((item) => (
-                <div key={item.id} className="py-3 flex items-center justify-between">
+                <div key={item.id} className="py-3 flex items-start justify-between">
                   <div className="flex-1 pr-2">
                     <p className="font-semibold text-gray-800">{item.nom}</p>
-                    <p className="text-sm text-gray-500">
+                    
+                    {/* Liste d'options compacte séparée par des virgules */}
+                    {item.options && item.options.length > 0 && (
+                      <p className="text-xs text-gray-500 mt-0.5">
+                        <span className="font-medium text-gray-600">Options : </span>
+                        {item.options
+                          .map((opt) => opt.nom || opt.nomOption || `Option #${opt}`)
+                          .join(', ')}
+                      </p>
+                    )}
+
+                    <p className="text-xs text-gray-400 mt-1">
                       {Number(item.prix).toFixed(2)} € / unité
                     </p>
                   </div>
@@ -128,7 +145,7 @@ export const PageCommande = () => {
                     <span className="font-semibold text-sm w-4 text-center">{item.quantite}</span>
                     <button
                       type="button"
-                      onClick={() => ajouterAuPanier(item)}
+                      onClick={() => incrementerQuantite(item.id)}
                       className="w-7 h-7 bg-gray-100 hover:bg-gray-200 rounded font-bold text-gray-700 flex items-center justify-center"
                     >
                       +
@@ -142,7 +159,7 @@ export const PageCommande = () => {
                     <button
                       type="button"
                       onClick={() => supprimerDuPanier(item.id)}
-                      className="text-xs text-red-500 hover:underline"
+                      className="text-xs text-red-500 hover:underline mt-1"
                     >
                       Supprimer
                     </button>
@@ -253,7 +270,7 @@ export const PageCommande = () => {
             </div>
           ) : (
             <div className="p-4 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-600 text-center">
-                **Retrait en restaurant** : Vous viendrez récupérer votre commande directement au comptoir une fois qu'elle sera marquée comme "Prête".
+              Retrait en restaurant : Vous viendrez récupérer votre commande directement au comptoir une fois qu'elle sera marquée comme "Prête".
             </div>
           )}
 

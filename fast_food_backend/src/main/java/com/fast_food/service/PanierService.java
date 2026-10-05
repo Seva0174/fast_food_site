@@ -110,10 +110,16 @@ public class PanierService {
 
     private void validarOptionsPourProduit(ProduitMenu produit, List<OptionItem> optionsSelectionnees) {
         List<OptionGroupe> groupes = produit.getGroupesOptions();
-        if (groupes == null || groupes.isEmpty()) return;
+        
+        // Si le produit n'a aucun groupe d'options, rien à valider
+        if (groupes == null || groupes.isEmpty()) {
+            return;
+        }
 
-        // Regrouper les options par groupe
-        Map<Long, Long> countsParGroupe = optionsSelectionnees.stream()
+        // Regrouper les options sélectionnées par groupe
+        Map<Long, Long> countsParGroupe = (optionsSelectionnees == null ? new ArrayList<OptionItem>() : optionsSelectionnees)
+                .stream()
+                .filter(opt -> opt.getGroupe() != null)
                 .collect(Collectors.groupingBy(opt -> opt.getGroupe().getId(), Collectors.counting()));
 
         for (OptionGroupe groupe : groupes) {
