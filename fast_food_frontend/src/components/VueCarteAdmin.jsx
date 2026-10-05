@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { adminApi } from '../api/adminApi';
+import { GestionOptionsModal } from './GestionOptionsModal';
 
 export function VueCarteAdmin() {
   const [produits, setProduits] = useState([]);
@@ -8,9 +9,12 @@ export function VueCarteAdmin() {
   const [loading, setLoading] = useState(true);
   const [erreur, setErreur] = useState(null);
 
-  // État du modal de création/édition
+  // État du modal de création/édition de produit
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [produitEnEdition, setProduitEnEdition] = useState(null);
+
+  // État du modal de gestion des options
+  const [produitPourOptions, setProduitPourOptions] = useState(null);
 
   // Formulaire
   const [formData, setFormData] = useState({
@@ -195,7 +199,7 @@ export function VueCarteAdmin() {
         <div>
           <h2 className="text-xl font-bold text-gray-800">Gestion de la Carte</h2>
           <p className="text-gray-500 text-sm">
-            Ajoutez, modifiez ou désactivez les produits du menu.
+            Ajoutez, modifiez, désactivez les produits ou configurez leurs options (viandes, sauces, etc.).
           </p>
         </div>
         <button
@@ -257,7 +261,7 @@ export function VueCarteAdmin() {
                             style={{ display: prod.imageUrl ? 'none' : 'flex' }}
                           >
                             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 002-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2 2v12a2 2 0 00-2 2z" />
                             </svg>
                           </div>
                         </td>
@@ -287,6 +291,12 @@ export function VueCarteAdmin() {
                         </td>
                         <td className="py-3 px-4 text-right space-x-2">
                           <button
+                            onClick={() => setProduitPourOptions(prod)}
+                            className="text-purple-600 hover:text-purple-800 font-medium text-xs border border-purple-200 hover:border-purple-400 px-2.5 py-1 rounded transition-colors"
+                          >
+                            Options
+                          </button>
+                          <button
                             onClick={() => handleOuvrirModal(prod)}
                             className="text-blue-600 hover:text-blue-800 font-medium text-xs border border-blue-200 hover:border-blue-400 px-2.5 py-1 rounded transition-colors"
                           >
@@ -309,7 +319,17 @@ export function VueCarteAdmin() {
         </div>
       )}
 
-      {/* MODAL CRÉATION / ÉDITION EN 2 COLONNES */}
+      {/* MODAL GESTION DES OPTIONS */}
+      {produitPourOptions && (
+        <GestionOptionsModal
+          produit={produitPourOptions}
+          matieresPremieres={matieresPremieres}
+          onClose={() => setProduitPourOptions(null)}
+          onRefresh={chargerDonnees}
+        />
+      )}
+
+      {/* MODAL CRÉATION / ÉDITION PRODUIT */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg max-w-3xl w-full p-6 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto">

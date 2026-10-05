@@ -42,6 +42,16 @@ export const adminApi = {
   toggleDisponibilite: (id) => api.patch(`/produits/${id}/disponibilite`),
   supprimerProduit: (id) => api.delete(`/produits/${id}`),
 
+  // Groupes d'options & Items
+  getGroupesOptionsByProduit: (idProduit) => api.get(`/options/produit/${idProduit}`),
+  creerGroupeOption: (idProduit, data) => api.post(`/options/produit/${idProduit}`, data),
+  modifierGroupeOption: (idGroupe, data) => api.put(`/options/groupes/${idGroupe}`, data),
+  supprimerGroupeOption: (idGroupe) => api.delete(`/options/groupes/${idGroupe}`),
+  
+  creerOptionItem: (idGroupe, data) => api.post(`/options/groupes/${idGroupe}/items`, data),
+  modifierOptionItem: (idItem, data) => api.put(`/options/items/${idItem}`, data),
+  supprimerOptionItem: (idItem) => api.delete(`/options/items/${idItem}`),
+
   // Employés, Heures & Salaires
   getEmployes: () => api.get('/admin/employes'),
   getEmployeParId: (id) => api.get(`/admin/employes/${id}`),

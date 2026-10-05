@@ -1,6 +1,8 @@
 package com.fast_food.service;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -8,6 +10,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import com.fast_food.entite.Commande;
+import com.fast_food.entite.CommandeItemOption;
 import com.fast_food.entite.CommandeMenu;
 
 import jakarta.mail.MessagingException;
@@ -56,16 +59,45 @@ public class EmailService {
             StringBuilder sb = new StringBuilder();
             sb.append("<h2>Merci pour votre commande !</h2>");
             sb.append("<p>Numéro de commande : <strong>#").append(commande.getId()).append("</strong></p>");
-            sb.append("<p>Adresse de livraison : ").append(commande.getCpRue()).append(", ")
-            .append(commande.getCpCodePostal()).append(" ").append(commande.getCpVille()).append("</p>");
             
+            if (commande.getTypeRetrait() == Commande.TypeRetrait.livraison) {
+                sb.append("<p>Mode de retrait : <strong>Livraison</strong><br>")
+                .append("Adresse : ").append(commande.getCpRue()).append(", ")
+                .append(commande.getCpCodePostal()).append(" ").append(commande.getCpVille()).append("</p>");
+            } else {
+                sb.append("<p>Mode de retrait : <strong>Click & Collect (Retrait en restaurant)</strong></p>");
+            }
+
             sb.append("<h3>Détails de la commande :</h3><ul>");
             for (CommandeMenu item : commande.getCommandeProduits()) {
                 sb.append("<li>")
-                .append(item.getQuantite()).append("x ")
-                .append(item.getProduitMenu().getNom())
-                .append(" — ").append(item.getPrix().multiply(BigDecimal.valueOf(item.getQuantite()))).append(" €")
-                .append("</li>");
+                .append("<strong>").append(item.getQuantite()).append("x ")
+                .append(item.getProduitMenu().getNom()).append("</strong>")
+                .append(" — ").append(item.getPrix().multiply(BigDecimal.valueOf(item.getQuantite()))).append(" €");
+
+                // Ajout de la liste des options / suppléments
+                if (item.getOptions() != null && !item.getOptions().isEmpty()) {
+                    List<String> detailsOptions = new ArrayList<>();
+                    for (CommandeItemOption opt : item.getOptions()) {
+                        String nom = opt.getNomOption() != null ? opt.getNomOption() 
+                                : (opt.getOptionItem() != null ? opt.getOptionItem().getNom() : "");
+
+                        if (opt.getSurcout() != null && opt.getSurcout().compareTo(BigDecimal.ZERO) > 0) {
+                            nom += " (+" + opt.getSurcout() + " €)";
+                        }
+                        if (!nom.isBlank()) {
+                            detailsOptions.add(nom);
+                        }
+                    }
+
+                    if (!detailsOptions.isEmpty()) {
+                        sb.append("<br><span style=\"font-size: 0.9em; color: #555;\">Options : ")
+                        .append(String.join(", ", detailsOptions))
+                        .append("</span>");
+                    }
+                }
+
+                sb.append("</li>");
             }
             sb.append("</ul>");
             sb.append("<h3>Total : ").append(commande.getTotal()).append(" €</h3>");
@@ -74,7 +106,6 @@ public class EmailService {
             mailSender.send(message);
 
         } catch (MessagingException e) {
-            // Optionnel : logger l'erreur sans bloquer la réponse de la commande
             System.err.println("Échec de l'envoi de la confirmation de commande : " + e.getMessage());
         }
     }

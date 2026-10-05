@@ -47,6 +47,8 @@
 - [x]  **Panier:**
     - **Version pc:** Un tiroir (Sheet Shadcn) ou une sidebar Panier accessible directement à droite de l'écran pour voir ses articles en temps réel.
     - **Version Mobile:** un bouton pour voir le panier ("Bottom Sheet")
+    - [x]  Creer la composition d’un produit a l’ajout
+    - [x]  Modifier la composition d’un produit qui a des options qui est dans le panier
 
 ### Page Connexion / Inscription (/login & /register) :
 
@@ -60,12 +62,14 @@
 - [x]  choix entre click & collect ou livraison
 - [x]  Saisie de l'adresse de livraison (rue, ville, code_postal), si livraison
 - [x]  confirmation finale.
+- [x]  Afficher les option choisit d’un produit si en possède
+- [x]  envoie un email avec le recap de la commande (avec suplément …)
 
 ### Page User :
 
 - [x]  info User
-- [x]  adresse par default
-- [x]  commande en cours et passé (avec detail des commandes)
+- [x]  adresse par défault
+- [x]  commande en cours et passé (avec détail des commandes et supplément )
 
 ### Page admin:
 
@@ -103,11 +107,11 @@
     - [x]  Modifier un produit de la carte (prix, nom …)
     - [x]  rendre un produit disponible ou pas
     - [x]  pouvoir modifier la compsition d’un produit de la carte
-    - [ ]  gerer la compostion d’un produit par un client
+    - [ ]  creer et modifier les options d’un produit
 
 ### Page employé :
 
-- [x]  afficher les commandes
+- [x]  afficher les commandes avec les produits et ces options
 - [x]  modifier le status de la commande
 - [x]  Donné l’accès au admin
 - [x]  envoyer un mail quand une commande est recupérable ou en cours de livraison
@@ -129,14 +133,15 @@
     - Vérifier la bonne gestion des stocks après :
         - commande fournisseur
         - commande passé
-        - gerer les annulation de commandes
-        - gestion des choix de compostion d’un produit par un client
+        - gérer les annulation de commandes
+        - gestion des choix de compostions d’un produit par un client
     - afficher dans admin les produit_carte, commande_fournisseur, stock_matiere_1ere, employe EN TRIER SELON l ID
-    - bug select qui s’affiche mal (pas entierement)
-    - Enlever les tacos car il faut faire la composition en direct
+    - bug des balises select qui s’affiche mal (pas entièrement cote front)
+    - Enlever les matières premières en doublon.
 - Tester toute les fonctionnalités pour trouver les bug
 - Rendre plus beau le front et factoriser le fronted composant réutilisable
 - Docker
+- Faire la doc sur github
 
 ## Plan
 

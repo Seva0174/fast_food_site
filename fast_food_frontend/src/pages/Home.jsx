@@ -20,9 +20,15 @@ export const Home = () => {
   );
 
   const handleModifierItem = (itemPanier) => {
-  // Retrouver le produit complet à partir de la liste des produits
-    const produitComplet = produits.find((p) => p.id === (itemPanier.produitId || itemPanier.id));
-    if (produitComplet) {
+    // Retrouver le produit complet à partir du catalogue
+    const produitComplet = produits.find(
+      (p) => p.id === (itemPanier.produitId || itemPanier.id)
+    );
+
+    const groupes = produitComplet?.groupesOptions || produitComplet?.groupes_options || [];
+
+    // On n'ouvre la modale que si le produit possède des groupes d'options
+    if (produitComplet && groupes.length > 0) {
       setItemEnCoursDeModification(itemPanier);
       setModalProduit(produitComplet);
     }

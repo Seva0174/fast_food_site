@@ -79,7 +79,7 @@ export const PanierContent = ({ onClose, onEditItem }) => {
             <div className="flex-1 min-w-0 pr-3">
               <h4 className="font-semibold text-sm text-gray-800 truncate">{item.nom}</h4>
               <p className="text-xs text-gray-500">
-                {Number(item.prix).toFixed(2)} € × {item.quantite}
+                {Number(item.prix).toFixed(2)} € x {item.quantite}
               </p>
             </div>
 
@@ -101,15 +101,15 @@ export const PanierContent = ({ onClose, onEditItem }) => {
               </div>
 
               {/* Bouton pour modifier les options de l'item */}
-              {onEditItem && (
-                <button
-                  onClick={() => onEditItem(item)}
-                  className="p-1 text-gray-400 hover:text-blue-600 transition"
-                  title="Modifier les options"
-                >
-                  <Pencil className="w-4 h-4" />
-                </button>
-              )}
+              {onEditItem && (item.options?.length > 0 || item.groupesOptions?.length > 0 || item.estPersonnalisable) && (
+              <button
+                onClick={() => onEditItem(item)}
+                className="p-1 text-gray-400 hover:text-blue-600 transition"
+                title="Modifier les options"
+              >
+                <Pencil className="w-4 h-4" />
+              </button>
+            )}
 
               {/* Bouton supprimer */}
               <button

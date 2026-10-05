@@ -93,19 +93,42 @@ export const CommandeDetailModal = ({ commande, onClose }) => {
           <div>
             <h4 className="font-bold text-gray-800 text-sm mb-3">Articles commandés</h4>
             <div className="space-y-2">
-              {(commande.items || commande.commandesMenu || []).map((item, idx) => (
-                <div key={idx} className="flex justify-between items-center text-sm p-2.5 rounded-lg bg-gray-50 border border-gray-100">
-                  <div className="flex items-center gap-3">
-                    <span className="font-bold text-red-600 text-xs bg-red-100 px-2 py-1 rounded">
-                      x{item.quantite}
-                    </span>
-                    <span className="font-medium text-gray-800">{item.nomProduit || item.produit?.nom || `Produit #${item.id_produit || item.idProduit}`}</span>
+              {(commande.items || commande.commandeProduits || commande.commandesMenu || []).map((item, idx) => {
+                const optionsList = item.options || item.commandeItemOptions || [];
+
+                return (
+                  <div key={idx} className="p-2.5 rounded-lg bg-gray-50 border border-gray-100">
+                    <div className="flex justify-between items-center text-sm">
+                      <div className="flex items-center gap-3">
+                        <span className="font-bold text-red-600 text-xs bg-red-100 px-2 py-1 rounded">
+                          x{item.quantite}
+                        </span>
+                        <span className="font-medium text-gray-800">
+                          {item.nomProduit || item.produitMenu?.nom || item.produit?.nom || `Produit #${item.id_produit || item.idProduit}`}
+                        </span>
+                      </div>
+                      <span className="font-semibold text-gray-900">
+                        {((item.prix || item.prixUnitaire || 0) * item.quantite).toFixed(2)} €
+                      </span>
+                    </div>
+
+                    {/* Affichage épuré des options séparées par des virgules */}
+                    {optionsList.length > 0 && (
+                      <p className="text-xs text-gray-500 mt-1 pl-11">
+                        <span className="font-medium text-gray-600">Options : </span>
+                        {optionsList
+                          .map((opt) => {
+                            const nom = opt.nomOption || opt.nom || opt.optionItem?.nom;
+                            const surcout = Number(opt.surcout || 0);
+                            return surcout > 0 ? `${nom} (+${surcout.toFixed(2)} €)` : nom;
+                          })
+                          .filter(Boolean)
+                          .join(', ')}
+                      </p>
+                    )}
                   </div>
-                  <span className="font-semibold text-gray-900">
-                    {((item.prix || item.prixUnitaire || 0) * item.quantite).toFixed(2)} €
-                  </span>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 
