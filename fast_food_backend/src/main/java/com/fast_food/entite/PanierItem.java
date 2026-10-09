@@ -11,6 +11,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
@@ -34,6 +35,18 @@ public class PanierItem {
 
     @OneToMany(mappedBy = "panierItem", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PanierItemOption> options = new ArrayList<>();
+
+    @ManyToOne
+    @JoinColumn(name = "id_item_parent")
+    private PanierItem parent;
+
+    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("id ASC")
+    private List<PanierItem> composants = new ArrayList<>();
+
+    @ManyToOne
+    @JoinColumn(name = "id_formule_groupe")
+    private FormuleGroupe formuleGroupe;
 
     private int quantite;
 }

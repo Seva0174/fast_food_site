@@ -2,6 +2,8 @@ DROP TABLE IF EXISTS commande_item_options CASCADE;
 DROP TABLE IF EXISTS panier_item_options CASCADE;
 DROP TABLE IF EXISTS option_item CASCADE;
 DROP TABLE IF EXISTS option_groupe CASCADE;
+DROP TABLE IF EXISTS formule_groupe_produit CASCADE;
+DROP TABLE IF EXISTS formule_groupe CASCADE;
 DROP TABLE IF EXISTS commandes_fournisseurs_details CASCADE;
 DROP TABLE IF EXISTS recette CASCADE;
 DROP TABLE IF EXISTS catalogue_fournisseur CASCADE;
@@ -71,7 +73,8 @@ CREATE TABLE produit_menu (
     prix            NUMERIC(8,2) NOT NULL,
     image_url       VARCHAR(500),
     nom             VARCHAR(150) NOT NULL,
-    est_dispo       BOOLEAN NOT NULL DEFAULT TRUE
+    est_dispo       BOOLEAN NOT NULL DEFAULT TRUE,
+    est_formule     BOOLEAN NOT NULL DEFAULT FALSE
 );
 
 CREATE TABLE panier (
@@ -114,22 +117,59 @@ CREATE TABLE commandes (
 );
 
 -- =====================================================================
--- TABLES DE LIAISON
+-- TABLES DE FORMULES (MENUS)
+-- =====================================================================
+
+CREATE TABLE formule_groupe (
+    id              BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id_formule      BIGINT NOT NULL REFERENCES produit_menu(id) ON DELETE CASCADE,
+    nom             VARCHAR(100) NOT NULL,
+    min_selection   INTEGER NOT NULL DEFAULT 1,
+    max_selection   INTEGER NOT NULL DEFAULT 1,
+    ordre           INTEGER NOT NULL DEFAULT 0,
+
+    CONSTRAINT check_formule_groupe_selection
+        CHECK (min_selection >= 0 AND max_selection >= min_selection)
+);
+
+CREATE TABLE formule_groupe_produit (
+    id          BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id_groupe   BIGINT NOT NULL REFERENCES formule_groupe(id) ON DELETE CASCADE,
+    id_produit  BIGINT NOT NULL REFERENCES produit_menu(id) ON DELETE RESTRICT,
+    surcout     NUMERIC(8,2) NOT NULL DEFAULT 0.00,
+
+    CONSTRAINT uq_formule_groupe_produit UNIQUE (id_groupe, id_produit)
+);
+
+-- =====================================================================
+-- TABLES DE LIAISON (PANIERS & COMMANDES)
 -- =====================================================================
 
 CREATE TABLE panier_items (
-    id          BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    id_panier   BIGINT NOT NULL REFERENCES panier(id) ON DELETE CASCADE,
-    id_produit  BIGINT NOT NULL REFERENCES produit_menu(id) ON DELETE CASCADE,
-    quantite    INTEGER NOT NULL CHECK (quantite > 0)
+    id                  BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id_panier           BIGINT REFERENCES panier(id) ON DELETE CASCADE,
+    id_produit          BIGINT NOT NULL REFERENCES produit_menu(id) ON DELETE CASCADE,
+    quantite            INTEGER NOT NULL CHECK (quantite > 0),
+    id_item_parent      BIGINT REFERENCES panier_items(id) ON DELETE CASCADE,
+    id_formule_groupe   BIGINT REFERENCES formule_groupe(id) ON DELETE CASCADE,
+
+    -- Ligne principale : rattachée au panier.
+    -- Composant d'une formule : rattaché uniquement à sa ligne parent (pas directement au panier).
+    CONSTRAINT check_panier_item_rattachement CHECK (
+        (id_item_parent IS NULL AND id_panier IS NOT NULL AND id_formule_groupe IS NULL)
+        OR
+        (id_item_parent IS NOT NULL AND id_panier IS NULL AND id_formule_groupe IS NOT NULL)
+    )
 );
 
 CREATE TABLE commandes_menu (
-    id          BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    id_commande BIGINT NOT NULL REFERENCES commandes(id) ON DELETE CASCADE,
-    id_produit  BIGINT NOT NULL REFERENCES produit_menu(id) ON DELETE RESTRICT,
-    quantite    INTEGER NOT NULL CHECK (quantite > 0),
-    prix        NUMERIC(8,2) NOT NULL -- prix unitaire au moment de la commande
+    id                  BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id_commande         BIGINT NOT NULL REFERENCES commandes(id) ON DELETE CASCADE,
+    id_produit          BIGINT NOT NULL REFERENCES produit_menu(id) ON DELETE RESTRICT,
+    quantite            INTEGER NOT NULL CHECK (quantite > 0),
+    prix                NUMERIC(8,2) NOT NULL,
+    id_item_parent      BIGINT REFERENCES commandes_menu(id) ON DELETE CASCADE,
+    id_formule_groupe   BIGINT REFERENCES formule_groupe(id) ON DELETE SET NULL
 );
 
 CREATE TABLE employe_heure (
@@ -171,41 +211,37 @@ CREATE TABLE commandes_fournisseurs_details (
 );
 
 -- =====================================================================
--- TABLES DE POUR LA COMPOSITION D'UN PRODUIT
+-- TABLES POUR LA COMPOSITION D'UN PRODUIT (OPTIONS)
 -- =====================================================================
 
--- Groupes d'options pour un produit (ex: "Choix de la viande", "Sauces")
 CREATE TABLE option_groupe (
     id              BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     id_produit      BIGINT NOT NULL REFERENCES produit_menu(id) ON DELETE CASCADE,
-    nom             VARCHAR(100) NOT NULL, -- ex: "Choix Viande", "Sauce"
-    min_selection   INTEGER NOT NULL DEFAULT 1, -- 0 si optionnel
+    nom             VARCHAR(100) NOT NULL,
+    min_selection   INTEGER NOT NULL DEFAULT 1,
     max_selection   INTEGER NOT NULL DEFAULT 1
 );
 
--- Choix disponibles dans un groupe
 CREATE TABLE option_item (
     id                  BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     id_groupe           BIGINT NOT NULL REFERENCES option_groupe(id) ON DELETE CASCADE,
     id_matiere          BIGINT NOT NULL REFERENCES stock_matiere_premiere(id) ON DELETE RESTRICT,
-    nom                 VARCHAR(100) NOT NULL, -- ex: "Poulet", "Sauce Algérienne"
-    quantite_deduite    NUMERIC(10,3) NOT NULL DEFAULT 1, -- quantité consommée en stock
-    surcout             NUMERIC(8,2) NOT NULL DEFAULT 0.00 -- supplément prix éventuel
+    nom                 VARCHAR(100) NOT NULL,
+    quantite_deduite    NUMERIC(10,3) NOT NULL DEFAULT 1,
+    surcout             NUMERIC(8,2) NOT NULL DEFAULT 0.00
 );
 
--- Options sélectionnées dans le panier
 CREATE TABLE panier_item_options (
     id                  BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     id_panier_item      BIGINT NOT NULL REFERENCES panier_items(id) ON DELETE CASCADE,
-    id_option_item      BIGINT NOT NULL REFERENCES option_item(id) ON DELETE RESTRICT
+    id_option_item      BIGINT NOT NULL REFERENCES option_item(id) ON DELETE CASCADE
 );
 
--- Options enregistrées lors de la validation de la commande
 CREATE TABLE commande_item_options (
     id                  BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     id_commande_menu    BIGINT NOT NULL REFERENCES commandes_menu(id) ON DELETE CASCADE,
-    id_option_item      BIGINT NOT NULL REFERENCES option_item(id) ON DELETE RESTRICT,
-    nom_option          VARCHAR(100) NOT NULL, -- Sauvegarde du nom au moment de la commande
+    id_option_item      BIGINT REFERENCES option_item(id) ON DELETE SET NULL,
+    nom_option          VARCHAR(100) NOT NULL,
     surcout             NUMERIC(8,2) NOT NULL DEFAULT 0.00
 );
 
@@ -230,7 +266,7 @@ CREATE INDEX idx_recette_produit               ON recette(id_produit);
 CREATE INDEX idx_recette_matiere               ON recette(id_matiere);
 CREATE INDEX idx_cf_details_commande           ON commandes_fournisseurs_details(id_commande_fournisseur);
 CREATE INDEX idx_cf_details_stock              ON commandes_fournisseurs_details(id_stock);
-CREATE INDEX idx_employe_user ON employe(id_user);
+CREATE INDEX idx_employe_user                  ON employe(id_user);
 CREATE INDEX idx_option_groupe_produit         ON option_groupe(id_produit);
 CREATE INDEX idx_option_item_groupe            ON option_item(id_groupe);
 CREATE INDEX idx_option_item_matiere           ON option_item(id_matiere);
@@ -238,3 +274,10 @@ CREATE INDEX idx_panier_item_options_item      ON panier_item_options(id_panier_
 CREATE INDEX idx_panier_item_options_option    ON panier_item_options(id_option_item);
 CREATE INDEX idx_commande_item_options_menu    ON commande_item_options(id_commande_menu);
 CREATE INDEX idx_commande_item_options_option  ON commande_item_options(id_option_item);
+
+-- Index pour les formules
+CREATE INDEX idx_formule_groupe_formule        ON formule_groupe(id_formule);
+CREATE INDEX idx_formule_groupe_produit_groupe ON formule_groupe_produit(id_groupe);
+CREATE INDEX idx_formule_groupe_produit_produit ON formule_groupe_produit(id_produit);
+CREATE INDEX idx_panier_items_parent           ON panier_items(id_item_parent);
+CREATE INDEX idx_commandes_menu_parent         ON commandes_menu(id_item_parent);

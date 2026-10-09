@@ -12,4 +12,6 @@ public class AjouterProduitRequest {
     @Min(value = 1, message = "La quantité doit être au moins de 1")
     private int quantite;
     private List<Long> optionIds;
+    private List<ChoixFormuleRequest> choixFormule;
+
 }

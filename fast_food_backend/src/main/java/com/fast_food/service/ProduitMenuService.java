@@ -15,8 +15,10 @@ import com.fast_food.entite.ProduitMenu;
 import com.fast_food.entite.Recette;
 import com.fast_food.entite.StockMatierePremiere;
 import com.fast_food.exception.ResourceNotFoundException;
+import com.fast_food.mapper.FormuleMapper;
 import com.fast_food.mapper.ProduitMenuMapper;
 import com.fast_food.repositorie.CategorieRepository;
+import com.fast_food.repositorie.FormuleGroupeProduitRepository;
 import com.fast_food.repositorie.ProduitMenuRepository;
 import com.fast_food.repositorie.RecetteRepository;
 import com.fast_food.repositorie.StockMatierePremiereRepository;
@@ -31,7 +33,9 @@ public class ProduitMenuService {
     private final CategorieRepository categorieRepository;
     private final RecetteRepository recetteRepository; 
     private final StockMatierePremiereRepository stockMatierePremiereRepository; 
+    private final FormuleGroupeProduitRepository formuleGroupeProduitRepository;
     private final ProduitMenuMapper produitMenuMapper;
+    private final FormuleMapper formuleMapper;
 
     @Transactional(readOnly = true)
     public List<ProduitMenuResponse> getAllProduits() {
@@ -58,7 +62,7 @@ public class ProduitMenuService {
                 .collect(Collectors.toList());
     }
 
-    // Créer un produit avec sa recette (Admin)
+    // Créer un produit avec sa recette, ou une formule (Admin)
     @Transactional
     public ProduitMenuResponse createProduit(ProduitMenuRequest request) {
         Categorie categorie = categorieRepository.findById(request.getIdCategorie())
@@ -66,11 +70,15 @@ public class ProduitMenuService {
 
         ProduitMenu produit = produitMenuMapper.toEntity(request);
         produit.setCategorie(categorie);
+        // Le caractère "formule" est défini à la création et ne peut plus être modifié ensuite
+        produit.setEstFormule(Boolean.TRUE.equals(request.getEstFormule()));
 
         ProduitMenu savedProduit = produitMenuRepository.save(produit);
 
-        // Sauvegarder la recette si fournie
-        enregistrerRecette(savedProduit, request);
+        // Une formule n'a pas de recette : son stock est déduit à partir des produits choisis
+        if (!savedProduit.isEstFormule()) {
+            enregistrerRecette(savedProduit, request);
+        }
 
         return mapToResponseWithRecette(savedProduit);
     }
@@ -95,9 +103,11 @@ public class ProduitMenuService {
 
         ProduitMenu updatedProduit = produitMenuRepository.save(produit);
 
-        // Réinitialiser et enregistrer la nouvelle recette
-        recetteRepository.deleteByProduitMenu(updatedProduit);
-        enregistrerRecette(updatedProduit, request);
+        // Réinitialiser et enregistrer la nouvelle recette (sauf pour une formule)
+        if (!updatedProduit.isEstFormule()) {
+            recetteRepository.deleteByProduitMenu(updatedProduit);
+            enregistrerRecette(updatedProduit, request);
+        }
 
         return mapToResponseWithRecette(updatedProduit);
     }
@@ -139,6 +149,12 @@ public class ProduitMenuService {
         }).collect(Collectors.toList());
 
         response.setRecette(recetteResponses);
+
+        // Informations propres aux formules
+        response.setEstFormule(produit.isEstFormule());
+        response.setGroupesFormule(formuleMapper.toGroupesResponse(produit.getGroupesFormule()));
+        response.setFormuleRealisable(formuleMapper.estRealisable(produit));
+
         return response;
     }
 
@@ -156,6 +172,13 @@ public class ProduitMenuService {
     public void deleteProduit(Long id) {
         ProduitMenu produit = produitMenuRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Produit introuvable avec l'ID : " + id));
+
+        // Sécurisation : un produit proposé dans une formule ne peut pas être supprimé
+        if (formuleGroupeProduitRepository.existsByProduitId(id)) {
+            throw new IllegalArgumentException("Impossible de supprimer '" + produit.getNom()
+                    + "' : ce produit est proposé dans une ou plusieurs formules. Retirez-le d'abord de ces formules.");
+        }
+
         recetteRepository.deleteByProduitMenu(produit);
         produitMenuRepository.delete(produit);
     }

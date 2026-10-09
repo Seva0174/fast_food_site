@@ -70,31 +70,43 @@ public class EmailService {
 
             sb.append("<h3>Détails de la commande :</h3><ul>");
             for (CommandeMenu item : commande.getCommandeProduits()) {
+                if (item.getParent() != null) {
+                    continue;
+                }
+
+                BigDecimal prixUnitaire = item.getPrix();
+                if (item.getComposants() != null) {
+                    for (CommandeMenu composant : item.getComposants()) {
+                        prixUnitaire = prixUnitaire.add(composant.getPrix());
+                    }
+                }
+
                 sb.append("<li>")
                 .append("<strong>").append(item.getQuantite()).append("x ")
                 .append(item.getProduitMenu().getNom()).append("</strong>")
-                .append(" — ").append(item.getPrix().multiply(BigDecimal.valueOf(item.getQuantite()))).append(" €");
+                .append(" — ").append(prixUnitaire.multiply(BigDecimal.valueOf(item.getQuantite()))).append(" €");
 
-                // Ajout de la liste des options / suppléments
-                if (item.getOptions() != null && !item.getOptions().isEmpty()) {
-                    List<String> detailsOptions = new ArrayList<>();
-                    for (CommandeItemOption opt : item.getOptions()) {
-                        String nom = opt.getNomOption() != null ? opt.getNomOption() 
-                                : (opt.getOptionItem() != null ? opt.getOptionItem().getNom() : "");
+                ajouterOptionsHtml(sb, item);
 
-                        if (opt.getSurcout() != null && opt.getSurcout().compareTo(BigDecimal.ZERO) > 0) {
-                            nom += " (+" + opt.getSurcout() + " €)";
+                // Composition de la formule
+                if (item.getComposants() != null && !item.getComposants().isEmpty()) {
+                    sb.append("<ul style=\"font-size: 0.9em; color: #555;\">");
+                    for (CommandeMenu composant : item.getComposants()) {
+                        sb.append("<li>");
+                        if (composant.getFormuleGroupe() != null) {
+                            sb.append(composant.getFormuleGroupe().getNom()).append(" : ");
                         }
-                        if (!nom.isBlank()) {
-                            detailsOptions.add(nom);
-                        }
-                    }
+                        sb.append(composant.getProduitMenu().getNom());
 
-                    if (!detailsOptions.isEmpty()) {
-                        sb.append("<br><span style=\"font-size: 0.9em; color: #555;\">Options : ")
-                        .append(String.join(", ", detailsOptions))
-                        .append("</span>");
+                        BigDecimal supplement = calculerSupplementEmplacement(composant);
+                        if (supplement.compareTo(BigDecimal.ZERO) > 0) {
+                            sb.append(" (+").append(supplement).append(" €)");
+                        }
+
+                        ajouterOptionsHtml(sb, composant);
+                        sb.append("</li>");
                     }
+                    sb.append("</ul>");
                 }
 
                 sb.append("</li>");
@@ -108,6 +120,45 @@ public class EmailService {
         } catch (MessagingException e) {
             System.err.println("Échec de l'envoi de la confirmation de commande : " + e.getMessage());
         }
+    }
+
+    // Ajoute la liste des options / suppléments d'une ligne de commande
+    private void ajouterOptionsHtml(StringBuilder sb, CommandeMenu ligne) {
+        if (ligne.getOptions() == null || ligne.getOptions().isEmpty()) {
+            return;
+        }
+
+        List<String> detailsOptions = new ArrayList<>();
+        for (CommandeItemOption opt : ligne.getOptions()) {
+            String nom = opt.getNomOption() != null ? opt.getNomOption()
+                    : (opt.getOptionItem() != null ? opt.getOptionItem().getNom() : "");
+
+            if (opt.getSurcout() != null && opt.getSurcout().compareTo(BigDecimal.ZERO) > 0) {
+                nom += " (+" + opt.getSurcout() + " €)";
+            }
+            if (!nom.isBlank()) {
+                detailsOptions.add(nom);
+            }
+        }
+
+        if (!detailsOptions.isEmpty()) {
+            sb.append("<br><span style=\"font-size: 0.9em; color: #555;\">Options : ")
+            .append(String.join(", ", detailsOptions))
+            .append("</span>");
+        }
+    }
+
+    // Supplément lié à l'emplacement d'une formule (prix de la ligne enfant sans les surcoûts des options)
+    private BigDecimal calculerSupplementEmplacement(CommandeMenu composant) {
+        BigDecimal supplement = composant.getPrix() != null ? composant.getPrix() : BigDecimal.ZERO;
+        if (composant.getOptions() != null) {
+            for (CommandeItemOption opt : composant.getOptions()) {
+                if (opt.getSurcout() != null) {
+                    supplement = supplement.subtract(opt.getSurcout());
+                }
+            }
+        }
+        return supplement;
     }
 
     @Async

@@ -12,6 +12,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OrderBy;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -33,10 +34,14 @@ public class ProduitMenu {
     @OneToMany(mappedBy = "produitMenu", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OptionGroupe> groupesOptions = new ArrayList<>();
 
+    @OneToMany(mappedBy = "formule", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("ordre ASC, id ASC")
+    private List<FormuleGroupe> groupesFormule = new ArrayList<>();
+
     private String description;
     private BigDecimal prix;
     private String imageUrl;
     private String nom;
     private boolean estDispo;
-    
+    private boolean estFormule;
 }

@@ -1,6 +1,7 @@
 package com.fast_food.dto;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 
 import lombok.Data;
@@ -16,4 +17,7 @@ public class ProduitMenuResponse {
     private CategorieResponse categorie;
     private List<RecetteItemResponse> recette;
     private List<OptionGroupeResponse> groupesOptions;
+    private boolean estFormule;
+    private boolean formuleRealisable;
+    private List<FormuleGroupeResponse> groupesFormule = new ArrayList<>();
 }

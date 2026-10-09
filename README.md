@@ -100,14 +100,14 @@
     - [x]  Masse salarial
     - [x]  Top des ventes
     - [x]  adapté les stats selon une periode ou global
-- [ ]  Sous page Gestion de la carte du fast food
+- [x]  Sous page Gestion de la carte du fast food
     - [x]  Afficher tout les produits
     - [x]  Ajouter un produit a la carte
     - [x]  Enlever un produit de la carte
     - [x]  Modifier un produit de la carte (prix, nom …)
     - [x]  rendre un produit disponible ou pas
     - [x]  pouvoir modifier la compsition d’un produit de la carte
-    - [ ]  creer et modifier les options d’un produit
+    - [x]  creer et modifier les options d’un produit
 
 ### Page employé :
 
@@ -128,7 +128,7 @@
 
 ## A faire :
 
-- Ajouter choix de composition d’un produit par un client
+- Ajouter fonctionnalité de menus
 - Corriger les bug :
     - Vérifier la bonne gestion des stocks après :
         - commande fournisseur

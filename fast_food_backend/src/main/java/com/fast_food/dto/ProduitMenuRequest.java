@@ -13,4 +13,5 @@ public class ProduitMenuRequest {
     private Boolean estDispo;
     private Long idCategorie;
     private List<RecetteItemRequest> recette;
+    private Boolean estFormule;
 }

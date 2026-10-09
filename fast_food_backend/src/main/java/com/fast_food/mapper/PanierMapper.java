@@ -21,6 +21,8 @@ public class PanierMapper {
         PanierResponse response = new PanierResponse();
         response.setId(panier.getId());
 
+        // Le panier ne contient que les lignes principales : les composants d'une formule
+        // sont rattaches a leur ligne parent et deja inclus dans son prix.
         if (panier.getPanierContenu() != null) {
             List<PanierItemResponse> itemResponses = panier.getPanierContenu().stream()
                     .map(this::toItemResponse)
@@ -39,6 +41,10 @@ public class PanierMapper {
         return response;
     }
 
+    /**
+     * Ligne principale du panier.
+     * Pour une formule, le prix unitaire est le prix de base + les supplements de tous les composants.
+     */
     public PanierItemResponse toItemResponse(PanierItem item) {
         PanierItemResponse response = new PanierItemResponse();
         response.setId(item.getId());
@@ -46,9 +52,64 @@ public class PanierMapper {
         response.setNomProduit(item.getProduitMenu().getNom());
         response.setQuantite(item.getQuantite());
 
-        // Calcul des options et du surcoût
-        BigDecimal surcoutTotal = BigDecimal.ZERO;
         List<PanierItemOptionResponse> optionResponses = new ArrayList<>();
+        BigDecimal surcoutOptions = remplirOptions(item, optionResponses);
+        response.setOptions(optionResponses);
+
+        BigDecimal prixUnitaire = item.getProduitMenu().getPrix().add(surcoutOptions);
+
+        List<PanierItemResponse> composants = new ArrayList<>();
+        if (item.getComposants() != null) {
+            for (PanierItem enfant : item.getComposants()) {
+                PanierItemResponse enfantResponse = toComposantResponse(enfant);
+                composants.add(enfantResponse);
+                prixUnitaire = prixUnitaire.add(enfantResponse.getPrixUnitaire());
+            }
+        }
+        response.setComposants(composants);
+
+        response.setPrixUnitaire(prixUnitaire);
+        response.setSousTotal(prixUnitaire.multiply(BigDecimal.valueOf(item.getQuantite())));
+
+        return response;
+    }
+
+    /**
+     * Composant d'une formule : son prix unitaire est uniquement le supplement
+     * (surcout de l'emplacement + surcouts des options choisies).
+     */
+    private PanierItemResponse toComposantResponse(PanierItem enfant) {
+        PanierItemResponse response = new PanierItemResponse();
+        response.setId(enfant.getId());
+        response.setProduitId(enfant.getProduitMenu().getId());
+        response.setNomProduit(enfant.getProduitMenu().getNom());
+        response.setQuantite(enfant.getQuantite());
+
+        if (enfant.getFormuleGroupe() != null) {
+            response.setIdGroupe(enfant.getFormuleGroupe().getId());
+            response.setNomGroupe(enfant.getFormuleGroupe().getNom());
+        }
+
+        List<PanierItemOptionResponse> optionResponses = new ArrayList<>();
+        BigDecimal surcoutOptions = remplirOptions(enfant, optionResponses);
+        response.setOptions(optionResponses);
+
+        BigDecimal surcoutEmplacement = enfant.getFormuleGroupe() != null
+                ? enfant.getFormuleGroupe().surcoutPour(enfant.getProduitMenu())
+                : BigDecimal.ZERO;
+        response.setSurcoutEmplacement(surcoutEmplacement);
+
+        BigDecimal supplement = surcoutEmplacement.add(surcoutOptions);
+        response.setPrixUnitaire(supplement);
+        response.setSousTotal(supplement.multiply(BigDecimal.valueOf(enfant.getQuantite())));
+        response.setComposants(new ArrayList<>());
+
+        return response;
+    }
+
+    // Remplit la liste des options et retourne le total des surcouts
+    private BigDecimal remplirOptions(PanierItem item, List<PanierItemOptionResponse> sortie) {
+        BigDecimal surcoutTotal = BigDecimal.ZERO;
 
         if (item.getOptions() != null) {
             for (PanierItemOption pio : item.getOptions()) {
@@ -56,23 +117,13 @@ public class PanierMapper {
                 optDto.setId(pio.getOptionItem().getId());
                 optDto.setNom(pio.getOptionItem().getNom());
                 optDto.setSurcout(pio.getOptionItem().getSurcout());
-                optionResponses.add(optDto);
+                sortie.add(optDto);
 
                 if (pio.getOptionItem().getSurcout() != null) {
                     surcoutTotal = surcoutTotal.add(pio.getOptionItem().getSurcout());
                 }
             }
         }
-
-        response.setOptions(optionResponses);
-
-        // Prix unitaire réel = Prix produit + surcoûts
-        BigDecimal prixUnitaireCalcule = item.getProduitMenu().getPrix().add(surcoutTotal);
-        response.setPrixUnitaire(prixUnitaireCalcule);
-
-        // Sous-total = Prix unitaire réel * Quantité
-        response.setSousTotal(prixUnitaireCalcule.multiply(BigDecimal.valueOf(item.getQuantite())));
-
-        return response;
+        return surcoutTotal;
     }
 }

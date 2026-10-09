@@ -6,6 +6,7 @@ import com.fast_food.dto.CommandeResponse;
 import com.fast_food.entite.Commande;
 import com.fast_food.entite.CommandeItemOption;
 import com.fast_food.entite.CommandeMenu;
+import com.fast_food.entite.FormuleGroupe;
 import com.fast_food.entite.OptionItem;
 import com.fast_food.entite.Panier;
 import com.fast_food.entite.PanierItem;
@@ -75,39 +76,22 @@ public class CommandeService {
             throw new IllegalArgumentException("Votre panier est vide. Impossible de passer la commande.");
         }
 
-        // 2. Déstockage atomique (Recette de base + Options)
+        // 2. Contrôle des formules et déstockage atomique (recette de base + options)
         for (PanierItem item : panier.getPanierContenu()) {
             ProduitMenu produit = item.getProduitMenu();
 
-            if (Boolean.FALSE.equals(produit.isEstDispo())) {
+            if (!produit.isEstDispo()) {
                 throw new IllegalArgumentException("Le produit '" + produit.getNom() + "' n'est plus disponible au menu.");
             }
 
-            // 2.a. Déstockage des ingrédients de la recette de base
-            List<Recette> recettes = recetteRepository.findByProduitMenu(produit);
-            for (Recette recette : recettes) {
-                BigDecimal quantiteNecessaire = recette.getQuantiteRequise()
-                        .multiply(BigDecimal.valueOf(item.getQuantite()));
+            deduireStock(produit, item.getQuantite(), item.getOptions());
 
-                int updated = stockRepository.decrementStock(recette.getMatierePremiere().getId(), quantiteNecessaire);
-                if (updated == 0) {
-                    throw new IllegalArgumentException("Stock insuffisant pour " + recette.getMatierePremiere().getNom());
-                }
-            }
+            // Une formule n'a pas de recette propre : le stock est déduit à partir de ses composants
+            if (produit.isEstFormule()) {
+                panierService.validerCompositionFormule(produit, item.getComposants());
 
-            // 2.b. Déstockage des matières premières liées aux options choisies
-            if (item.getOptions() != null) {
-                for (PanierItemOption pio : item.getOptions()) {
-                    OptionItem option = pio.getOptionItem();
-                    if (option.getMatierePremiere() != null && option.getQuantiteDeduite() != null) {
-                        BigDecimal qteOptionTotale = option.getQuantiteDeduite()
-                                .multiply(BigDecimal.valueOf(item.getQuantite()));
-
-                        int updatedOpt = stockRepository.decrementStock(option.getMatierePremiere().getId(), qteOptionTotale);
-                        if (updatedOpt == 0) {
-                            throw new IllegalArgumentException("Stock insuffisant pour l'option : " + option.getNom());
-                        }
-                    }
+                for (PanierItem composant : item.getComposants()) {
+                    deduireStock(composant.getProduitMenu(), item.getQuantite(), composant.getOptions());
                 }
             }
         }
@@ -126,50 +110,37 @@ public class CommandeService {
 
         commande.setDateCreation(LocalDateTime.now());
 
-        BigDecimal totalCommande = BigDecimal.ZERO;
-        List<CommandeMenu> itemsCommande = new ArrayList<>();
+        // Liste à plat : chaque ligne principale est suivie de ses lignes enfants (composants de formule)
+        List<CommandeMenu> lignes = new ArrayList<>();
 
         for (PanierItem item : panier.getPanierContenu()) {
-            BigDecimal prixUnitaireProduit = item.getProduitMenu().getPrix();
-            BigDecimal surcoutOptions = BigDecimal.ZERO;
+            ProduitMenu produit = item.getProduitMenu();
 
-            List<CommandeItemOption> optionsCommande = new ArrayList<>();
+            CommandeMenu ligne = creerLigneCommande(commande, produit, item.getQuantite(),
+                    produit.getPrix(), item.getOptions(), null, null);
+            lignes.add(ligne);
 
-            // Traitement et historisation des options
-            if (item.getOptions() != null) {
-                for (PanierItemOption pio : item.getOptions()) {
-                    OptionItem opt = pio.getOptionItem();
-                    surcoutOptions = surcoutOptions.add(opt.getSurcout() != null ? opt.getSurcout() : BigDecimal.ZERO);
+            if (produit.isEstFormule()) {
+                for (PanierItem composant : item.getComposants()) {
+                    FormuleGroupe groupe = composant.getFormuleGroupe();
+                    BigDecimal surcoutEmplacement = groupe.surcoutPour(composant.getProduitMenu());
 
-                    CommandeItemOption cio = new CommandeItemOption();
-                    cio.setOptionItem(opt);
-                    cio.setNomOption(opt.getNom());
-                    cio.setSurcout(opt.getSurcout());
-                    optionsCommande.add(cio);
+                    CommandeMenu ligneEnfant = creerLigneCommande(commande, composant.getProduitMenu(),
+                            item.getQuantite(), surcoutEmplacement, composant.getOptions(), ligne, groupe);
+                    ligne.getComposants().add(ligneEnfant);
+                    lignes.add(ligneEnfant);
                 }
             }
+        }
 
-            BigDecimal prixTotalUnitaireItem = prixUnitaireProduit.add(surcoutOptions);
-            BigDecimal sousTotalItem = prixTotalUnitaireItem.multiply(BigDecimal.valueOf(item.getQuantite()));
-            totalCommande = totalCommande.add(sousTotalItem);
-
-            CommandeMenu commandeMenu = new CommandeMenu();
-            commandeMenu.setCommandeInfo(commande);
-            commandeMenu.setProduitMenu(item.getProduitMenu());
-            commandeMenu.setQuantite(item.getQuantite());
-            commandeMenu.setPrix(prixTotalUnitaireItem);
-
-            // Liaison bi-directionnelle avec les options historisées
-            for (CommandeItemOption cio : optionsCommande) {
-                cio.setCommandeMenu(commandeMenu);
-            }
-            commandeMenu.setOptions(optionsCommande);
-
-            itemsCommande.add(commandeMenu);
+        // Le prix des lignes enfants ne contient que leurs suppléments : la somme ne compte donc rien en double
+        BigDecimal totalCommande = BigDecimal.ZERO;
+        for (CommandeMenu ligne : lignes) {
+            totalCommande = totalCommande.add(ligne.getPrix().multiply(BigDecimal.valueOf(ligne.getQuantite())));
         }
 
         commande.setTotal(totalCommande);
-        commande.setCommandeProduits(itemsCommande);
+        commande.setCommandeProduits(lignes);
 
         Commande commandeSauvegardee = commandeRepository.save(commande);
 
@@ -178,6 +149,72 @@ public class CommandeService {
         emailService.envoyerRecuCommande(commandeSauvegardee);
 
         return commandeMapper.toResponse(commandeSauvegardee);
+    }
+
+    // Déduit du stock la recette du produit et les matières premières des options choisies
+    private void deduireStock(ProduitMenu produit, int quantite, List<PanierItemOption> options) {
+        BigDecimal facteur = BigDecimal.valueOf(quantite);
+
+        // Ingrédients de la recette de base
+        List<Recette> recettes = recetteRepository.findByProduitMenu(produit);
+        for (Recette recette : recettes) {
+            BigDecimal quantiteNecessaire = recette.getQuantiteRequise().multiply(facteur);
+
+            int updated = stockRepository.decrementStock(recette.getMatierePremiere().getId(), quantiteNecessaire);
+            if (updated == 0) {
+                throw new IllegalArgumentException("Stock insuffisant pour " + recette.getMatierePremiere().getNom());
+            }
+        }
+
+        // Matières premières liées aux options choisies
+        if (options != null) {
+            for (PanierItemOption pio : options) {
+                OptionItem option = pio.getOptionItem();
+                if (option.getMatierePremiere() != null && option.getQuantiteDeduite() != null) {
+                    BigDecimal qteOptionTotale = option.getQuantiteDeduite().multiply(facteur);
+
+                    int updatedOpt = stockRepository.decrementStock(option.getMatierePremiere().getId(), qteOptionTotale);
+                    if (updatedOpt == 0) {
+                        throw new IllegalArgumentException("Stock insuffisant pour l'option : " + option.getNom());
+                    }
+                }
+            }
+        }
+    }
+
+    // Construit une ligne de commande avec l'historisation de ses options
+    // prixBase : prix du produit pour une ligne principale, surcout de l'emplacement pour une ligne enfant
+    private CommandeMenu creerLigneCommande(Commande commande, ProduitMenu produit, int quantite,
+                                            BigDecimal prixBase, List<PanierItemOption> optionsPanier,
+                                            CommandeMenu parent, FormuleGroupe groupe) {
+        CommandeMenu ligne = new CommandeMenu();
+        ligne.setCommandeInfo(commande);
+        ligne.setProduitMenu(produit);
+        ligne.setQuantite(quantite);
+        ligne.setParent(parent);
+        ligne.setFormuleGroupe(groupe);
+
+        BigDecimal prix = prixBase;
+        List<CommandeItemOption> optionsCommande = new ArrayList<>();
+
+        if (optionsPanier != null) {
+            for (PanierItemOption pio : optionsPanier) {
+                OptionItem opt = pio.getOptionItem();
+                BigDecimal surcout = opt.getSurcout() != null ? opt.getSurcout() : BigDecimal.ZERO;
+                prix = prix.add(surcout);
+
+                CommandeItemOption cio = new CommandeItemOption();
+                cio.setCommandeMenu(ligne);
+                cio.setOptionItem(opt);
+                cio.setNomOption(opt.getNom());
+                cio.setSurcout(surcout);
+                optionsCommande.add(cio);
+            }
+        }
+
+        ligne.setPrix(prix);
+        ligne.setOptions(optionsCommande);
+        return ligne;
     }
 
     @Transactional(readOnly = true)

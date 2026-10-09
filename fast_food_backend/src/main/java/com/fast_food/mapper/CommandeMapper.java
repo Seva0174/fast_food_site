@@ -17,6 +17,12 @@ import java.util.stream.Collectors;
 @Component
 public class CommandeMapper {
 
+    /**
+     * Ligne de commande.
+     * Pour une formule, le prix unitaire retourne est le prix de base + les supplements de tous
+     * les composants, et le sous-total est calcule sur ce prix complet.
+     * Pour un composant, le prix retourne est uniquement son supplement.
+     */
     public CommandeItemResponse toItemResponse(CommandeMenu item) {
         if (item == null) {
             return null;
@@ -24,18 +30,17 @@ public class CommandeMapper {
 
         CommandeItemResponse response = new CommandeItemResponse();
         response.setId(item.getId());
-        
+
         if (item.getProduitMenu() != null) {
             response.setProduitId(item.getProduitMenu().getId());
             response.setNomProduit(item.getProduitMenu().getNom());
         }
 
-        response.setQuantite(item.getQuantite());
-        response.setPrix(item.getPrix());
-
-        if (item.getPrix() != null) {
-            response.setSousTotal(item.getPrix().multiply(BigDecimal.valueOf(item.getQuantite())));
+        if (item.getFormuleGroupe() != null) {
+            response.setNomGroupe(item.getFormuleGroupe().getNom());
         }
+
+        response.setQuantite(item.getQuantite());
 
         // Mapping des options
         List<CommandeItemOptionResponse> optionResponses = new ArrayList<>();
@@ -48,6 +53,24 @@ public class CommandeMapper {
             }
         }
         response.setOptions(optionResponses);
+
+        // Mapping des composants (formule)
+        BigDecimal prixUnitaire = item.getPrix();
+        List<CommandeItemResponse> composants = new ArrayList<>();
+        if (item.getComposants() != null) {
+            for (CommandeMenu enfant : item.getComposants()) {
+                composants.add(toItemResponse(enfant));
+                if (prixUnitaire != null && enfant.getPrix() != null) {
+                    prixUnitaire = prixUnitaire.add(enfant.getPrix());
+                }
+            }
+        }
+        response.setComposants(composants);
+
+        response.setPrix(prixUnitaire);
+        if (prixUnitaire != null) {
+            response.setSousTotal(prixUnitaire.multiply(BigDecimal.valueOf(item.getQuantite())));
+        }
 
         return response;
     }
@@ -63,24 +86,27 @@ public class CommandeMapper {
         if (commande.getUser() != null) {
             response.setNomClient(commande.getUser().getNom());
         }
-        
+
         if (commande.getTypeRetrait() != null) {
             response.setTypeRetrait(commande.getTypeRetrait().name());
         }
-        
+
         if (commande.getStatus() != null) {
             response.setStatus(commande.getStatus().name());
         }
-        
+
         response.setCpRue(commande.getCpRue());
         response.setCpVille(commande.getCpVille());
         response.setCpCodePostal(commande.getCpCodePostal());
         response.setTotal(commande.getTotal());
         response.setDateCreation(commande.getDateCreation());
 
+        // Seules les lignes principales sont listees : les composants d'une formule
+        // sont retournes dans la liste "composants" de leur ligne parent.
         List<CommandeItemResponse> itemsResponse = (commande.getCommandeProduits() == null)
                 ? Collections.emptyList()
                 : commande.getCommandeProduits().stream()
+                        .filter(ligne -> ligne.getParent() == null)
                         .map(this::toItemResponse)
                         .collect(Collectors.toList());
 
