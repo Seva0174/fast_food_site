@@ -200,9 +200,9 @@ INSERT INTO option_item (id_groupe, id_matiere, nom, quantite_deduite, surcout) 
 (5, 19, 'Sauce Algérienne', 0.020, 0.00),
 (5, 20, 'Sauce Samouraï',   0.020, 0.00),
 
--- Groupe 6 : Suppléments Classic Burger (groupe 6)
-(6, 6,  'Extra Cheddar',    1.000, 1.00),
-(6, 14, 'Extra Bacon',      0.030, 1.50);
+-- Groupe 7 : Suppléments Classic Burger (groupe 7)
+(7, 6,  'Extra Cheddar',    1.000, 1.00),
+(7, 14, 'Extra Bacon',      0.030, 1.50);
 
 -- =====================================================================
 -- PANIERS EN COURS
@@ -213,16 +213,16 @@ INSERT INTO panier (id_user) VALUES
 
 INSERT INTO panier_items (id_panier, id_produit, quantite) VALUES
 (1, 2, 1),   -- Julie : 1 Tacos Double (item 1)
-(1, 11, 1),  -- Julie : 1 Frites (item 2)
+(1, 10, 1),  -- Julie : 1 Frites (item 2)
 (1, 12, 2),  -- Julie : 2 Sodas (item 3)
 (2, 5, 1),   -- Thomas : 1 Bacon Cheese Burger (item 4)
 (2, 9, 1);   -- Thomas : 1 Wings Party (item 5)
 
 -- Options associées à l'item 1 du panier (Tacos Double de Julie)
 INSERT INTO panier_item_options (id_panier_item, id_option_item) VALUES
-(1, 10), -- Viande Hachée
-(1, 11), -- Poulet
-(1, 14); -- Sauce Algérienne
+(1, 13), -- Viande Hachée
+(1, 14), -- Poulet
+(1, 17); -- Sauce Algérienne
 
 -- =====================================================================
 -- COMMANDES CLIENTS
@@ -241,13 +241,13 @@ INSERT INTO commandes_menu (id_commande, id_produit, quantite, prix) VALUES
 -- commande 1 (Julie - Livraison)
 (1, 2, 1, 9.50),  -- item 1
 (1, 12, 1, 2.00), -- item 2
-(1, 11, 1, 3.50), -- item 3
+(1, 10, 1, 3.50), -- item 3
 
 -- commande 2 (Thomas - Livraison)
 (2, 5, 1, 11.90),
 (2, 8, 1, 6.50),
 (2, 12, 1, 2.00),
-(2, 11, 1, 3.50),
+(2, 10, 1, 3.50),
 
 -- commande 3 (Sofia - Click & Collect)
 (3, 3, 1, 12.90),
@@ -257,9 +257,9 @@ INSERT INTO commandes_menu (id_commande, id_produit, quantite, prix) VALUES
 
 -- Options historisées pour l'item 1 de la commande 1
 INSERT INTO commande_item_options (id_commande_menu, id_option_item, nom_option, surcout) VALUES
-(1, 10, 'Viande Hachée', 0.00),
-(1, 11, 'Poulet',        0.00),
-(1, 14, 'Sauce Algérienne', 0.00);
+(1, 13, 'Viande Hachée',    0.00),
+(1, 14, 'Poulet',           0.00),
+(1, 17, 'Sauce Algérienne', 0.00);
 
 -- =====================================================================
 -- EMPLOYÉS ET HEURES TRAVAILLÉES
@@ -290,3 +290,111 @@ INSERT INTO commandes_fournisseurs_details (id_commande_fournisseur, id_stock, q
 (2, 10, 80.000, 0.90),  -- pommes de terre
 (3, 2, 120.000, 0.28),  -- pain burger
 (3, 6, 60.000, 4.10);   -- cheddar
+
+-- =====================================================================
+-- MENUS (FORMULES) : CATEGORIE ET PRODUITS
+-- =====================================================================
+INSERT INTO categorie (nom) VALUES ('Menus');  -- id 7
+
+INSERT INTO produit_menu (id_categorie, description, prix, image_url, nom, est_dispo, est_formule) VALUES
+(7, 'Un burger au choix, un accompagnement et une boisson', 11.90, '/img/menu_burger.jpg',  'Menu Burger',         TRUE, TRUE),  -- id 16
+(7, 'Un tacos au choix, un accompagnement et une boisson',  10.90, '/img/menu_tacos.jpg',   'Menu Tacos',          TRUE, TRUE),  -- id 17
+(7, 'Menu de test : son seul dessert est en rupture',        3.90, '/img/menu_dessert.jpg', 'Menu Dessert',        TRUE, TRUE),  -- id 18
+(7, 'Menu de test : sans emplacement, a configurer',         9.90, NULL,                    'Menu En Preparation', TRUE, TRUE);  -- id 19
+
+-- =====================================================================
+-- MENUS : EMPLACEMENTS ET PRODUITS PROPOSES
+-- =====================================================================
+INSERT INTO formule_groupe (id_formule, nom, min_selection, max_selection, ordre) VALUES
+(16, 'Ton burger',         1, 1, 1),  -- id 1
+(16, 'Ton accompagnement', 1, 1, 2),  -- id 2
+(16, 'Ta boisson',         1, 1, 3),  -- id 3
+(17, 'Ton tacos',          1, 1, 1),  -- id 4
+(17, 'Ton accompagnement', 1, 1, 2),  -- id 5
+(17, 'Ta boisson',         1, 1, 3),  -- id 6
+(18, 'Ton dessert',        1, 1, 1);  -- id 7
+
+INSERT INTO formule_groupe_produit (id_groupe, id_produit, surcout) VALUES
+-- Ton burger (Menu Burger)
+(1, 4,  0.00),  -- Classic Burger
+(1, 5,  3.00),  -- Bacon Cheese Burger
+(1, 6,  0.60),  -- Spicy Chicken Burger
+-- Ton accompagnement (Menu Burger)
+(2, 10, 0.00),  -- Frites
+(2, 11, 1.00),  -- Onion Rings
+-- Ta boisson (Menu Burger)
+(3, 12, 0.00),  -- Soda 33cl
+(3, 13, 0.00),  -- Eau minerale 50cl
+-- Ton tacos (Menu Tacos)
+(4, 1,  0.00),  -- Tacos Simple
+(4, 2,  2.00),  -- Tacos Double
+-- Ton accompagnement (Menu Tacos)
+(5, 10, 0.00),  -- Frites
+(5, 11, 1.00),  -- Onion Rings
+-- Ta boisson (Menu Tacos)
+(6, 12, 0.00),  -- Soda 33cl
+(6, 13, 0.00),  -- Eau minerale 50cl
+-- Ton dessert (Menu Dessert) : Tiramisu est en rupture
+(7, 15, 0.00);  -- Tiramisu
+
+-- =====================================================================
+-- COMMANDES AVEC MENUS
+-- =====================================================================
+INSERT INTO commandes (id_user, type_retrait, status, cp_rue, cp_ville, cp_code_postal, total, date_creation) VALUES
+-- Commande 5 : Julie, livraison, en preparation
+(2, 'livraison',         'en_preparation', '12 rue des Lilas', 'Lyon', '69000', 12.90, '2025-08-03 19:00:00'),
+-- Commande 6 : Thomas, click & collect, livree
+(3, 'click_and_collect', 'livree',         NULL,               NULL,   NULL,    13.90, '2025-08-03 20:15:00');
+
+-- Commande 5 : Menu Burger (Classic + Extra Cheddar, Frites, Soda)
+-- Ligne principale : id 10
+INSERT INTO commandes_menu (id_commande, id_produit, quantite, prix) VALUES
+(5, 16, 1, 11.90);
+-- Composants : ids 11, 12, 13
+INSERT INTO commandes_menu (id_commande, id_produit, quantite, prix, id_item_parent, id_formule_groupe) VALUES
+(5, 4,  1, 1.00, 10, 1),  -- Classic Burger (supplement Extra Cheddar)
+(5, 10, 1, 0.00, 10, 2),  -- Frites
+(5, 12, 1, 0.00, 10, 3);  -- Soda 33cl
+
+-- Commande 6 : Menu Tacos (Tacos Double, Onion Rings, Eau)
+-- Ligne principale : id 14
+INSERT INTO commandes_menu (id_commande, id_produit, quantite, prix) VALUES
+(6, 17, 1, 10.90);
+-- Composants : ids 15, 16, 17
+INSERT INTO commandes_menu (id_commande, id_produit, quantite, prix, id_item_parent, id_formule_groupe) VALUES
+(6, 2,  1, 2.00, 14, 4),  -- Tacos Double (supplement de l'emplacement)
+(6, 11, 1, 1.00, 14, 5),  -- Onion Rings
+(6, 13, 1, 0.00, 14, 6);  -- Eau minerale 50cl
+
+INSERT INTO commande_item_options (id_commande_menu, id_option_item, nom_option, surcout) VALUES
+(11, 19, 'Extra Cheddar',    1.00),  -- Classic Burger de la commande 5
+(15, 13, 'Viande Hachée',    0.00),  -- Tacos Double de la commande 6
+(15, 14, 'Poulet',           0.00),
+(15, 17, 'Sauce Algérienne', 0.00);
+
+-- =====================================================================
+-- PANIERS AVEC MENUS
+-- =====================================================================
+-- Panier de Julie : Menu Burger (id 6), composants ids 7, 8, 9
+INSERT INTO panier_items (id_panier, id_produit, quantite) VALUES
+(1, 16, 1);
+
+INSERT INTO panier_items (id_panier, id_produit, quantite, id_item_parent, id_formule_groupe) VALUES
+(NULL, 4,  1, 6, 1),  -- Classic Burger (id 7)
+(NULL, 10, 1, 6, 2),  -- Frites (id 8)
+(NULL, 12, 1, 6, 3);  -- Soda 33cl (id 9)
+
+-- Panier de Thomas : Menu Tacos (id 10), composants ids 11, 12, 13
+INSERT INTO panier_items (id_panier, id_produit, quantite) VALUES
+(2, 17, 1);
+
+INSERT INTO panier_items (id_panier, id_produit, quantite, id_item_parent, id_formule_groupe) VALUES
+(NULL, 1,  1, 10, 4),  -- Tacos Simple (id 11)
+(NULL, 11, 1, 10, 5),  -- Onion Rings (id 12)
+(NULL, 13, 1, 10, 6);  -- Eau minerale 50cl (id 13)
+
+INSERT INTO panier_item_options (id_panier_item, id_option_item) VALUES
+(7, 19),        -- Extra Cheddar sur le Classic Burger du menu de Julie
+(11, 2),        -- Tacos Simple de Thomas : Poulet
+(11, 6),        -- Sauce Algérienne
+(11, 8);        -- Mayonnaise

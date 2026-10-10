@@ -4,6 +4,7 @@ import { ProductCard } from '../components/ProductCard';
 import { PanierSidebarDesktop } from '../components/PanierSidebarDesktop';
 import { PanierMobileSheet } from '../components/PanierMobileSheet';
 import { ProductOptionModal } from '../components/ProductOptionModal';
+import { FormuleCompositionModal } from '../components/FormuleCompositionModal';
 import { ContextePanier } from '../context/ContextePanier';
 
 export const Home = () => {
@@ -19,11 +20,23 @@ export const Home = () => {
     typeof window !== 'undefined' ? window.innerWidth >= 1024 : true
   );
 
+  const fermerModal = () => {
+    setModalProduit(null);
+    setItemEnCoursDeModification(null);
+  };
+
   const handleModifierItem = (itemPanier) => {
     // Retrouver le produit complet à partir du catalogue
     const produitComplet = produits.find(
       (p) => p.id === (itemPanier.produitId || itemPanier.id)
     );
+
+    // Un menu se modifie dans la modale de composition
+    if (produitComplet?.estFormule) {
+      setItemEnCoursDeModification(itemPanier);
+      setModalProduit(produitComplet);
+      return;
+    }
 
     const groupes = produitComplet?.groupesOptions || produitComplet?.groupes_options || [];
 
@@ -143,26 +156,41 @@ export const Home = () => {
         <PanierMobileSheet onEditItem={handleModifierItem} />
       )}
 
-      {/* Modal de personnalisation positionnée globalement */}
-      <ProductOptionModal
-        key={modalProduit?.id || 'modal-fermee'}
-        produit={modalProduit}
-        itemPanier={itemEnCoursDeModification}
-        isOpen={!!modalProduit}
-        onClose={() => {
-          setModalProduit(null);
-          setItemEnCoursDeModification(null);
-        }}
-        onConfirm={(produit, options) => {
-          if (itemEnCoursDeModification) {
-            modifierItemPanier(itemEnCoursDeModification.id, options);
-          } else {
-            ajouterAuPanier(produit, options);
-          }
-          setModalProduit(null);
-          setItemEnCoursDeModification(null);
-        }}
-      />
+      {/* Modales positionnées globalement : composition d'un menu, ou personnalisation d'un produit */}
+      {modalProduit?.estFormule ? (
+        <FormuleCompositionModal
+          key={`formule-${modalProduit.id}-${itemEnCoursDeModification?.id || 'nouveau'}`}
+          formule={modalProduit}
+          produits={produits}
+          itemPanier={itemEnCoursDeModification}
+          isOpen={!!modalProduit}
+          onClose={fermerModal}
+          onConfirm={(formule, choixFormule) => {
+            if (itemEnCoursDeModification) {
+              modifierItemPanier(itemEnCoursDeModification.id, [], choixFormule);
+            } else {
+              ajouterAuPanier(formule, [], choixFormule);
+            }
+            fermerModal();
+          }}
+        />
+      ) : (
+        <ProductOptionModal
+          key={modalProduit?.id || 'modal-fermee'}
+          produit={modalProduit}
+          itemPanier={itemEnCoursDeModification}
+          isOpen={!!modalProduit}
+          onClose={fermerModal}
+          onConfirm={(produit, options) => {
+            if (itemEnCoursDeModification) {
+              modifierItemPanier(itemEnCoursDeModification.id, options);
+            } else {
+              ajouterAuPanier(produit, options);
+            }
+            fermerModal();
+          }}
+        />
+      )}
     </div>
   );
 };

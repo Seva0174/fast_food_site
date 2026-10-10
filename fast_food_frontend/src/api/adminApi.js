@@ -52,6 +52,16 @@ export const adminApi = {
   modifierOptionItem: (idItem, data) => api.put(`/options/items/${idItem}`, data),
   supprimerOptionItem: (idItem) => api.delete(`/options/items/${idItem}`),
 
+  // Composition des menus (formules) : emplacements & produits proposés
+  getGroupesFormule: (idFormule) => api.get(`/admin/formules/${idFormule}/groupes`),
+  creerGroupeFormule: (idFormule, data) => api.post(`/admin/formules/${idFormule}/groupes`, data),
+  modifierGroupeFormule: (idGroupe, data) => api.put(`/admin/formules/groupes/${idGroupe}`, data),
+  supprimerGroupeFormule: (idGroupe) => api.delete(`/admin/formules/groupes/${idGroupe}`),
+
+  ajouterProduitGroupeFormule: (idGroupe, data) => api.post(`/admin/formules/groupes/${idGroupe}/produits`, data),
+  modifierSurcoutFormule: (idLien, data) => api.put(`/admin/formules/produits/${idLien}`, data),
+  retirerProduitGroupeFormule: (idLien) => api.delete(`/admin/formules/produits/${idLien}`),
+
   // Employés, Heures & Salaires
   getEmployes: () => api.get('/admin/employes'),
   getEmployeParId: (id) => api.get(`/admin/employes/${id}`),

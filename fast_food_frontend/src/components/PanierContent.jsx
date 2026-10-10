@@ -2,6 +2,7 @@ import { useContext } from 'react';
 import { ContextePanier } from '../context/ContextePanier';
 import { Plus, Minus, Trash2, ShoppingBag, X, Pencil } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { ComposantsFormule } from './ComposantsFormule';
 
 export const PanierContent = ({ onClose, onEditItem }) => {
   const {
@@ -81,6 +82,7 @@ export const PanierContent = ({ onClose, onEditItem }) => {
               <p className="text-xs text-gray-500">
                 {Number(item.prix).toFixed(2)} € x {item.quantite}
               </p>
+              <ComposantsFormule composants={item.composants} />
             </div>
 
             <div className="flex items-center gap-2">
@@ -101,7 +103,7 @@ export const PanierContent = ({ onClose, onEditItem }) => {
               </div>
 
               {/* Bouton pour modifier les options de l'item */}
-              {onEditItem && (item.options?.length > 0 || item.groupesOptions?.length > 0 || item.estPersonnalisable) && (
+              {onEditItem && (item.estFormule || item.options?.length > 0 || item.groupesOptions?.length > 0 || item.estPersonnalisable) && (
               <button
                 onClick={() => onEditItem(item)}
                 className="p-1 text-gray-400 hover:text-blue-600 transition"

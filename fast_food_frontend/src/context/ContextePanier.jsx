@@ -12,6 +12,18 @@ export const ContextePanier = createContext();
 
 const CLE_PANIER_INVITE = 'panier_invite';
 
+// Produit choisi dans un menu, tel que stocké dans le panier
+const mapComposant = (composant) => ({
+  id: composant.id,
+  idGroupe: composant.idGroupe,
+  nomGroupe: composant.nomGroupe,
+  produitId: composant.produitId,
+  nom: composant.nomProduit,
+  options: composant.options || [],
+  // Supplément = surcoût de l'emplacement + surcoûts des options
+  supplement: Number(composant.prixUnitaire || 0),
+});
+
 const mapPanierResponse = (panierResponse) => {
   if (!panierResponse || !panierResponse.items) return [];
   return panierResponse.items.map((item) => ({
@@ -21,7 +33,29 @@ const mapPanierResponse = (panierResponse) => {
     prix: item.prixUnitaire,
     quantite: item.quantite,
     options: item.options || [],
+    composants: (item.composants || []).map(mapComposant),
+    estFormule: (item.composants || []).length > 0,
   }));
+};
+
+// Convertit un choix de menu (panier invité) en composant affichable
+const composantDepuisChoix = (choix) => ({
+  id: `${choix.idGroupe}-${choix.idProduit}`,
+  idGroupe: choix.idGroupe,
+  nomGroupe: choix.nomGroupe,
+  produitId: choix.idProduit,
+  nom: choix.nomProduit,
+  options: choix.optionsDetails || [],
+  supplement: Number(choix.supplement || 0),
+});
+
+const additionnerSupplements = (choixFormule) =>
+  choixFormule.reduce((total, choix) => total + Number(choix.supplement || 0), 0);
+
+const extraireMessageErreur = (error) => {
+  const data = error?.response?.data;
+  if (data?.messages && Array.isArray(data.messages)) return data.messages.join(' | ');
+  return data?.message || null;
 };
 
 const chargerPanierInviteLocal = () => {
@@ -48,9 +82,19 @@ export const FournisseurPanier = ({ children }) => {
         let panierBackend = mapPanierResponse(await getPanierApi());
 
         for (const item of panierInvite) {
-          panierBackend = mapPanierResponse(
-            await ajouterProduitApi(item.produitId, item.quantite, item.optionItemIds || [])
-          );
+          // Un produit devenu invalide (rupture, menu modifié...) ne doit pas bloquer les autres
+          try {
+            panierBackend = mapPanierResponse(
+              await ajouterProduitApi(
+                item.produitId,
+                item.quantite,
+                item.optionItemIds || [],
+                item.choixFormule || []
+              )
+            );
+          } catch (error) {
+            console.error(`Impossible de synchroniser "${item.nom}" :`, error);
+          }
         }
         setPanier(panierBackend);
       } else {
@@ -80,32 +124,40 @@ export const FournisseurPanier = ({ children }) => {
     etaitAuthentifie.current = isAuthenticated;
   }, [isAuthenticated]);
 
-  const ajouterAuPanier = async (produitOuId, optionItemIds = []) => {
+  // choixFormule : produits choisis dans un menu (voir FormuleCompositionModal)
+  const ajouterAuPanier = async (produitOuId, optionItemIds = [], choixFormule = []) => {
     let produitId = typeof produitOuId === 'object' && produitOuId !== null
       ? (produitOuId.produitId || produitOuId.id)
       : produitOuId;
 
     if (isAuthenticated) {
       try {
-        const res = await ajouterProduitApi(produitId, 1, optionItemIds);
+        const res = await ajouterProduitApi(produitId, 1, optionItemIds, choixFormule);
         setPanier(mapPanierResponse(res));
       } catch (error) {
         console.error("Erreur lors de l'ajout au panier :", error);
+        const message = extraireMessageErreur(error);
+        if (message) alert(message);
       }
       return;
     }
 
     setPanier((prev) => {
+      const prixBase = Number(produitOuId.prix || 0);
       const nouveau = [
         ...prev,
         {
           id: Date.now(),
           produitId: produitId,
           nom: produitOuId.nom || 'Produit',
-          prix: produitOuId.prix || 0,
+          prixBase: prixBase,
+          prix: prixBase + additionnerSupplements(choixFormule),
           quantite: 1,
           optionItemIds: optionItemIds,
           options: optionItemIds.map((id) => ({ id, nom: 'Option' })),
+          choixFormule: choixFormule,
+          composants: choixFormule.map(composantDepuisChoix),
+          estFormule: choixFormule.length > 0 || !!produitOuId.estFormule,
         },
       ];
       localStorage.setItem(CLE_PANIER_INVITE, JSON.stringify(nouveau));
@@ -136,7 +188,7 @@ export const FournisseurPanier = ({ children }) => {
     });
   };
 
-  const modifierItemPanier = async (itemId, optionItemIds = []) => {
+  const modifierItemPanier = async (itemId, optionItemIds = [], choixFormule = []) => {
     if (isAuthenticated) {
       try {
         const itemExistant = panier.find((i) => i.id === itemId);
@@ -145,16 +197,19 @@ export const FournisseurPanier = ({ children }) => {
         // 1. Supprimer l'ancien item du panier backend
         await supprimerItemApi(itemId);
 
-        // 2. Ajouter le produit avec ses nouvelles options
+        // 2. Ajouter le produit avec ses nouvelles options / sa nouvelle composition
         const res = await ajouterProduitApi(
           itemExistant.produitId,
           itemExistant.quantite,
-          optionItemIds
+          optionItemIds,
+          choixFormule
         );
 
         setPanier(mapPanierResponse(res));
       } catch (error) {
         console.error('Erreur lors de la modification du produit :', error);
+        const message = extraireMessageErreur(error);
+        if (message) alert(message);
       }
       return;
     }
@@ -163,10 +218,15 @@ export const FournisseurPanier = ({ children }) => {
     setPanier((prev) => {
       const nouveau = prev.map((item) => {
         if (item.id === itemId) {
+          const prixBase = item.prixBase ?? item.prix;
           return {
             ...item,
+            prixBase: prixBase,
+            prix: prixBase + additionnerSupplements(choixFormule),
             optionItemIds: optionItemIds,
             options: optionItemIds.map((id) => ({ id, nom: 'Option' })),
+            choixFormule: choixFormule,
+            composants: choixFormule.map(composantDepuisChoix),
           };
         }
         return item;

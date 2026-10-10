@@ -4,6 +4,7 @@ import { ContextePanier } from '../context/ContextePanier';
 import { AuthContext } from '../context/AuthProvider';
 import { passerCommandeApi } from '../api/commandeApi';
 import { Truck, Store, ArrowLeft } from 'lucide-react';
+import { ComposantsFormule } from '../components/ComposantsFormule';
 
 export const PageCommande = () => {
   const { panier, viderPanier, totalPrix, incrementerQuantite, retirerDuPanier, supprimerDuPanier } =
@@ -128,6 +129,8 @@ export const PageCommande = () => {
                           .join(', ')}
                       </p>
                     )}
+
+                    <ComposantsFormule composants={item.composants} />
 
                     <p className="text-xs text-gray-400 mt-1">
                       {Number(item.prix).toFixed(2)} € / unité

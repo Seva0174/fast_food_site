@@ -5,17 +5,28 @@ import { ContextePanier } from '../context/ContextePanier';
 export const ProductCard = ({ produit, onOpenModal }) => {
   const { ajouterAuPanier } = useContext(ContextePanier);
 
-  const isDisponible = produit.estDispo ?? produit.est_dispo ?? true;
+  const estFormule = produit.estFormule ?? produit.est_formule ?? false;
+  const estDispoManuel = produit.estDispo ?? produit.est_dispo ?? true;
+  // Un menu est indisponible si un de ses emplacements obligatoires n'a plus aucun produit disponible
+  const formuleRealisable = !estFormule || produit.formuleRealisable !== false;
+  const isDisponible = estDispoManuel && formuleRealisable;
+
   const imageUrl = produit.imageUrl || produit.image_url;
   const aDesOptions = (produit.groupesOptions?.length || produit.groupes_options?.length || 0) > 0;
 
   const handleClick = () => {
-    if (aDesOptions) {
+    if (estFormule || aDesOptions) {
       if (onOpenModal) onOpenModal(produit);
     } else {
       ajouterAuPanier(produit, []);
     }
   };
+
+  const libelleBouton = estFormule
+    ? 'Composer mon menu'
+    : aDesOptions
+      ? 'Personnaliser'
+      : 'Ajouter au panier';
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition flex flex-col justify-between">
@@ -26,9 +37,16 @@ export const ProductCard = ({ produit, onOpenModal }) => {
           ) : (
             <div className="w-full h-full flex items-center justify-center text-4xl"></div>
           )}
+
+          {estFormule && (
+            <span className="absolute top-2 left-2 bg-red-600 text-white text-xs font-bold px-2.5 py-1 rounded-full shadow">
+              Menu
+            </span>
+          )}
+
           {!isDisponible && (
             <div className="absolute inset-0 bg-black/60 flex items-center justify-center text-white font-bold">
-              Épuisé
+              {estDispoManuel ? 'Indisponible' : 'Épuisé'}
             </div>
           )}
         </div>
@@ -48,10 +66,10 @@ export const ProductCard = ({ produit, onOpenModal }) => {
           onClick={handleClick}
           disabled={!isDisponible}
           className="bg-red-600 hover:bg-red-700 disabled:bg-gray-300 text-white font-semibold px-4 py-2 rounded-lg flex items-center gap-2 transition shadow-sm text-sm"
-          title="Ajouter au panier"
+          title={libelleBouton}
         >
           <ShoppingBag className="w-4 h-4" />
-          <span>{aDesOptions ? 'Personnaliser' : 'Ajouter au panier'}</span>
+          <span>{libelleBouton}</span>
         </button>
       </div>
     </div>

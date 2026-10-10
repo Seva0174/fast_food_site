@@ -128,7 +128,6 @@
 
 ## A faire :
 
-- Ajouter fonctionnalité de menus
 - Corriger les bug :
     - Vérifier la bonne gestion des stocks après :
         - commande fournisseur

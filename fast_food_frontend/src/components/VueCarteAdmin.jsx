@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { adminApi } from '../api/adminApi';
 import { GestionOptionsModal } from './GestionOptionsModal';
+import { GestionFormuleModal } from './GestionFormuleModal';
 
 export function VueCarteAdmin() {
   const [produits, setProduits] = useState([]);
@@ -16,6 +17,9 @@ export function VueCarteAdmin() {
   // État du modal de gestion des options
   const [produitPourOptions, setProduitPourOptions] = useState(null);
 
+  // État du modal de composition d'un menu (formule)
+  const [produitPourFormule, setProduitPourFormule] = useState(null);
+
   // Formulaire
   const [formData, setFormData] = useState({
     nom: '',
@@ -24,6 +28,7 @@ export function VueCarteAdmin() {
     imageUrl: '',
     idCategorie: '',
     estDispo: true,
+    estFormule: false,
   });
 
   const [recetteSelectionnee, setRecetteSelectionnee] = useState([]);
@@ -66,6 +71,7 @@ export function VueCarteAdmin() {
         imageUrl: produit.imageUrl || '',
         idCategorie: produit.categorie?.id || (categories[0]?.id || ''),
         estDispo: produit.estDispo ?? true,
+        estFormule: produit.estFormule ?? false,
       });
 
       if (produit.recette && Array.isArray(produit.recette)) {
@@ -88,6 +94,7 @@ export function VueCarteAdmin() {
         imageUrl: '',
         idCategorie: categories[0]?.id || '',
         estDispo: true,
+        estFormule: false,
       });
       setRecetteSelectionnee([]);
     }
@@ -149,10 +156,12 @@ export function VueCarteAdmin() {
         ...formData,
         prix: parseFloat(formData.prix),
         idCategorie: parseInt(formData.idCategorie, 10),
-        recette: recetteSelectionnee.map((item) => ({
-          idMatiere: item.idMatiere,
-          quantiteRequise: item.quantiteRequise,
-        })),
+        recette: formData.estFormule
+          ? []
+          : recetteSelectionnee.map((item) => ({
+              idMatiere: item.idMatiere,
+              quantiteRequise: item.quantiteRequise,
+            })),
       };
 
       if (produitEnEdition) {
@@ -188,7 +197,7 @@ export function VueCarteAdmin() {
         setProduits((prev) => prev.filter((p) => p.id !== id));
       } catch (err) {
         console.error("Erreur suppression produit :", err);
-        alert("Impossible de supprimer le produit (déjà présent dans des commandes ?).");
+        alert(err.response?.data?.message || "Impossible de supprimer le produit (déjà présent dans des commandes ?).");
       }
     }
   };
@@ -199,7 +208,7 @@ export function VueCarteAdmin() {
         <div>
           <h2 className="text-xl font-bold text-gray-800">Gestion de la Carte</h2>
           <p className="text-gray-500 text-sm">
-            Ajoutez, modifiez, désactivez les produits ou configurez leurs options (viandes, sauces, etc.).
+            Ajoutez, modifiez, désactivez les produits, configurez leurs options (viandes, sauces, etc.) ou la composition des menus.
           </p>
         </div>
         <button
@@ -267,6 +276,16 @@ export function VueCarteAdmin() {
                         </td>
                         <td className="py-3 px-4 font-medium text-gray-900">
                           {prod.nom}
+                          {prod.estFormule && (
+                            <span className="ml-2 text-[10px] font-bold bg-red-100 text-red-700 px-2 py-0.5 rounded-full align-middle">
+                              Menu
+                            </span>
+                          )}
+                          {prod.estFormule && prod.formuleRealisable === false && (
+                            <span className="ml-2 text-[10px] font-bold bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full align-middle">
+                              À configurer ou indisponible
+                            </span>
+                          )}
                           {prod.description && (
                             <p className="text-xs text-gray-400 font-normal line-clamp-1">
                               {prod.description}
@@ -290,12 +309,21 @@ export function VueCarteAdmin() {
                           </button>
                         </td>
                         <td className="py-3 px-4 text-right space-x-2">
-                          <button
-                            onClick={() => setProduitPourOptions(prod)}
-                            className="text-purple-600 hover:text-purple-800 font-medium text-xs border border-purple-200 hover:border-purple-400 px-2.5 py-1 rounded transition-colors"
-                          >
-                            Options
-                          </button>
+                          {prod.estFormule ? (
+                            <button
+                              onClick={() => setProduitPourFormule(prod)}
+                              className="text-purple-600 hover:text-purple-800 font-medium text-xs border border-purple-200 hover:border-purple-400 px-2.5 py-1 rounded transition-colors"
+                            >
+                              Composition
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => setProduitPourOptions(prod)}
+                              className="text-purple-600 hover:text-purple-800 font-medium text-xs border border-purple-200 hover:border-purple-400 px-2.5 py-1 rounded transition-colors"
+                            >
+                              Options
+                            </button>
+                          )}
                           <button
                             onClick={() => handleOuvrirModal(prod)}
                             className="text-blue-600 hover:text-blue-800 font-medium text-xs border border-blue-200 hover:border-blue-400 px-2.5 py-1 rounded transition-colors"
@@ -325,6 +353,16 @@ export function VueCarteAdmin() {
           produit={produitPourOptions}
           matieresPremieres={matieresPremieres}
           onClose={() => setProduitPourOptions(null)}
+          onRefresh={chargerDonnees}
+        />
+      )}
+
+      {/* MODAL COMPOSITION D'UN MENU */}
+      {produitPourFormule && (
+        <GestionFormuleModal
+          formule={produitPourFormule}
+          produits={produits}
+          onClose={() => setProduitPourFormule(null)}
           onRefresh={chargerDonnees}
         />
       )}
@@ -401,6 +439,24 @@ export function VueCarteAdmin() {
                   </div>
 
                   <div>
+                    <label className="flex items-center gap-2 cursor-pointer text-xs font-medium text-gray-700">
+                      <input
+                        type="checkbox"
+                        checked={formData.estFormule}
+                        disabled={!!produitEnEdition}
+                        onChange={(e) => setFormData({ ...formData, estFormule: e.target.checked })}
+                        className="rounded text-red-500 focus:ring-red-500"
+                      />
+                      Menu (composé de plusieurs produits)
+                    </label>
+                    {produitEnEdition && (
+                      <p className="text-[11px] text-gray-400 mt-1">
+                        Ce choix ne peut pas être modifié après la création.
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
                     <label className="block text-xs font-medium text-gray-700 mb-1">URL de l'image</label>
                     <input
                       type="text"
@@ -422,8 +478,25 @@ export function VueCarteAdmin() {
                   </div>
                 </div>
 
+                {/* COLONNE 2 : note pour un menu */}
+                {formData.estFormule && (
+                  <div className="space-y-2 bg-amber-50 p-4 rounded-lg border border-amber-200 text-sm text-amber-900">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-amber-800">
+                      Menu (formule)
+                    </h4>
+                    <p>
+                      Le prix saisi est le prix de base du menu. Après l'enregistrement, utilisez le bouton
+                      "Composition" pour définir les emplacements (burger, accompagnement, boisson...) et les
+                      produits proposés dans chacun.
+                    </p>
+                    <p>
+                      Un menu n'a pas de recette : le stock est déduit à partir des produits choisis par le client.
+                    </p>
+                  </div>
+                )}
+
                 {/* COLONNE 2 : Composition / Recette */}
-                <div className="space-y-3 bg-gray-50 p-4 rounded-lg border">
+                <div className={`space-y-3 bg-gray-50 p-4 rounded-lg border ${formData.estFormule ? 'hidden' : ''}`}>
                   <div className="flex justify-between items-center border-b pb-2">
                     <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider">
                       Composition (Recette)

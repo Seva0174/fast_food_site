@@ -112,6 +112,43 @@ export const CommandeDetailModal = ({ commande, onClose }) => {
                       </span>
                     </div>
 
+                    {/* Composition d'un menu */}
+                    {(item.composants || []).length > 0 && (
+                      <ul className="mt-2 pl-11 space-y-1">
+                        {item.composants.map((composant, i) => {
+                          const optionsComposant = composant.options || [];
+                          const surcoutOptions = optionsComposant.reduce(
+                            (total, opt) => total + Number(opt.surcoutHistorise ?? opt.surcout ?? 0),
+                            0
+                          );
+                          const supplementEmplacement = Number(composant.prix || 0) - surcoutOptions;
+                          const detailsOptions = optionsComposant
+                            .map((opt) => {
+                              const nom = opt.nomOption || opt.nom;
+                              const surcout = Number(opt.surcoutHistorise ?? opt.surcout ?? 0);
+                              return surcout > 0 ? `${nom} (+${surcout.toFixed(2)} €)` : nom;
+                            })
+                            .filter(Boolean)
+                            .join(', ');
+
+                          return (
+                            <li key={composant.id ?? i} className="text-xs text-gray-600">
+                              {composant.nomGroupe && (
+                                <span className="text-gray-400">{composant.nomGroupe} : </span>
+                              )}
+                              <span className="font-medium text-gray-700">{composant.nomProduit}</span>
+                              {supplementEmplacement > 0.001 && (
+                                <span className="text-gray-500"> (+{supplementEmplacement.toFixed(2)} €)</span>
+                              )}
+                              {detailsOptions && (
+                                <span className="text-gray-500"> - {detailsOptions}</span>
+                              )}
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    )}
+
                     {/* Affichage épuré des options séparées par des virgules */}
                     {optionsList.length > 0 && (
                       <p className="text-xs text-gray-500 mt-1 pl-11">
@@ -119,7 +156,7 @@ export const CommandeDetailModal = ({ commande, onClose }) => {
                         {optionsList
                           .map((opt) => {
                             const nom = opt.nomOption || opt.nom || opt.optionItem?.nom;
-                            const surcout = Number(opt.surcout || 0);
+                            const surcout = Number(opt.surcoutHistorise ?? opt.surcout ?? 0);
                             return surcout > 0 ? `${nom} (+${surcout.toFixed(2)} €)` : nom;
                           })
                           .filter(Boolean)

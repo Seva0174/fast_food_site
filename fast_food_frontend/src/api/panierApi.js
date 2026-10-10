@@ -6,15 +6,33 @@ export const getPanierApi = async () => {
   return response.data;
 };
 
-export const ajouterProduitApi = async (produit, quantite = 1, optionItemIds = []) => {
+/**
+ * Ajoute un produit au panier.
+ * choixFormule : produits choisis dans un menu, au format
+ * [{ idGroupe, idProduit, optionIds }]. Les autres champs éventuels (noms, suppléments)
+ * servent uniquement à l'affichage du panier invité et ne sont pas envoyés au serveur.
+ */
+export const ajouterProduitApi = async (
+  produit,
+  quantite = 1,
+  optionItemIds = [],
+  choixFormule = []
+) => {
   const produitId = typeof produit === 'object' && produit !== null
     ? (produit.produitId || produit.id) 
     : produit;
 
+  const choix = (choixFormule || []).map(({ idGroupe, idProduit, optionIds }) => ({
+    idGroupe,
+    idProduit,
+    optionIds: optionIds || [],
+  }));
+
   const response = await api.post('/panier/items', { 
     produitId: produitId, 
     quantite: quantite,
-    optionIds: optionItemIds
+    optionIds: optionItemIds,
+    choixFormule: choix
   });
   return response.data;
 };
