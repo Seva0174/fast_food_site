@@ -128,17 +128,10 @@
 
 ## A faire :
 
-- Corriger les bug :
-    - Vérifier la bonne gestion des stocks après :
-        - commande fournisseur
-        - commande passé
-        - gérer les annulation de commandes
-        - gestion des choix de compostions d’un produit par un client
-    - afficher dans admin les produit_carte, commande_fournisseur, stock_matiere_1ere, employe EN TRIER SELON l ID
-    - bug des balises select qui s’affiche mal (pas entièrement cote front)
-    - Enlever les matières premières en doublon.
 - Tester toute les fonctionnalités pour trouver les bug
 - Rendre plus beau le front et factoriser le fronted composant réutilisable
+- réorganiser proprement le code
+- factoriser fichiers si trop long
 - Docker
 - Faire la doc sur github
 

@@ -28,43 +28,41 @@ INSERT INTO email_verification_tokens (id_user, token, expire_le) VALUES
 -- CATÉGORIES DU MENU
 -- =====================================================================
 INSERT INTO categorie (nom) VALUES
-('Tacos'),
-('Burgers'),
-('Wings'),
-('Accompagnements'),
-('Boissons'),
-('Desserts');
+('Menus'),                          -- id 1
+('Tacos'),                          -- id 2
+('Burgers'),                        -- id 3
+('Accompagnements'),                -- id 4
+('Boissons'),                       -- id 5
+('Desserts');                       -- id 6
 
 -- =====================================================================
 -- PRODUITS DU MENU
 -- =====================================================================
 INSERT INTO produit_menu (id_categorie, description, prix, image_url, nom, est_dispo) VALUES
--- Tacos (categorie 1)
-(1, 'Tacos simple viande au choix, sauce fromagère et frites incluses',        7.50, '/img/tacos_simple.jpg',   'Tacos Simple',        TRUE),
-(1, 'Tacos double viande au choix, sauce fromagère, frites et sauces',          9.50, '/img/tacos_double.jpg',   'Tacos Double',        TRUE),
-(1, 'Tacos XXL 3 viandes, cheddar fondu et sauce au choix',                    12.90,'/img/tacos_xxl.jpg',      'Tacos XXL',           TRUE),
+-- Tacos (categorie 2)
+(2, 'Tacos simple viande au choix, sauce fromagère et frites incluses',        7.50, '/img/tacos_simple.jpg',   'Tacos Simple',        TRUE),  -- id 1
+(2, 'Tacos double viande au choix, sauce fromagère, frites et sauces',          9.50, '/img/tacos_double.jpg',   'Tacos Double',        TRUE),  -- id 2
+(2, 'Tacos XXL 3 viandes, cheddar fondu et sauce au choix',                    12.90,'/img/tacos_xxl.jpg',      'Tacos XXL',           TRUE),  -- id 3
 
--- Burgers (categorie 2)
-(2, 'Steak haché 150g, cheddar, salade, tomate, oignons, sauce burger',        8.90, '/img/classic_burger.jpg', 'Classic Burger',      TRUE),
-(2, 'Double steak haché, double cheddar, bacon grillé, sauce BBQ',            11.90,'/img/bacon_burger.jpg',   'Bacon Cheese Burger', TRUE),
-(2, 'Poulet croustillant pané, salade, sauce épicée',                          9.50, '/img/chicken_burger.jpg', 'Spicy Chicken Burger',TRUE),
+-- Burgers (categorie 3)
+(3, 'Steak haché 150g, cheddar, salade, tomate, oignons, sauce burger',        8.90, '/img/classic_burger.jpg', 'Classic Burger',      TRUE),  -- id 4
+(3, 'Double steak haché, double cheddar, bacon grillé, sauce BBQ',            11.90,'/img/bacon_burger.jpg',   'Bacon Cheese Burger', TRUE),  -- id 5
+(3, 'Poulet croustillant pané, salade, sauce épicée',                          9.50, '/img/chicken_burger.jpg', 'Spicy Chicken Burger',TRUE),  -- id 6
 
--- Wings (categorie 3)
-(3, '6 ailes de poulet marinées, sauce BBQ maison',                            6.50, '/img/wings_bbq.jpg',      'Wings BBQ (x6)',      TRUE),
-(3, '6 ailes de poulet, sauce buffalo bien relevée',                           6.50, '/img/wings_buffalo.jpg',  'Wings Buffalo (x6)',  TRUE),
-(3, '12 ailes de poulet, sauce au choix, format partage',                     11.90,'/img/wings_12.jpg',       'Wings Party (x12)',   TRUE),
-
--- Accompagnements (categorie 4)
-(4, 'Frites maison croustillantes',                                            3.50, '/img/frites.jpg',         'Frites',              TRUE),
-(4, 'Onion rings croustillants, sauce fromagère',                              4.50, '/img/onion_rings.jpg',    'Onion Rings',         TRUE),
+-- Wings et Accompagnements (categorie 4)
+(4, '6 ailes de poulet marinées, sauce BBQ maison',                            6.50, '/img/wings_bbq.jpg',      'Wings BBQ (x6)',      TRUE),  -- id 7
+(4, '6 ailes de poulet, sauce buffalo bien relevée',                           6.50, '/img/wings_buffalo.jpg',  'Wings Buffalo (x6)',  TRUE),  -- id 8
+(4, '12 ailes de poulet, sauce au choix, format partage',                     11.90,'/img/wings_12.jpg',       'Wings Party (x12)',   TRUE),  -- id 9
+(4, 'Frites maison croustillantes',                                            3.50, '/img/frites.jpg',         'Frites',              TRUE),  -- id 10
+(4, 'Onion rings croustillants, sauce fromagère',                              4.50, '/img/onion_rings.jpg',    'Onion Rings',         TRUE),  -- id 11
 
 -- Boissons (categorie 5)
-(5, 'Canette 33cl',                                                            2.00, '/img/soda.jpg',           'Soda 33cl',           TRUE),
-(5, 'Bouteille eau minérale 50cl',                                             1.50, '/img/eau.jpg',            'Eau minérale 50cl',   TRUE),
+(5, 'Canette 33cl',                                                            2.00, '/img/soda.jpg',           'Soda 33cl',           TRUE),  -- id 12
+(5, 'Bouteille eau minérale 50cl',                                             1.50, '/img/eau.jpg',            'Eau minérale 50cl',   TRUE),  -- id 13
 
 -- Desserts (categorie 6)
-(6, 'Moelleux au chocolat fait maison',                                        3.90, '/img/moelleux.jpg',       'Moelleux Chocolat',   TRUE),
-(6, 'Tiramisu individuel',                                                     3.90, '/img/tiramisu.jpg',       'Tiramisu',            FALSE);
+(6, 'Moelleux au chocolat fait maison',                                        3.90, '/img/moelleux.jpg',       'Moelleux Chocolat',   TRUE),  -- id 14
+(6, 'Tiramisu individuel',                                                     3.90, '/img/tiramisu.jpg',       'Tiramisu',            FALSE); -- id 15
 
 -- =====================================================================
 -- MATIÈRES PREMIÈRES EN STOCK
@@ -294,13 +292,12 @@ INSERT INTO commandes_fournisseurs_details (id_commande_fournisseur, id_stock, q
 -- =====================================================================
 -- MENUS (FORMULES) : CATEGORIE ET PRODUITS
 -- =====================================================================
-INSERT INTO categorie (nom) VALUES ('Menus');  -- id 7
 
 INSERT INTO produit_menu (id_categorie, description, prix, image_url, nom, est_dispo, est_formule) VALUES
-(7, 'Un burger au choix, un accompagnement et une boisson', 11.90, '/img/menu_burger.jpg',  'Menu Burger',         TRUE, TRUE),  -- id 16
-(7, 'Un tacos au choix, un accompagnement et une boisson',  10.90, '/img/menu_tacos.jpg',   'Menu Tacos',          TRUE, TRUE),  -- id 17
-(7, 'Menu de test : son seul dessert est en rupture',        3.90, '/img/menu_dessert.jpg', 'Menu Dessert',        TRUE, TRUE),  -- id 18
-(7, 'Menu de test : sans emplacement, a configurer',         9.90, NULL,                    'Menu En Preparation', TRUE, TRUE);  -- id 19
+(1, 'Un burger au choix, un accompagnement et une boisson', 11.90, '/img/menu_burger.jpg',  'Menu Burger',         TRUE, TRUE),  -- id 16
+(1, 'Un tacos au choix, un accompagnement et une boisson',  10.90, '/img/menu_tacos.jpg',   'Menu Tacos',          TRUE, TRUE),  -- id 17
+(1, 'Menu de test : son seul dessert est en rupture',        3.90, '/img/menu_dessert.jpg', 'Menu Dessert',        TRUE, TRUE),  -- id 18
+(1, 'Menu de test : sans emplacement, a configurer',         9.90, NULL,                    'Menu En Preparation', TRUE, TRUE);  -- id 19
 
 -- =====================================================================
 -- MENUS : EMPLACEMENTS ET PRODUITS PROPOSES

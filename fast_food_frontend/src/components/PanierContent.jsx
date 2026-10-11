@@ -71,8 +71,8 @@ export const PanierContent = ({ onClose, onEditItem }) => {
       </div>
 
       {/* Liste des produits */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {panier.map((item) => (
+      <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 space-y-4 scrollbar-thin">
+          {panier.map((item) => (
           <div
             key={item.id}
             className="flex items-center justify-between bg-white border border-gray-100 rounded-xl p-3 shadow-sm"
@@ -82,7 +82,7 @@ export const PanierContent = ({ onClose, onEditItem }) => {
               <p className="text-xs text-gray-500">
                 {Number(item.prix).toFixed(2)} € x {item.quantite}
               </p>
-              <ComposantsFormule composants={item.composants} />
+              <ComposantsFormule composants={item.composants} afficherOptions={false} />
             </div>
 
             <div className="flex items-center gap-2">

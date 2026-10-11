@@ -1,5 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { adminApi } from '../api/adminApi';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 export function GestionOptionsModal({ produit, matieresPremieres, onClose, onRefresh }) {
   const [groupes, setGroupes] = useState([]);
@@ -395,19 +402,21 @@ export function GestionOptionsModal({ produit, matieresPremieres, onClose, onRef
                                 <label className="block text-[10px] font-medium text-gray-600 mb-0.5">
                                   Matière Première
                                 </label>
-                                <select
-                                  required
-                                  value={itemForm.idMatiere}
-                                  onChange={handleMatiereChange}
-                                  className="w-full border rounded px-2 py-1 text-xs bg-white focus:ring-1 focus:ring-red-500 outline-none"
+                                <Select
+                                  value={itemForm.idMatiere ? String(itemForm.idMatiere) : ''}
+                                  onValueChange={(v) => handleMatiereChange({ target: { value: v } })}
                                 >
-                                  <option value="">-- Sélectionner --</option>
-                                  {matieresPremieres.map((m) => (
-                                    <option key={m.id} value={m.id}>
-                                      {m.nom}
-                                    </option>
-                                  ))}
-                                </select>
+                                  <SelectTrigger className="w-full h-auto py-1 px-2 text-xs bg-white focus:ring-1 focus:ring-red-500">
+                                    <SelectValue placeholder="-- Sélectionner --" />
+                                  </SelectTrigger>
+                                  <SelectContent className="z-[60]">
+                                    {matieresPremieres.map((m) => (
+                                      <SelectItem key={m.id} value={String(m.id)} className="text-xs">
+                                        {m.nom}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
                               </div>
                               <div>
                                 <label className="block text-[10px] font-medium text-gray-600 mb-0.5">

@@ -2,6 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { adminApi } from '../api/adminApi';
 import { GestionOptionsModal } from './GestionOptionsModal';
 import { GestionFormuleModal } from './GestionFormuleModal';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 export function VueCarteAdmin() {
   const [produits, setProduits] = useState([]);
@@ -151,6 +158,10 @@ export function VueCarteAdmin() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!formData.idCategorie) {
+      alert('Veuillez sélectionner une catégorie.');
+      return;
+    }
     try {
       const payload = {
         ...formData,
@@ -397,19 +408,21 @@ export function VueCarteAdmin() {
 
                   <div>
                     <label className="block text-xs font-medium text-gray-700 mb-1">Catégorie</label>
-                    <select
-                      required
-                      value={formData.idCategorie}
-                      onChange={(e) => setFormData({ ...formData, idCategorie: e.target.value })}
-                      className="w-full border rounded px-3 py-2 text-sm focus:ring-1 focus:ring-red-500 outline-none bg-white"
+                    <Select
+                      value={formData.idCategorie ? String(formData.idCategorie) : ''}
+                      onValueChange={(v) => setFormData({ ...formData, idCategorie: v })}
                     >
-                      <option value="" disabled>Sélectionner une catégorie</option>
-                      {categories.map((cat) => (
-                        <option key={cat.id} value={cat.id}>
-                          {cat.nom}
-                        </option>
-                      ))}
-                    </select>
+                      <SelectTrigger className="w-full border rounded px-3 py-2 text-sm bg-white h-auto focus:ring-1 focus:ring-red-500">
+                        <SelectValue placeholder="Sélectionner une catégorie" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {categories.map((cat) => (
+                          <SelectItem key={cat.id} value={String(cat.id)}>
+                            {cat.nom}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
@@ -510,18 +523,22 @@ export function VueCarteAdmin() {
                   <div className="space-y-2">
                     <div>
                       <label className="block text-xs font-medium text-gray-600 mb-1">Ingrédient du stock</label>
-                      <select
-                        value={ingrediantForm.idMatiere}
-                        onChange={(e) => setIngrediantForm({ ...ingrediantForm, idMatiere: e.target.value })}
-                        className="w-full border rounded px-2.5 py-1.5 text-xs bg-white focus:ring-1 focus:ring-red-500 outline-none"
+                      <Select
+                        value={ingrediantForm.idMatiere ? String(ingrediantForm.idMatiere) : ''}
+                        onValueChange={(v) => setIngrediantForm({ ...ingrediantForm, idMatiere: v })}
                       >
-                        <option value="">-- Sélectionner une matière première --</option>
-                        {Array.isArray(matieresPremieres) && matieresPremieres.map((m) => (
-                          <option key={m.id} value={m.id}>
-                            {m.nom}
-                          </option>
-                        ))}
-                      </select>
+                        <SelectTrigger className="w-full border rounded px-2.5 py-1.5 text-xs bg-white h-auto focus:ring-1 focus:ring-red-500">
+                          <SelectValue placeholder="-- Sélectionner une matière première --" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Array.isArray(matieresPremieres) &&
+                            matieresPremieres.map((m) => (
+                              <SelectItem key={m.id} value={String(m.id)} className="text-xs">
+                                {m.nom}
+                              </SelectItem>
+                            ))}
+                        </SelectContent>
+                      </Select>
                     </div>
 
                     <div className="flex gap-2 items-center">

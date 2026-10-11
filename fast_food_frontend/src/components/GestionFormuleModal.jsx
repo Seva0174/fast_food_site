@@ -1,5 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { adminApi } from '../api/adminApi';
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 const messageErreur = (err, parDefaut) => err?.response?.data?.message || parDefaut;
 
@@ -458,23 +467,28 @@ export function GestionFormuleModal({ formule, produits, onClose, onRefresh }) {
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                               <div className="sm:col-span-2">
                                 <label className="block text-[10px] font-medium text-gray-600 mb-0.5">Produit</label>
-                                <select
-                                  required
-                                  value={produitForm.idProduit}
-                                  onChange={(e) => setProduitForm({ ...produitForm, idProduit: e.target.value })}
-                                  className="w-full border rounded px-2 py-1 text-xs bg-white focus:ring-1 focus:ring-red-500 outline-none"
+                                <Select
+                                  value={produitForm.idProduit ? String(produitForm.idProduit) : ''}
+                                  onValueChange={(v) => setProduitForm({ ...produitForm, idProduit: v })}
                                 >
-                                  <option value="">-- Sélectionner --</option>
-                                  {categoriesAjoutables.map(([nomCategorie, liste]) => (
-                                    <optgroup key={nomCategorie} label={nomCategorie}>
-                                      {liste.map((p) => (
-                                        <option key={p.id} value={p.id}>
-                                          {p.nom} ({Number(p.prix).toFixed(2)} €)
-                                        </option>
-                                      ))}
-                                    </optgroup>
-                                  ))}
-                                </select>
+                                  <SelectTrigger className="w-full h-auto py-1 px-2 text-xs bg-white focus:ring-1 focus:ring-red-500">
+                                    <SelectValue placeholder="-- Sélectionner --" />
+                                  </SelectTrigger>
+                                  <SelectContent className="z-[60]">
+                                    {categoriesAjoutables.map(([nomCategorie, liste]) => (
+                                      <SelectGroup key={nomCategorie}>
+                                        <SelectLabel className="text-[10px] uppercase text-gray-500">
+                                          {nomCategorie}
+                                        </SelectLabel>
+                                        {liste.map((p) => (
+                                          <SelectItem key={p.id} value={String(p.id)} className="text-xs">
+                                            {p.nom} ({Number(p.prix).toFixed(2)} €)
+                                          </SelectItem>
+                                        ))}
+                                      </SelectGroup>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
                               </div>
                               <div>
                                 <label className="block text-[10px] font-medium text-gray-600 mb-0.5">

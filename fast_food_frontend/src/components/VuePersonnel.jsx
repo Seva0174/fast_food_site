@@ -1,5 +1,28 @@
 import React, { useState, useEffect } from 'react';
 import { adminApi } from '../api/adminApi';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+
+const ROLES_SYSTEME = [
+  { value: 'employe', label: 'Employé' },
+  { value: 'admin', label: 'Administrateur' },
+];
+
+const ROLES_RH = [
+  { value: 'CUISINIER', label: 'Cuisinier' },
+  { value: 'CAISSIER', label: 'Caissier' },
+  { value: 'MANAGER', label: 'Manager' },
+];
+
+const MOIS = Array.from({ length: 12 }, (_, i) => ({
+  value: String(i + 1),
+  label: new Date(0, i).toLocaleString('fr-FR', { month: 'long' }),
+}));
 
 export function VuePersonnel() {
   const [employes, setEmployes] = useState([]);
@@ -250,26 +273,33 @@ export function VuePersonnel() {
           </div>
           <div>
             <label className="block text-xs font-semibold text-gray-600 mb-1">Accès Système</label>
-            <select
-              value={roleSysteme}
-              onChange={(e) => setRoleSysteme(e.target.value)}
-              className="w-full border border-gray-300 rounded px-2.5 py-1.5 text-sm focus:ring-1 focus:ring-red-500"
-            >
-              <option value="employe">Employé</option>
-              <option value="admin">Administrateur</option>
-            </select>
+            <Select value={roleSysteme} onValueChange={setRoleSysteme}>
+              <SelectTrigger className="w-full border border-gray-300 rounded px-2.5 py-1.5 text-sm h-auto">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="z-[60]">
+                {ROLES_SYSTEME.map((r) => (
+                  <SelectItem key={r.value} value={r.value} className="text-sm">
+                    {r.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div>
             <label className="block text-xs font-semibold text-gray-600 mb-1">Poste RH</label>
-            <select
-              value={roleRH}
-              onChange={(e) => setRoleRH(e.target.value)}
-              className="w-full border border-gray-300 rounded px-2.5 py-1.5 text-sm focus:ring-1 focus:ring-red-500"
-            >
-              <option value="CUISINIER">Cuisinier</option>
-              <option value="CAISSIER">Caissier</option>
-              <option value="MANAGER">Manager</option>
-            </select>
+            <Select value={roleRH} onValueChange={setRoleRH}>
+              <SelectTrigger className="w-full border border-gray-300 rounded px-2.5 py-1.5 text-sm h-auto">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="z-[60]">
+                {ROLES_RH.map((r) => (
+                  <SelectItem key={r.value} value={r.value} className="text-sm">
+                    {r.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div>
             <label className="block text-xs font-semibold text-gray-600 mb-1">Taux (€/h)</label>
@@ -343,14 +373,18 @@ export function VuePersonnel() {
 
                       <td className="p-3">
                         {estEnEdition ? (
-                          <select
-                            value={editRoleSysteme}
-                            onChange={(e) => setEditRoleSysteme(e.target.value)}
-                            className="border rounded px-2 py-1 text-sm"
-                          >
-                            <option value="employe">employe</option>
-                            <option value="admin">admin</option>
-                          </select>
+                          <Select value={editRoleSysteme} onValueChange={setEditRoleSysteme}>
+                            <SelectTrigger className="border rounded px-2 py-1 text-sm h-auto min-w-[8rem]">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="z-[60]">
+                              {ROLES_SYSTEME.map((r) => (
+                                <SelectItem key={r.value} value={r.value} className="text-sm">
+                                  {r.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                         ) : (
                           <span
                             className={`px-2 py-0.5 text-xs font-semibold rounded ${
@@ -366,15 +400,18 @@ export function VuePersonnel() {
 
                       <td className="p-3">
                         {estEnEdition ? (
-                          <select
-                            value={editRoleRH}
-                            onChange={(e) => setEditRoleRH(e.target.value)}
-                            className="border rounded px-2 py-1 text-sm"
-                          >
-                            <option value="CUISINIER">Cuisinier</option>
-                            <option value="CAISSIER">Caissier</option>
-                            <option value="MANAGER">Manager</option>
-                          </select>
+                          <Select value={editRoleRH} onValueChange={setEditRoleRH}>
+                            <SelectTrigger className="border rounded px-2 py-1 text-sm h-auto min-w-[8rem]">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="z-[60]">
+                              {ROLES_RH.map((r) => (
+                                <SelectItem key={r.value} value={r.value} className="text-sm">
+                                  {r.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                         ) : (
                           <span className="px-2 py-1 bg-gray-100 border text-xs rounded-full">
                             {emp.role}
@@ -579,17 +616,21 @@ export function VuePersonnel() {
             <form onSubmit={handleCalculerSalaire} className="flex gap-2 items-end">
               <div className="flex-1">
                 <label className="block text-xs text-gray-500 mb-1">Mois</label>
-                <select
-                  value={moisPaie}
-                  onChange={(e) => setMoisPaie(parseInt(e.target.value, 10))}
-                  className="w-full border rounded px-2 py-1.5 text-sm"
+                <Select
+                  value={String(moisPaie)}
+                  onValueChange={(v) => setMoisPaie(parseInt(v, 10))}
                 >
-                  {Array.from({ length: 12 }, (_, i) => (
-                    <option key={i + 1} value={i + 1}>
-                      {new Date(0, i).toLocaleString('fr-FR', { month: 'long' })}
-                    </option>
-                  ))}
-                </select>
+                  <SelectTrigger className="w-full border rounded px-2 py-1.5 text-sm h-auto capitalize">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="z-[60]">
+                    {MOIS.map((m) => (
+                      <SelectItem key={m.value} value={m.value} className="text-sm capitalize">
+                        {m.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="flex-1">

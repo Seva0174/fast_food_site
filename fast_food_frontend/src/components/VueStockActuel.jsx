@@ -2,6 +2,24 @@ import { useState, useEffect, useCallback } from 'react';
 import { adminApi } from '../api/adminApi';
 import { Package, Edit2, Save, X, AlertTriangle, CheckCircle2, AlertCircle, Plus, Trash2 } from 'lucide-react';
 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+
+const UNITES = [
+  { value: 'unite', label: 'unité(s)' },
+  { value: 'g', label: 'g (grammes)' },
+  { value: 'kg', label: 'kg (kilos)' },
+  { value: 'ml', label: 'ml (millilitres)' },
+  { value: 'L', label: 'L (litres)' },
+  { value: 'tranche', label: 'tranche(s)' },
+];
+
+
 export function VueStockActuel() {
   const [stocks, setStocks] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -165,18 +183,18 @@ export function VueStockActuel() {
               className="border p-2 rounded-lg text-xs"
               required
             />
-            <select
-              value={nouvelleUnite}
-              onChange={(e) => setNouvelleUnite(e.target.value)}
-              className="border p-2 rounded-lg text-xs bg-white"
-            >
-              <option value="unite">unité(s)</option>
-              <option value="g">g (grammes)</option>
-              <option value="kg">kg (kilos)</option>
-              <option value="ml">ml (millilitres)</option>
-              <option value="L">L (litres)</option>
-              <option value="tranche">tranche(s)</option>
-            </select>
+            <Select value={nouvelleUnite} onValueChange={setNouvelleUnite}>
+              <SelectTrigger className="border p-2 rounded-lg text-xs bg-white h-auto">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="z-[60]">
+                {UNITES.map((u) => (
+                  <SelectItem key={u.value} value={u.value} className="text-xs">
+                    {u.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div className="flex justify-end gap-2">
             <button
@@ -237,18 +255,18 @@ export function VueStockActuel() {
 
                   <td className="p-3">
                     {isEdition ? (
-                      <select
-                        value={formUnite}
-                        onChange={(e) => setFormUnite(e.target.value)}
-                        className="border rounded p-1 text-xs font-medium focus:ring-1 focus:ring-red-500 bg-white"
-                      >
-                        <option value="unite">unité(s)</option>
-                        <option value="g">g (grammes)</option>
-                        <option value="kg">kg (kilos)</option>
-                        <option value="ml">ml (millilitres)</option>
-                        <option value="L">L (litres)</option>
-                        <option value="tranche">tranche(s)</option>
-                      </select>
+                      <Select value={formUnite} onValueChange={setFormUnite}>
+                        <SelectTrigger className="border rounded p-1 text-xs font-medium bg-white h-auto min-w-[7rem]">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="z-[60]">
+                          {UNITES.map((u) => (
+                            <SelectItem key={u.value} value={u.value} className="text-xs">
+                              {u.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     ) : (
                       <span className="text-gray-500 font-medium">{item.uniteMesure || 'unite'}</span>
                     )}

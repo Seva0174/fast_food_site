@@ -2,6 +2,13 @@ import { VueStockActuel } from './VueStockActuel';
 import { useState, useEffect, useCallback } from 'react';
 import { adminApi } from '../api/adminApi';
 import { Truck, Upload, Plus, Minus, Trash2, CheckCircle2, AlertCircle, ShoppingCart, Eye, X } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 export function VueStockAdmin() {
   const [sousOnglet, setSousOnglet] = useState('fournisseurs');
@@ -257,16 +264,21 @@ export function VueStockAdmin() {
             <div className="md:col-span-2 space-y-2">
               <label className="block text-xs font-semibold text-gray-700">Sélectionner un Fournisseur</label>
               <div className="flex gap-2">
-                <select
-                  value={fournisseurSelect}
-                  onChange={(e) => handleChangerFournisseur(e.target.value)}
-                  className="w-full bg-white border border-gray-300 rounded-lg p-2 text-sm font-medium focus:ring-2 focus:ring-red-500"
+                <Select
+                  value={fournisseurSelect ? String(fournisseurSelect) : ''}
+                  onValueChange={handleChangerFournisseur}
                 >
-                  <option value="">-- Choisir un fournisseur --</option>
-                  {fournisseurs.map(f => (
-                    <option key={f.id} value={f.id}>{f.nom}</option>
-                  ))}
-                </select>
+                  <SelectTrigger className="w-full bg-white border-gray-300 rounded-lg p-2 text-sm font-medium h-auto">
+                    <SelectValue placeholder="-- Choisir un fournisseur --" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {fournisseurs.map((f) => (
+                      <SelectItem key={f.id} value={String(f.id)}>
+                        {f.nom}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 {fournisseurSelect && (
                   <button
                     onClick={() => handleSupprimerFournisseur(fournisseurSelect)}
@@ -460,16 +472,20 @@ export function VueStockAdmin() {
                             <Eye className="w-3.5 h-3.5" />
                           </button>
 
-                          <select
+                          <Select
                             value={cmd.status}
-                            onChange={(e) => handleChangerStatutCommande(cmd.id, e.target.value)}
-                            className="bg-white border rounded p-1 text-xs font-medium cursor-pointer"
+                            onValueChange={(v) => handleChangerStatutCommande(cmd.id, v)}
                           >
-                            <option value="en_attente">En attente</option>
-                            <option value="expediee">Expédiée</option>
-                            <option value="recue">Reçue (Crédite le stock)</option>
-                            <option value="annulee">Annulée</option>
-                          </select>
+                            <SelectTrigger className="bg-white border rounded p-1 text-xs font-medium h-auto min-w-[11rem] cursor-pointer">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="en_attente" className="text-xs">En attente</SelectItem>
+                              <SelectItem value="expediee" className="text-xs">Expédiée</SelectItem>
+                              <SelectItem value="recue" className="text-xs">Reçue (Crédite le stock)</SelectItem>
+                              <SelectItem value="annulee" className="text-xs">Annulée</SelectItem>
+                            </SelectContent>
+                          </Select>
                         </td>
                       </tr>
                     ))}

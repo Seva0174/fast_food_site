@@ -1,4 +1,13 @@
+import { useState, useEffect } from 'react';
 import { Store, Truck, Eye } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+
 
 const STATUTS_LIVRAISON = [
   { value: 'en_attente', label: 'En attente' },
@@ -23,13 +32,26 @@ export const CommandeCard = ({ commande, onChangerStatut, onVoirDetail, enCours 
 
   const statutsProposes = isClickAndCollect ? STATUTS_RETRAIT : STATUTS_LIVRAISON;
 
+  const [statutAffiche, setStatutAffiche] = useState(commande.status);
+
+  useEffect(() => {
+    setStatutAffiche(commande.status);
+  }, [commande.status]);
+
+  const handleChange = (e) => {
+    const nouveau = e.target.value;
+    setStatutAffiche(nouveau);
+    onChangerStatut(commande.id, nouveau);
+  };
+
+
   const nbArticles = (commande.items || commande.commandesMenu || []).reduce(
     (acc, i) => acc + (i.quantite || 1),
     0
   );
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition flex flex-col justify-between p-5 space-y-4">
+    <div className="bg-white rounded-xl border border-gray-200 shadow-sm flex flex-col justify-between p-5 space-y-4">
       <div>
         <div className="flex justify-between items-start mb-2">
           <div>
@@ -68,18 +90,22 @@ export const CommandeCard = ({ commande, onChangerStatut, onVoirDetail, enCours 
           <label className="block text-xs font-semibold text-gray-500 mb-1">
             Changer le statut :
           </label>
-          <select
-            value={commande.status}
+          <Select
+            value={statutAffiche}
+            onValueChange={handleChange}
             disabled={enCours}
-            onChange={(e) => onChangerStatut(commande.id, e.target.value)}
-            className="w-full bg-gray-50 border border-gray-300 text-gray-800 text-xs font-semibold rounded-lg p-2 focus:ring-2 focus:ring-red-500 focus:outline-none transition cursor-pointer"
           >
-            {statutsProposes.map((st) => (
-              <option key={st.value} value={st.value}>
-                {st.label}
-              </option>
-            ))}
-          </select>
+            <SelectTrigger className="w-full bg-gray-50 border-gray-300 text-gray-800 text-xs font-semibold rounded-lg">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {statutsProposes.map((st) => (
+                <SelectItem key={st.value} value={st.value} className="text-xs font-semibold">
+                  {st.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         <button
