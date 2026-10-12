@@ -38,8 +38,7 @@ export const CommandeCard = ({ commande, onChangerStatut, onVoirDetail, enCours 
     setStatutAffiche(commande.status);
   }, [commande.status]);
 
-  const handleChange = (e) => {
-    const nouveau = e.target.value;
+  const handleChange = (nouveau) => {
     setStatutAffiche(nouveau);
     onChangerStatut(commande.id, nouveau);
   };

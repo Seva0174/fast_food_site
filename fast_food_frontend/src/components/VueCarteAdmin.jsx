@@ -35,7 +35,6 @@ export function VueCarteAdmin() {
     imageUrl: '',
     idCategorie: '',
     estDispo: true,
-    estFormule: false,
   });
 
   const [recetteSelectionnee, setRecetteSelectionnee] = useState([]);
@@ -43,6 +42,25 @@ export function VueCarteAdmin() {
     idMatiere: '',
     quantiteRequise: '1',
   });
+
+  // Un produit est un menu (formule) quand il appartient à la catégorie "Menus".
+  // En modification, la nature du produit est conservée.
+  const estCategorieMenu = (idCategorie) => {
+    const categorie = categories.find((c) => String(c.id) === String(idCategorie));
+    return ['menu', 'menus'].includes((categorie?.nom || '').trim().toLowerCase());
+  };
+
+  const estFormule = produitEnEdition
+    ? !!produitEnEdition.estFormule
+    : estCategorieMenu(formData.idCategorie);
+
+  // En modification, on ne peut pas faire passer un produit dans ou hors de la catégorie Menus
+  const categoriesProposees = categories.filter(
+    (cat) =>
+      !produitEnEdition ||
+      estCategorieMenu(cat.id) === estFormule ||
+      String(cat.id) === String(formData.idCategorie)
+  );
 
   const chargerDonnees = async () => {
     setLoading(true);
@@ -78,7 +96,6 @@ export function VueCarteAdmin() {
         imageUrl: produit.imageUrl || '',
         idCategorie: produit.categorie?.id || (categories[0]?.id || ''),
         estDispo: produit.estDispo ?? true,
-        estFormule: produit.estFormule ?? false,
       });
 
       if (produit.recette && Array.isArray(produit.recette)) {
@@ -99,9 +116,8 @@ export function VueCarteAdmin() {
         description: '',
         prix: '',
         imageUrl: '',
-        idCategorie: categories[0]?.id || '',
+        idCategorie: categories.find((c) => !estCategorieMenu(c.id))?.id || categories[0]?.id || '',
         estDispo: true,
-        estFormule: false,
       });
       setRecetteSelectionnee([]);
     }
@@ -167,7 +183,8 @@ export function VueCarteAdmin() {
         ...formData,
         prix: parseFloat(formData.prix),
         idCategorie: parseInt(formData.idCategorie, 10),
-        recette: formData.estFormule
+        estFormule: estFormule,
+        recette: estFormule
           ? []
           : recetteSelectionnee.map((item) => ({
               idMatiere: item.idMatiere,
@@ -416,13 +433,23 @@ export function VueCarteAdmin() {
                         <SelectValue placeholder="Sélectionner une catégorie" />
                       </SelectTrigger>
                       <SelectContent>
-                        {categories.map((cat) => (
+                        {categoriesProposees.map((cat) => (
                           <SelectItem key={cat.id} value={String(cat.id)}>
                             {cat.nom}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
+                    {estFormule && (
+                      <p className="text-[11px] text-gray-500 mt-1">
+                        Les produits de cette catégorie sont des menus composés de plusieurs produits.
+                      </p>
+                    )}
+                    {produitEnEdition && (
+                      <p className="text-[11px] text-gray-400 mt-1">
+                        Un menu ne peut pas être déplacé hors de cette catégorie, ni un produit simple dedans.
+                      </p>
+                    )}
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
@@ -452,24 +479,6 @@ export function VueCarteAdmin() {
                   </div>
 
                   <div>
-                    <label className="flex items-center gap-2 cursor-pointer text-xs font-medium text-gray-700">
-                      <input
-                        type="checkbox"
-                        checked={formData.estFormule}
-                        disabled={!!produitEnEdition}
-                        onChange={(e) => setFormData({ ...formData, estFormule: e.target.checked })}
-                        className="rounded text-red-500 focus:ring-red-500"
-                      />
-                      Menu (composé de plusieurs produits)
-                    </label>
-                    {produitEnEdition && (
-                      <p className="text-[11px] text-gray-400 mt-1">
-                        Ce choix ne peut pas être modifié après la création.
-                      </p>
-                    )}
-                  </div>
-
-                  <div>
                     <label className="block text-xs font-medium text-gray-700 mb-1">URL de l'image</label>
                     <input
                       type="text"
@@ -492,7 +501,7 @@ export function VueCarteAdmin() {
                 </div>
 
                 {/* COLONNE 2 : note pour un menu */}
-                {formData.estFormule && (
+                {estFormule && (
                   <div className="space-y-2 bg-amber-50 p-4 rounded-lg border border-amber-200 text-sm text-amber-900">
                     <h4 className="text-xs font-bold uppercase tracking-wider text-amber-800">
                       Menu (formule)
@@ -509,7 +518,7 @@ export function VueCarteAdmin() {
                 )}
 
                 {/* COLONNE 2 : Composition / Recette */}
-                <div className={`space-y-3 bg-gray-50 p-4 rounded-lg border ${formData.estFormule ? 'hidden' : ''}`}>
+                <div className={`space-y-3 bg-gray-50 p-4 rounded-lg border ${estFormule ? 'hidden' : ''}`}>
                   <div className="flex justify-between items-center border-b pb-2">
                     <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider">
                       Composition (Recette)

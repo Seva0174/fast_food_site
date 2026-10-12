@@ -439,7 +439,6 @@ export function VueStockAdmin() {
                 <table className="w-full text-left text-xs border-collapse">
                   <thead>
                     <tr className="bg-gray-100 text-gray-600 border-b">
-                      <th className="p-2.5">ID</th>
                       <th className="p-2.5">Fournisseur</th>
                       <th className="p-2.5">Date</th>
                       <th className="p-2.5">Montant</th>
@@ -450,7 +449,6 @@ export function VueStockAdmin() {
                   <tbody className="divide-y">
                     {commandes.map((cmd) => (
                       <tr key={cmd.id} className="hover:bg-gray-50">
-                        <td className="p-2.5 font-bold">#{cmd.id}</td>
                         <td className="p-2.5">{cmd.fournisseurNom}</td>
                         <td className="p-2.5">{cmd.dateCommande}</td>
                         <td className="p-2.5 font-semibold text-red-600">{Number(cmd.montantTotal || 0).toFixed(2)} €</td>
