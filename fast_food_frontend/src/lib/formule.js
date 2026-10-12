@@ -1,4 +1,4 @@
-import { estRadio, groupesNonValides } from './options';
+import { estRadio, estSousMinimum, groupesNonValides } from './options';
 
 // Options d'un produit, telles que renvoyees par l'API : chaque groupe contient "options".
 const optionsDuProduit = (produit) => produit?.groupesOptions ?? [];
@@ -72,7 +72,7 @@ export const erreurEtape = (etape, selections) => {
 
   if (etape.type === 'groupe') {
     const { groupe } = etape;
-    if (choixDuGroupe(selections, groupe).length < groupe.minSelection) {
+    if (estSousMinimum(groupe, choixDuGroupe(selections, groupe).length)) {
       return `Veuillez choisir au moins ${groupe.minSelection} produit(s) pour : ${groupe.nom}.`;
     }
     return null;

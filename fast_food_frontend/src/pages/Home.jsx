@@ -2,7 +2,7 @@ import { useContext, useState } from 'react';
 import { ContextePanier } from '../context/ContextePanier';
 import { useCarte } from '../hooks/useCarte';
 import { useIsDesktop } from '../hooks/useIsDesktop';
-import { trouverProduit, produitsDeCategorie, aDesOptions } from '../lib/produit';
+import { estPersonnalisable, trouverProduit, produitsDeCategorie } from '../lib/produit';
 import { PanierSidebarDesktop } from '../components/PanierSidebarDesktop';
 import { PanierMobileSheet } from '../components/PanierMobileSheet';
 import { HeroBanner } from '../components/carte/HeroBanner';
@@ -32,7 +32,7 @@ export const Home = () => {
   // Ouvre la modale seulement si le produit peut etre personnalise
   const modifierItem = (item) => {
     const produit = trouverProduit(produits, item.produitId);
-    if (produit && (produit.estFormule || aDesOptions(produit))) {
+    if (produit && (produit.estFormule || estPersonnalisable(produit))) {
       ouvrirModal(produit, item);
     }
   };

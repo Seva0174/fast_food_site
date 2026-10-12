@@ -59,7 +59,6 @@ export const MentionsLegales = () => {
           </p>
         </section>
 
-        {/* Mention projet scolaire */}
         <section>
           <h2 className="text-xl font-semibold text-gray-800 mb-2">
             Projet personnel

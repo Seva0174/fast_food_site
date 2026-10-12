@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { getCategories, getProduits } from '../api/menuApi';
-import { normaliserProduit } from '../lib/produit';
 
 export const useCarte = () => {
   const [categories, setCategories] = useState([]);
@@ -16,7 +15,7 @@ export const useCarte = () => {
         const [cats, prods] = await Promise.all([getCategories(), getProduits()]);
         if (!annule) {
           setCategories(cats);
-          setProduits(prods.map(normaliserProduit));
+          setProduits(prods);
         }
       } catch (erreur) {
         console.error('Erreur lors du chargement de la carte :', erreur);

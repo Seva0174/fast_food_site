@@ -7,6 +7,10 @@ export class ErreurBoundary extends Component {
     return { erreur };
   }
 
+  componentDidCatch(erreur, infos) {
+    console.error("Erreur d'affichage :", erreur, infos.componentStack);
+  }
+
   render() {
     if (this.state.erreur) {
       return (

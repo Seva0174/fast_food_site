@@ -1,11 +1,18 @@
 import { useState } from 'react';
-import { calculerSurcouts, estRadio, selectionsInitiales } from '../lib/options';
-import { groupesNonValides } from '../lib/options';
+import {
+  calculerSurcouts,
+  estRadio,
+  estSousMinimum,
+  groupesNonValides,
+  selectionsInitiales,
+} from '../lib/options';
 
 // Gere les choix d'options d'un produit : selection, validation et surcout.
 export const useSelectionOptions = (groupes, itemPanier) => {
   const [selections, setSelections] = useState(() => selectionsInitiales(groupes, itemPanier));
   const [erreurs, setErreurs] = useState({});
+
+  const optionIds = Object.values(selections).flat();
 
   const choisir = (groupe, idItem) => {
     const actuels = selections[groupe.id] ?? [];
@@ -23,14 +30,15 @@ export const useSelectionOptions = (groupes, itemPanier) => {
 
     setSelections((prev) => ({ ...prev, [groupe.id]: nouveaux }));
 
-    if (nouveaux.length >= groupe.minSelection) {
+    // L'erreur du groupe disparait des que le minimum est atteint
+    if (!estSousMinimum(groupe, nouveaux.length)) {
       setErreurs((prev) => ({ ...prev, [groupe.id]: null }));
     }
   };
 
   // Renvoie true si toutes les selections obligatoires sont respectees.
   const verifier = () => {
-    const invalides = groupesNonValides(groupes, Object.values(selections).flat());
+    const invalides = groupesNonValides(groupes, optionIds);
 
     setErreurs(
       Object.fromEntries(
@@ -49,7 +57,7 @@ export const useSelectionOptions = (groupes, itemPanier) => {
     erreurs,
     choisir,
     verifier,
-    optionIds: Object.values(selections).flat(),
+    optionIds,
     surcout: calculerSurcouts(groupes, selections),
   };
 };

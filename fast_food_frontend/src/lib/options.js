@@ -20,7 +20,7 @@ export const calculerSurcouts = (groupes, selections) =>
     return total + surcoutGroupe;
   }, 0);
 
-  // Libelle court affiche sur un groupe d'options : Obligatoire ou Optionnel, avec le maximum.
+// Libelle court affiche sur un groupe d'options : Obligatoire ou Optionnel, avec le maximum.
 export const libelleTypeGroupe = (groupe) =>
   `${groupe.minSelection > 0 ? 'Obligatoire' : 'Optionnel'}${
     groupe.maxSelection > 1 ? ` (max ${groupe.maxSelection})` : ''
@@ -35,9 +35,14 @@ export const decrireRegle = (groupe) => {
   return `Choisissez de ${min} à ${max} produits`;
 };
 
+// Nombre d'options d'un groupe qui figurent dans la liste d'identifiants choisis.
+export const nombreOptionsChoisies = (groupe, optionIds) =>
+  groupe.options.filter((item) => optionIds.includes(item.id)).length;
+
+// Regle unique du minimum : vrai si le nombre de choix est inferieur au minimum du groupe.
+// Valable pour un groupe d'options comme pour un emplacement de menu.
+export const estSousMinimum = (groupe, nombreChoisi) => nombreChoisi < groupe.minSelection;
+
 // Renvoie la liste des groupes dont le nombre d'options choisies est inferieur au minimum.
 export const groupesNonValides = (groupes, optionIds) =>
-  groupes.filter((groupe) => {
-    const nombre = groupe.options.filter((item) => optionIds.includes(item.id)).length;
-    return nombre < groupe.minSelection;
-  });
+  groupes.filter((groupe) => estSousMinimum(groupe, nombreOptionsChoisies(groupe, optionIds)));
