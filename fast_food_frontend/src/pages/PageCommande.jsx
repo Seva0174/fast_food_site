@@ -4,7 +4,7 @@ import { ContextePanier } from '../context/ContextePanier';
 import { AuthContext } from '../context/AuthProvider';
 import { passerCommandeApi } from '../api/commandeApi';
 import { Truck, Store, ArrowLeft } from 'lucide-react';
-import { ComposantsFormule } from '../components/ComposantsFormule';
+import { ComposantsFormule } from '../components/produits/ComposantsFormule';
 
 export const PageCommande = () => {
   const { panier, viderPanier, totalPrix, incrementerQuantite, retirerDuPanier, supprimerDuPanier } =

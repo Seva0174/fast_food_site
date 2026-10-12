@@ -1,6 +1,6 @@
 import { useState, useContext } from 'react';
 import { ContextePanier } from '../context/ContextePanier';
-import { PanierContent } from './PanierContent';
+import { PanierContent } from './panier/PanierContent';
 
 export const PanierMobileSheet = ({ onEditItem }) => {
   const [isOpen, setIsOpen] = useState(false);

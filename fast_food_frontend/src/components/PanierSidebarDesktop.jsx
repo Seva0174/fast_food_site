@@ -1,8 +1,8 @@
-import { PanierContent } from './PanierContent';
+import { PanierContent } from './panier/PanierContent';
 
 export const PanierSidebarDesktop = ({ onEditItem }) => {
   return (
-    <aside className="w-80 border rounded-2xl bg-white shadow-sm overflow-hidden sticky top-4 h-[calc(100vh-2rem)] flex flex-col">
+    <aside className="sticky top-20 flex h-[calc(100vh-6rem)] w-80 flex-col overflow-hidden rounded-2xl border bg-white shadow-sm">
       <PanierContent onEditItem={onEditItem} />
     </aside>
   );

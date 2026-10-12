@@ -19,22 +19,21 @@ const mapComposant = (composant) => ({
   nomGroupe: composant.nomGroupe,
   produitId: composant.produitId,
   nom: composant.nomProduit,
-  options: composant.options || [],
-  // Supplément = surcoût de l'emplacement + surcoûts des options
-  supplement: Number(composant.prixUnitaire || 0),
+  options: composant.options ?? [],
+  supplement: Number(composant.surcoutEmplacement ?? 0),
 });
 
 const mapPanierResponse = (panierResponse) => {
-  if (!panierResponse || !panierResponse.items) return [];
+  if (!panierResponse?.items) return [];
   return panierResponse.items.map((item) => ({
     id: item.id,
     produitId: item.produitId,
     nom: item.nomProduit,
-    prix: item.prixUnitaire,
+    prix: Number(item.prixUnitaire ?? 0),
     quantite: item.quantite,
-    options: item.options || [],
-    composants: (item.composants || []).map(mapComposant),
-    estFormule: (item.composants || []).length > 0,
+    options: item.options ?? [],
+    composants: (item.composants ?? []).map(mapComposant),
+    estFormule: (item.composants ?? []).length > 0,
   }));
 };
 
@@ -52,6 +51,22 @@ const composantDepuisChoix = (choix) => ({
 const additionnerSupplements = (choixFormule) =>
   choixFormule.reduce((total, choix) => total + Number(choix.supplement || 0), 0);
 
+// Empreinte d'un article : deux articles avec la meme empreinte sont identiques.
+// Les listes sont triees pour que l'ordre de selection n'ait pas d'importance.
+const cleArticle = (produitId, optionItemIds = [], choixFormule = []) =>
+  JSON.stringify({
+    produitId,
+    options: [...optionItemIds].sort((a, b) => a - b),
+    choix: choixFormule
+      .map((choix) => ({
+        groupe: choix.idGroupe,
+        produit: choix.idProduit,
+        options: [...(choix.optionIds ?? [])].sort((a, b) => a - b),
+      }))
+      .sort((a, b) => a.groupe - b.groupe || a.produit - b.produit),
+  });
+
+
 const extraireMessageErreur = (error) => {
   const data = error?.response?.data;
   if (data?.messages && Array.isArray(data.messages)) return data.messages.join(' | ');
@@ -65,11 +80,29 @@ const chargerPanierInviteLocal = () => {
 
 export const FournisseurPanier = ({ children }) => {
   const { isAuthenticated } = useContext(AuthContext);
-  const [panier, setPanier] = useState(chargerPanierInviteLocal);
+  const [panier, setPanier] = useState(() =>
+    isAuthenticated ? [] : chargerPanierInviteLocal()
+  );
   const [chargement, setChargement] = useState(false);
 
   const dejaSynchronise = useRef(false);
   const etaitAuthentifie = useRef(isAuthenticated);
+
+  const mettreAJourPanier = async (reponse) => {
+    if (reponse?.items) {
+      setPanier(mapPanierResponse(reponse));
+    } else {
+      setPanier(mapPanierResponse(await getPanierApi()));
+    }
+  };
+
+  const mettreAJourInvite = (transformation) => {
+    setPanier((prev) => {
+      const nouveau = transformation(prev);
+      localStorage.setItem(CLE_PANIER_INVITE, JSON.stringify(nouveau));
+      return nouveau;
+    });
+  };
 
   // Déclarée avant l'utilisation dans useEffect
   const chargerOuSynchroniserPanier = async () => {
@@ -133,7 +166,7 @@ export const FournisseurPanier = ({ children }) => {
     if (isAuthenticated) {
       try {
         const res = await ajouterProduitApi(produitId, 1, optionItemIds, choixFormule);
-        setPanier(mapPanierResponse(res));
+        await mettreAJourPanier(res);
       } catch (error) {
         console.error("Erreur lors de l'ajout au panier :", error);
         const message = extraireMessageErreur(error);
@@ -142,26 +175,33 @@ export const FournisseurPanier = ({ children }) => {
       return;
     }
 
-    setPanier((prev) => {
-      const prixBase = Number(produitOuId.prix || 0);
-      const nouveau = [
-        ...prev,
-        {
-          id: Date.now(),
-          produitId: produitId,
-          nom: produitOuId.nom || 'Produit',
-          prixBase: prixBase,
-          prix: prixBase + additionnerSupplements(choixFormule),
-          quantite: 1,
-          optionItemIds: optionItemIds,
-          options: optionItemIds.map((id) => ({ id, nom: 'Option' })),
-          choixFormule: choixFormule,
-          composants: choixFormule.map(composantDepuisChoix),
-          estFormule: choixFormule.length > 0 || !!produitOuId.estFormule,
-        },
-      ];
-      localStorage.setItem(CLE_PANIER_INVITE, JSON.stringify(nouveau));
-      return nouveau;
+    const prixBase = Number(produitOuId.prix || 0);
+    const nouvelArticle = {
+      id: Date.now(),
+      produitId,
+      nom: produitOuId.nom || 'Produit',
+      prixBase,
+      prix: prixBase + additionnerSupplements(choixFormule),
+      quantite: 1,
+      optionItemIds,
+      options: optionItemIds.map((id) => ({ id, nom: 'Option' })),
+      choixFormule,
+      composants: choixFormule.map(composantDepuisChoix),
+      estFormule: choixFormule.length > 0 || !!produitOuId.estFormule,
+    };
+
+    mettreAJourInvite((prev) => {
+      const cle = cleArticle(produitId, optionItemIds, choixFormule);
+      const existant = prev.find(
+        (article) =>
+          cleArticle(article.produitId, article.optionItemIds, article.choixFormule) === cle
+      );
+
+      if (!existant) return [...prev, nouvelArticle];
+
+      return prev.map((article) =>
+        article.id === existant.id ? { ...article, quantite: article.quantite + 1 } : article
+      );
     });
   };
 
@@ -172,40 +212,33 @@ export const FournisseurPanier = ({ children }) => {
     if (isAuthenticated) {
       try {
         const data = await modifierQuantiteApi(item.id, item.quantite + 1);
-        setPanier(mapPanierResponse(data));
+        await mettreAJourPanier(data);
       } catch (error) {
         console.error('Erreur lors de l’incrémentation du produit :', error);
       }
       return;
     }
 
-    setPanier((prev) => {
-      const nouveau = prev.map((i) =>
-        i.id === item.id ? { ...i, quantite: i.quantite + 1 } : i
-      );
-      localStorage.setItem(CLE_PANIER_INVITE, JSON.stringify(nouveau));
-      return nouveau;
-    });
+    mettreAJourInvite((prev) =>
+      prev.map((i) => (i.id === item.id ? { ...i, quantite: i.quantite + 1 } : i))
+    );
   };
 
   const modifierItemPanier = async (itemId, optionItemIds = [], choixFormule = []) => {
     if (isAuthenticated) {
+      const itemExistant = panier.find((i) => i.id === itemId);
+      if (!itemExistant) return;
+
       try {
-        const itemExistant = panier.find((i) => i.id === itemId);
-        if (!itemExistant) return;
-
-        // 1. Supprimer l'ancien item du panier backend
-        await supprimerItemApi(itemId);
-
-        // 2. Ajouter le produit avec ses nouvelles options / sa nouvelle composition
-        const res = await ajouterProduitApi(
+        // Ajouter d'abord : si cela echoue, l'ancien article reste dans le panier
+        await ajouterProduitApi(
           itemExistant.produitId,
           itemExistant.quantite,
           optionItemIds,
           choixFormule
         );
-
-        setPanier(mapPanierResponse(res));
+        const data = await supprimerItemApi(itemId);
+        await mettreAJourPanier(data);
       } catch (error) {
         console.error('Erreur lors de la modification du produit :', error);
         const message = extraireMessageErreur(error);
@@ -214,26 +247,36 @@ export const FournisseurPanier = ({ children }) => {
       return;
     }
 
-    // --- Mode Invité (LocalStorage) ---
-    setPanier((prev) => {
-      const nouveau = prev.map((item) => {
-        if (item.id === itemId) {
-          const prixBase = item.prixBase ?? item.prix;
-          return {
-            ...item,
-            prixBase: prixBase,
-            prix: prixBase + additionnerSupplements(choixFormule),
-            optionItemIds: optionItemIds,
-            options: optionItemIds.map((id) => ({ id, nom: 'Option' })),
-            choixFormule: choixFormule,
-            composants: choixFormule.map(composantDepuisChoix),
-          };
-        }
-        return item;
-      });
-      localStorage.setItem(CLE_PANIER_INVITE, JSON.stringify(nouveau));
-      return nouveau;
+    mettreAJourInvite((prev) => {
+    const modifie = prev.map((article) => {
+      if (article.id !== itemId) return article;
+
+      const prixBase = article.prixBase ?? article.prix;
+      return {
+        ...article,
+        prixBase,
+        prix: prixBase + additionnerSupplements(choixFormule),
+        optionItemIds,
+        options: optionItemIds.map((id) => ({ id, nom: 'Option' })),
+        choixFormule,
+        composants: choixFormule.map(composantDepuisChoix),
+      };
     });
+
+    // Regroupe les articles devenus identiques
+    return modifie.reduce((resultat, article) => {
+      const cle = cleArticle(article.produitId, article.optionItemIds, article.choixFormule);
+      const existant = resultat.find(
+        (a) => cleArticle(a.produitId, a.optionItemIds, a.choixFormule) === cle
+      );
+
+      if (!existant) return [...resultat, article];
+
+      return resultat.map((a) =>
+        a.id === existant.id ? { ...a, quantite: a.quantite + a.quantite + 0 + (article.quantite) - a.quantite } : a
+      );
+    }, []);
+  });
   };
 
   const retirerDuPanier = async (itemId) => {
@@ -246,41 +289,32 @@ export const FournisseurPanier = ({ children }) => {
           item.quantite <= 1
             ? await supprimerItemApi(item.id)
             : await modifierQuantiteApi(item.id, item.quantite - 1);
-        setPanier(mapPanierResponse(data));
+        await mettreAJourPanier(data);
       } catch (error) {
         console.error('Erreur lors de la mise à jour du panier :', error);
       }
       return;
     }
 
-    setPanier((prev) => {
-      const nouveau =
-        item.quantite <= 1
-          ? prev.filter((i) => i.id !== item.id)
-          : prev.map((i) =>
-              i.id === item.id ? { ...i, quantite: i.quantite - 1 } : i
-            );
-      localStorage.setItem(CLE_PANIER_INVITE, JSON.stringify(nouveau));
-      return nouveau;
-    });
+    mettreAJourInvite((prev) =>
+      item.quantite <= 1
+        ? prev.filter((i) => i.id !== item.id)
+        : prev.map((i) => (i.id === item.id ? { ...i, quantite: i.quantite - 1 } : i))
+    );
   };
 
   const supprimerDuPanier = async (itemId) => {
     if (isAuthenticated) {
       try {
         const data = await supprimerItemApi(itemId);
-        setPanier(mapPanierResponse(data));
+        await mettreAJourPanier(data);
       } catch (error) {
         console.error('Erreur lors de la suppression du produit :', error);
       }
       return;
     }
 
-    setPanier((prev) => {
-      const nouveau = prev.filter((i) => i.id !== itemId);
-      localStorage.setItem(CLE_PANIER_INVITE, JSON.stringify(nouveau));
-      return nouveau;
-    });
+    mettreAJourInvite((prev) => prev.filter((i) => i.id !== itemId));
   };
 
   const viderPanier = async () => {
