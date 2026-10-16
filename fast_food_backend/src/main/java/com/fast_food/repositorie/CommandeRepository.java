@@ -10,17 +10,18 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.fast_food.entite.Commande;
+import com.fast_food.entite.CommandeMenu;
 import com.fast_food.entite.User;
 
 @Repository
 public interface CommandeRepository extends JpaRepository<Commande, Long> {
 
-    @Query("SELECT DISTINCT c FROM Commande c LEFT JOIN FETCH c.commandeProduits cp LEFT JOIN FETCH cp.produitMenu WHERE c.user = :user ORDER BY c.dateCreation DESC")
+    @Query("SELECT DISTINCT c FROM Commande c LEFT JOIN FETCH c.user LEFT JOIN FETCH c.commandeProduits cp LEFT JOIN FETCH cp.produitMenu WHERE c.user = :user ORDER BY c.dateCreation DESC")
     List<Commande> findByUserOrderByDateCreationDesc(@Param("user") User user);
 
-    @Query("SELECT DISTINCT c FROM Commande c LEFT JOIN FETCH c.commandeProduits cp LEFT JOIN FETCH cp.produitMenu ORDER BY c.dateCreation DESC")
+    @Query("SELECT DISTINCT c FROM Commande c LEFT JOIN FETCH c.user LEFT JOIN FETCH c.commandeProduits cp LEFT JOIN FETCH cp.produitMenu ORDER BY c.dateCreation DESC")
     List<Commande> findAllByOrderByDateCreationDesc();
-
+    
     // Chiffre d'affaires global (sur commandes non annulées)
     @Query("SELECT SUM(c.total) FROM Commande c WHERE c.status <> 'annulee'")
     BigDecimal calculateTotalChiffreAffaires();
@@ -51,4 +52,12 @@ public interface CommandeRepository extends JpaRepository<Commande, Long> {
             "WHERE status != 'annulee' " +
             "GROUP BY jour_num ORDER BY jour_num", nativeQuery = true)
     List<Object[]> countCommandesParJourSemaine();
+
+    // Charge les options de toutes les lignes (principales et composants) des commandes donnees
+    @Query("SELECT DISTINCT cm FROM CommandeMenu cm LEFT JOIN FETCH cm.options WHERE cm.commandeInfo IN :commandes")
+    List<CommandeMenu> chargerOptionsDesLignes(@Param("commandes") List<Commande> commandes);
+
+    // Charge les composants des lignes de menu (les entites sont deja en cache de session)
+    @Query("SELECT DISTINCT cm FROM CommandeMenu cm LEFT JOIN FETCH cm.composants WHERE cm.commandeInfo IN :commandes")
+    List<CommandeMenu> chargerComposantsDesLignes(@Param("commandes") List<Commande> commandes);
 }

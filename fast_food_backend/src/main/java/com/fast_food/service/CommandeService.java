@@ -217,13 +217,11 @@ public class CommandeService {
         return ligne;
     }
 
-    @Transactional(readOnly = true)
+     @Transactional(readOnly = true)
     public List<CommandeResponse> getMesCommandesByEmail(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("Utilisateur non trouvé avec l'email : " + email));
-
-        List<Commande> commandes = commandeRepository.findByUserOrderByDateCreationDesc(user);
-        return commandes.stream().map(commandeMapper::toResponse).collect(Collectors.toList());
+        return versReponses(commandeRepository.findByUserOrderByDateCreationDesc(user));
     }
 
     @Transactional
@@ -242,8 +240,7 @@ public class CommandeService {
 
     @Transactional(readOnly = true)
     public List<CommandeResponse> getMesCommandes(User user) {
-        List<Commande> commandes = commandeRepository.findByUserOrderByDateCreationDesc(user);
-        return commandes.stream().map(commandeMapper::toResponse).collect(Collectors.toList());
+        return versReponses(commandeRepository.findByUserOrderByDateCreationDesc(user));
     }
 
     @Transactional(readOnly = true)
@@ -260,9 +257,7 @@ public class CommandeService {
 
     @Transactional(readOnly = true)
     public List<CommandeResponse> getAllCommandes() {
-        return commandeRepository.findAllByOrderByDateCreationDesc().stream()
-                .map(commandeMapper::toResponse)
-                .collect(Collectors.toList());
+        return versReponses(commandeRepository.findAllByOrderByDateCreationDesc());
     }
 
     @Transactional
@@ -283,5 +278,17 @@ public class CommandeService {
         }
 
         return commandeMapper.toResponse(commandeSauvegardee);
+    }
+
+    // Precharge options et composants en deux requetes, puis convertit les commandes.
+    // Les entites chargees restent dans le contexte de persistance : le mapper ne declenche plus de requete.
+    private List<CommandeResponse> versReponses(List<Commande> commandes) {
+        if (commandes.isEmpty()) {
+            return new ArrayList<>();
+        }
+        commandeRepository.chargerOptionsDesLignes(commandes);
+        commandeRepository.chargerComposantsDesLignes(commandes);
+
+        return commandes.stream().map(commandeMapper::toResponse).collect(Collectors.toList());
     }
 }
