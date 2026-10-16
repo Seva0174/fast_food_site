@@ -3,8 +3,8 @@ import { ContextePanier } from '../context/ContextePanier';
 import { useCarte } from '../hooks/useCarte';
 import { useIsDesktop } from '../hooks/useIsDesktop';
 import { estPersonnalisable, trouverProduit, produitsDeCategorie } from '../lib/produit';
-import { PanierSidebarDesktop } from '../components/PanierSidebarDesktop';
-import { PanierMobileSheet } from '../components/PanierMobileSheet';
+import { PanierSidebarDesktop } from '../components/panier/PanierSidebarDesktop';
+import { PanierMobileSheet } from '../components/panier/PanierMobileSheet';
 import { HeroBanner } from '../components/carte/HeroBanner';
 import { FiltresCategories } from '../components/carte/FiltresCategories';
 import { SectionCategorie } from '../components/carte/SectionCategorie';
@@ -39,7 +39,7 @@ export const Home = () => {
 
   const confirmer = (produit, options, choixFormule) => {
     if (itemEnModification) {
-      modifierItemPanier(itemEnModification.id, options, choixFormule);
+      modifierItemPanier(itemEnModification.id, produit, options, choixFormule);
     } else {
       ajouterAuPanier(produit, options, choixFormule);
     }

@@ -1,8 +1,8 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./context/AuthProvider";
 import { FournisseurPanier } from "./context/ContextePanier";
-import { ProtectedRoute } from "./components/ProtectedRoute";
-import { MainLayout } from "./components/MainLayout";
+import { ProtectedRoute } from "./components/layout/ProtectedRoute";
+import { MainLayout } from "./components/layout/MainLayout";
 import { Home } from "./pages/Home";
 import { PageAuth } from "./pages/PageAuth";
 import { PageCommande } from "./pages/PageCommande";

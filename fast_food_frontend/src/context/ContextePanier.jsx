@@ -1,4 +1,5 @@
 import { createContext, useState, useEffect, useContext, useRef } from 'react';
+import { extraireMessageErreur } from '../lib/erreurs';
 import {
   getPanierApi,
   ajouterProduitApi,
@@ -7,82 +8,30 @@ import {
   viderPanierApi,
 } from '../api/panierApi';
 import { AuthContext } from './AuthProvider';
+import {
+  mapPanierResponse,
+  creerArticleInvite,
+  modifierArticleInvite,
+  regrouperArticlesIdentiques,
+  changerQuantiteArticle,
+  supprimerArticle,
+} from '../lib/panier';
 
 export const ContextePanier = createContext();
 
 const CLE_PANIER_INVITE = 'panier_invite';
-
-// Produit choisi dans un menu, tel que stocké dans le panier
-const mapComposant = (composant) => ({
-  id: composant.id,
-  idGroupe: composant.idGroupe,
-  nomGroupe: composant.nomGroupe,
-  produitId: composant.produitId,
-  nom: composant.nomProduit,
-  options: composant.options ?? [],
-  supplement: Number(composant.surcoutEmplacement ?? 0),
-});
-
-const mapPanierResponse = (panierResponse) => {
-  if (!panierResponse?.items) return [];
-  return panierResponse.items.map((item) => ({
-    id: item.id,
-    produitId: item.produitId,
-    nom: item.nomProduit,
-    prix: Number(item.prixUnitaire ?? 0),
-    quantite: item.quantite,
-    options: item.options ?? [],
-    composants: (item.composants ?? []).map(mapComposant),
-    estFormule: (item.composants ?? []).length > 0,
-  }));
-};
-
-// Convertit un choix de menu (panier invité) en composant affichable
-const composantDepuisChoix = (choix) => ({
-  id: `${choix.idGroupe}-${choix.idProduit}`,
-  idGroupe: choix.idGroupe,
-  nomGroupe: choix.nomGroupe,
-  produitId: choix.idProduit,
-  nom: choix.nomProduit,
-  options: choix.optionsDetails || [],
-  supplement: Number(choix.supplement || 0),
-});
-
-const additionnerSupplements = (choixFormule) =>
-  choixFormule.reduce((total, choix) => total + Number(choix.supplement || 0), 0);
-
-// Empreinte d'un article : deux articles avec la meme empreinte sont identiques.
-// Les listes sont triees pour que l'ordre de selection n'ait pas d'importance.
-const cleArticle = (produitId, optionItemIds = [], choixFormule = []) =>
-  JSON.stringify({
-    produitId,
-    options: [...optionItemIds].sort((a, b) => a - b),
-    choix: choixFormule
-      .map((choix) => ({
-        groupe: choix.idGroupe,
-        produit: choix.idProduit,
-        options: [...(choix.optionIds ?? [])].sort((a, b) => a - b),
-      }))
-      .sort((a, b) => a.groupe - b.groupe || a.produit - b.produit),
-  });
-
-
-const extraireMessageErreur = (error) => {
-  const data = error?.response?.data;
-  if (data?.messages && Array.isArray(data.messages)) return data.messages.join(' | ');
-  return data?.message || null;
-};
 
 const chargerPanierInviteLocal = () => {
   const sauvegarde = localStorage.getItem(CLE_PANIER_INVITE);
   return sauvegarde ? JSON.parse(sauvegarde) : [];
 };
 
+const sauvegarderPanierInviteLocal = (articles) =>
+  localStorage.setItem(CLE_PANIER_INVITE, JSON.stringify(articles));
+
 export const FournisseurPanier = ({ children }) => {
   const { isAuthenticated } = useContext(AuthContext);
-  const [panier, setPanier] = useState(() =>
-    isAuthenticated ? [] : chargerPanierInviteLocal()
-  );
+  const [panier, setPanier] = useState(() => (isAuthenticated ? [] : chargerPanierInviteLocal()));
   const [chargement, setChargement] = useState(false);
 
   const dejaSynchronise = useRef(false);
@@ -96,26 +45,26 @@ export const FournisseurPanier = ({ children }) => {
     }
   };
 
+  // Panier invite : on calcule le nouveau panier, on le sauvegarde, puis une seule mise a jour d'etat.
+  // La transformation est une fonction pure (voir lib/panier.js).
   const mettreAJourInvite = (transformation) => {
-    setPanier((prev) => {
-      const nouveau = transformation(prev);
-      localStorage.setItem(CLE_PANIER_INVITE, JSON.stringify(nouveau));
-      return nouveau;
-    });
+    const nouveau = transformation(panier);
+    sauvegarderPanierInviteLocal(nouveau);
+    setPanier(nouveau);
   };
 
-  // Déclarée avant l'utilisation dans useEffect
+  // Declaree avant l'utilisation dans useEffect
   const chargerOuSynchroniserPanier = async () => {
     setChargement(true);
     try {
       const panierInvite = chargerPanierInviteLocal();
-      
+
       if (panierInvite.length > 0) {
         localStorage.removeItem(CLE_PANIER_INVITE);
         let panierBackend = mapPanierResponse(await getPanierApi());
 
         for (const item of panierInvite) {
-          // Un produit devenu invalide (rupture, menu modifié...) ne doit pas bloquer les autres
+          // Un produit devenu invalide (rupture, menu modifie...) ne doit pas bloquer les autres
           try {
             panierBackend = mapPanierResponse(
               await ajouterProduitApi(
@@ -131,8 +80,7 @@ export const FournisseurPanier = ({ children }) => {
         }
         setPanier(panierBackend);
       } else {
-        const res = await getPanierApi();
-        setPanier(mapPanierResponse(res));
+        setPanier(mapPanierResponse(await getPanierApi()));
       }
     } catch (error) {
       console.error('Erreur lors du chargement/synchronisation du panier :', error);
@@ -157,15 +105,12 @@ export const FournisseurPanier = ({ children }) => {
     etaitAuthentifie.current = isAuthenticated;
   }, [isAuthenticated]);
 
+  // produit : produit de la carte (voir ProduitMenuResponse)
   // choixFormule : produits choisis dans un menu (voir FormuleCompositionModal)
-  const ajouterAuPanier = async (produitOuId, optionItemIds = [], choixFormule = []) => {
-    let produitId = typeof produitOuId === 'object' && produitOuId !== null
-      ? (produitOuId.produitId || produitOuId.id)
-      : produitOuId;
-
+  const ajouterAuPanier = async (produit, optionItemIds = [], choixFormule = []) => {
     if (isAuthenticated) {
       try {
-        const res = await ajouterProduitApi(produitId, 1, optionItemIds, choixFormule);
+        const res = await ajouterProduitApi(produit.id, 1, optionItemIds, choixFormule);
         await mettreAJourPanier(res);
       } catch (error) {
         console.error("Erreur lors de l'ajout au panier :", error);
@@ -175,34 +120,8 @@ export const FournisseurPanier = ({ children }) => {
       return;
     }
 
-    const prixBase = Number(produitOuId.prix || 0);
-    const nouvelArticle = {
-      id: Date.now(),
-      produitId,
-      nom: produitOuId.nom || 'Produit',
-      prixBase,
-      prix: prixBase + additionnerSupplements(choixFormule),
-      quantite: 1,
-      optionItemIds,
-      options: optionItemIds.map((id) => ({ id, nom: 'Option' })),
-      choixFormule,
-      composants: choixFormule.map(composantDepuisChoix),
-      estFormule: choixFormule.length > 0 || !!produitOuId.estFormule,
-    };
-
-    mettreAJourInvite((prev) => {
-      const cle = cleArticle(produitId, optionItemIds, choixFormule);
-      const existant = prev.find(
-        (article) =>
-          cleArticle(article.produitId, article.optionItemIds, article.choixFormule) === cle
-      );
-
-      if (!existant) return [...prev, nouvelArticle];
-
-      return prev.map((article) =>
-        article.id === existant.id ? { ...article, quantite: article.quantite + 1 } : article
-      );
-    });
+    const article = creerArticleInvite(Date.now(), produit, optionItemIds, choixFormule);
+    mettreAJourInvite((prev) => regrouperArticlesIdentiques([...prev, article]));
   };
 
   const incrementerQuantite = async (itemId) => {
@@ -214,23 +133,20 @@ export const FournisseurPanier = ({ children }) => {
         const data = await modifierQuantiteApi(item.id, item.quantite + 1);
         await mettreAJourPanier(data);
       } catch (error) {
-        console.error('Erreur lors de l’incrémentation du produit :', error);
+        console.error("Erreur lors de l'incrementation du produit :", error);
       }
       return;
     }
 
-    mettreAJourInvite((prev) =>
-      prev.map((i) => (i.id === item.id ? { ...i, quantite: i.quantite + 1 } : i))
-    );
+    mettreAJourInvite((prev) => changerQuantiteArticle(prev, item.id, item.quantite + 1));
   };
 
-  const modifierItemPanier = async (itemId, optionItemIds = [], choixFormule = []) => {
+  const modifierItemPanier = async (itemId, produit, optionItemIds = [], choixFormule = []) => {
     if (isAuthenticated) {
       const itemExistant = panier.find((i) => i.id === itemId);
       if (!itemExistant) return;
 
       try {
-        // Ajouter d'abord : si cela echoue, l'ancien article reste dans le panier
         await ajouterProduitApi(
           itemExistant.produitId,
           itemExistant.quantite,
@@ -247,36 +163,16 @@ export const FournisseurPanier = ({ children }) => {
       return;
     }
 
-    mettreAJourInvite((prev) => {
-    const modifie = prev.map((article) => {
-      if (article.id !== itemId) return article;
-
-      const prixBase = article.prixBase ?? article.prix;
-      return {
-        ...article,
-        prixBase,
-        prix: prixBase + additionnerSupplements(choixFormule),
-        optionItemIds,
-        options: optionItemIds.map((id) => ({ id, nom: 'Option' })),
-        choixFormule,
-        composants: choixFormule.map(composantDepuisChoix),
-      };
-    });
-
-    // Regroupe les articles devenus identiques
-    return modifie.reduce((resultat, article) => {
-      const cle = cleArticle(article.produitId, article.optionItemIds, article.choixFormule);
-      const existant = resultat.find(
-        (a) => cleArticle(a.produitId, a.optionItemIds, a.choixFormule) === cle
-      );
-
-      if (!existant) return [...resultat, article];
-
-      return resultat.map((a) =>
-        a.id === existant.id ? { ...a, quantite: a.quantite + a.quantite + 0 + (article.quantite) - a.quantite } : a
-      );
-    }, []);
-  });
+    // Les articles devenus identiques apres la modification sont regroupes
+    mettreAJourInvite((prev) =>
+      regrouperArticlesIdentiques(
+        prev.map((article) =>
+          article.id === itemId
+            ? modifierArticleInvite(article, produit, optionItemIds, choixFormule)
+            : article
+        )
+      )
+    );
   };
 
   const retirerDuPanier = async (itemId) => {
@@ -291,15 +187,15 @@ export const FournisseurPanier = ({ children }) => {
             : await modifierQuantiteApi(item.id, item.quantite - 1);
         await mettreAJourPanier(data);
       } catch (error) {
-        console.error('Erreur lors de la mise à jour du panier :', error);
+        console.error('Erreur lors de la mise a jour du panier :', error);
       }
       return;
     }
 
     mettreAJourInvite((prev) =>
       item.quantite <= 1
-        ? prev.filter((i) => i.id !== item.id)
-        : prev.map((i) => (i.id === item.id ? { ...i, quantite: i.quantite - 1 } : i))
+        ? supprimerArticle(prev, item.id)
+        : changerQuantiteArticle(prev, item.id, item.quantite - 1)
     );
   };
 
@@ -314,7 +210,7 @@ export const FournisseurPanier = ({ children }) => {
       return;
     }
 
-    mettreAJourInvite((prev) => prev.filter((i) => i.id !== itemId));
+    mettreAJourInvite((prev) => supprimerArticle(prev, itemId));
   };
 
   const viderPanier = async () => {

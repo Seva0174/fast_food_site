@@ -25,7 +25,7 @@ export const ModalPersonnalisation = ({ produit, produits, itemPanier, onClose, 
       itemPanier={itemPanier}
       isOpen={!!produit}
       onClose={onClose}
-      onConfirm={(p, options) => onConfirm(p, options)}
+      onConfirm={(p, options) => onConfirm(p, options, [])}
     />
   );
 };

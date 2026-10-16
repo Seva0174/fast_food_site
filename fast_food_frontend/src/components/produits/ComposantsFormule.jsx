@@ -1,4 +1,4 @@
-const libelleOption = (option) => option.nom ?? option.nomOption;
+const libelleOption = (option) => option.nom;
 
 // Liste compacte des produits choisis dans un menu (panier et recapitulatif de commande)
 export const ComposantsFormule = ({ composants = [], afficherOptions = true, className = '' }) => {

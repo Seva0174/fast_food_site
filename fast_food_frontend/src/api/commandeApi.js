@@ -23,3 +23,9 @@ export const changerStatusCommandeApi = async (commandeId, status) => {
   const response = await api.patch(`/commandes/admin/${commandeId}/status`, { status });
   return response.data;
 };
+
+// Commandes de l'utilisateur connecte
+export const getMesCommandesApi = async () => {
+  const response = await api.get('/commandes/mes-commandes');
+  return response.data;
+};

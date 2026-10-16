@@ -46,3 +46,11 @@ export const estSousMinimum = (groupe, nombreChoisi) => nombreChoisi < groupe.mi
 // Renvoie la liste des groupes dont le nombre d'options choisies est inferieur au minimum.
 export const groupesNonValides = (groupes, optionIds) =>
   groupes.filter((groupe) => estSousMinimum(groupe, nombreOptionsChoisies(groupe, optionIds)));
+
+// Details des options choisies (id, nom, surcout), pour l'affichage et le calcul du prix.
+export const detaillerOptions = (groupes, optionIds) =>
+  groupes.flatMap((groupe) =>
+    groupe.options
+      .filter((item) => optionIds.includes(item.id))
+      .map((item) => ({ id: item.id, nom: item.nom, surcout: Number(item.surcout ?? 0) }))
+  );

@@ -1,5 +1,5 @@
 import { Outlet, useLocation } from 'react-router-dom';
-import { Navbar } from './layout/Navbar';
+import { Navbar } from './Navbar';
 import { Footer } from './Footer';
 import { ErreurBoundary } from './ErreurBoundary';
 

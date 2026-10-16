@@ -6,6 +6,8 @@ const variantes = {
   secondaire: 'border border-gray-200 bg-white text-gray-700 hover:bg-gray-50',
   danger: 'bg-red-50 text-red-600 hover:bg-red-100',
   fantome: 'text-gray-500 hover:bg-gray-100 hover:text-gray-800',
+  succes: 'bg-green-600 text-white shadow-sm hover:bg-green-700',
+  neutre: 'bg-gray-100 text-gray-700 hover:bg-gray-200',
 };
 
 const tailles = {

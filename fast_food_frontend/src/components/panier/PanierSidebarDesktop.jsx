@@ -1,4 +1,4 @@
-import { PanierContent } from './panier/PanierContent';
+import { PanierContent } from './PanierContent';
 
 export const PanierSidebarDesktop = ({ onEditItem }) => {
   return (
