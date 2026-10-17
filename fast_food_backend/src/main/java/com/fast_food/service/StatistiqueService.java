@@ -15,11 +15,15 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class StatistiqueService {
+
+    // Ordre des jours : l'indice 0 correspond au lundi (ISODOW = 1)
+    private static final String[] JOURS = {"Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"};
 
     private final CommandeRepository commandeRepository;
     private final CommandeFournisseurRepository commandeFournisseurRepository;
@@ -29,30 +33,33 @@ public class StatistiqueService {
     @Transactional(readOnly = true)
     public StatistiquesGlobalesResponse obtenirStatistiquesGlobales() {
         BigDecimal ca = commandeRepository.calculateTotalChiffreAffaires();
-        // System.out.println("ICICI : " + ca + "\n\n\n\n\n");
         BigDecimal appro = commandeFournisseurRepository.calculateTotalDepensesApprovisionnement();
-        BigDecimal salaires = employeHeureRepository.calculateMasseSalarialeTotale();      
-        Long totalCommandes = commandeRepository.countCommandesValides(); 
+        BigDecimal salaires = employeHeureRepository.calculateMasseSalarialeTotale();
+        Long totalCommandes = commandeRepository.countCommandesValides();
 
         return statistiqueMapper.toGlobalesResponse(ca, appro, salaires, totalCommandes);
     }
 
     @Transactional(readOnly = true)
     public StatistiquesGlobalesResponse obtenirStatistiquesParPeriode(LocalDate debut, LocalDate fin) {
+        validerPeriode(debut, fin);
         LocalDateTime debutDateTime = debut.atStartOfDay();
         LocalDateTime finDateTime = fin.atTime(LocalTime.MAX);
 
         BigDecimal ca = commandeRepository.calculateChiffreAffairesEntre(debutDateTime, finDateTime);
         BigDecimal appro = commandeFournisseurRepository.calculateDepensesApprovisionnementEntre(debut, fin);
         BigDecimal salaires = employeHeureRepository.calculateMasseSalarialeEntre(debut, fin);
-        Long totalCommandes = commandeRepository.countCommandesValidesEntre(debutDateTime,finDateTime);
+        Long totalCommandes = commandeRepository.countCommandesValidesEntre(debutDateTime, finDateTime);
 
         return statistiqueMapper.toGlobalesResponse(ca, appro, salaires, totalCommandes);
     }
 
+    // Sans période (debut et fin nuls) : vue globale. Avec période : filtre sur la date de commande.
     @Transactional(readOnly = true)
-    public List<VenteProduitStatResponse> obtenirTopProduitsVendus() {
-        List<Object[]> resultats = commandeRepository.findTopProduitsVendus();
+    public List<VenteProduitStatResponse> obtenirTopProduitsVendus(LocalDate debut, LocalDate fin) {
+        List<Object[]> resultats = periodeDemandee(debut, fin)
+                ? commandeRepository.findTopProduitsVendusEntre(debut.atStartOfDay(), fin.atTime(LocalTime.MAX))
+                : commandeRepository.findTopProduitsVendus();
 
         return resultats.stream()
                 .map(row -> statistiqueMapper.toVenteProduitResponse(
@@ -64,31 +71,51 @@ public class StatistiqueService {
                 .toList();
     }
 
+    // Sans période (debut et fin nuls) : vue globale. Avec période : filtre sur la date de commande.
     @Transactional(readOnly = true)
-    public List<CommandesParJourResponse> obtenirCommandesParJourSemaine() {
-        List<Object[]> resultats = commandeRepository.countCommandesParJourSemaine();
-        
-        String[] joursNoms = {"Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"};
-        Long[] counts = new Long[7];
-        java.util.Arrays.fill(counts, 0L);
+    public List<CommandesParJourResponse> obtenirCommandesParJourSemaine(LocalDate debut, LocalDate fin) {
+        List<Object[]> resultats = periodeDemandee(debut, fin)
+                ? commandeRepository.countCommandesParJourSemaineEntre(debut.atStartOfDay(), fin.atTime(LocalTime.MAX))
+                : commandeRepository.countCommandesParJourSemaine();
 
-        if (resultats != null) {
-            for (Object[] row : resultats) {
-                if (row[0] != null && row[1] != null) {
-                    int jourIndex = ((Number) row[0]).intValue() - 1; // 1 (Lundi) .. 7 (Dimanche) -> 0 .. 6
-                    Long count = ((Number) row[1]).longValue();
-                    
-                    if (jourIndex >= 0 && jourIndex < 7) {
-                        counts[jourIndex] = count;
-                    }
-                }
+        return construireCommandesParJour(resultats);
+    }
+
+    // Remplit les sept jours, y compris ceux sans commande (compteur à zéro).
+    private List<CommandesParJourResponse> construireCommandesParJour(List<Object[]> resultats) {
+        long[] compteurs = new long[JOURS.length];
+
+        for (Object[] row : resultats) {
+            if (row[0] == null || row[1] == null) continue;
+            int indice = ((Number) row[0]).intValue() - 1;
+            if (indice >= 0 && indice < JOURS.length) {
+                compteurs[indice] = ((Number) row[1]).longValue();
             }
         }
 
-        List<CommandesParJourResponse> response = new java.util.ArrayList<>();
-        for (int i = 0; i < 7; i++) {
-            response.add(new CommandesParJourResponse(joursNoms[i], counts[i]));
+        List<CommandesParJourResponse> reponse = new ArrayList<>();
+        for (int i = 0; i < JOURS.length; i++) {
+            reponse.add(new CommandesParJourResponse(JOURS[i], compteurs[i]));
         }
-        return response;
+        return reponse;
+    }
+
+    // Renvoie false si aucune date n'est fournie (vue globale), true si une période valide est fournie.
+    private boolean periodeDemandee(LocalDate debut, LocalDate fin) {
+        if (debut == null && fin == null) {
+            return false;
+        }
+        validerPeriode(debut, fin);
+        return true;
+    }
+
+    // Une période doit avoir deux dates, et la fin ne peut pas précéder le début.
+    private void validerPeriode(LocalDate debut, LocalDate fin) {
+        if (debut == null || fin == null) {
+            throw new IllegalArgumentException("Les deux dates de la période sont requises.");
+        }
+        if (fin.isBefore(debut)) {
+            throw new IllegalArgumentException("La date de fin doit être postérieure à la date de début.");
+        }
     }
 }

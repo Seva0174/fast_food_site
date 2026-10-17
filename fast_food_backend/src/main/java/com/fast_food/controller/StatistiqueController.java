@@ -19,13 +19,13 @@ public class StatistiqueController {
 
     private final StatistiqueService statistiqueService;
 
-    // Récupérer le bilan global (CA, dépenses approvisionnement, masse salariale, bénéfice)
+    // Bilan global (CA, dépenses approvisionnement, masse salariale, bénéfice)
     @GetMapping("/globales")
     public ResponseEntity<StatistiquesGlobalesResponse> obtenirStatistiquesGlobales() {
         return ResponseEntity.ok(statistiqueService.obtenirStatistiquesGlobales());
     }
 
-    // Récupérer le bilan filtré sur une période spécifique
+    // Bilan filtré sur une période (les deux dates sont obligatoires)
     @GetMapping("/periode")
     public ResponseEntity<StatistiquesGlobalesResponse> obtenirStatistiquesParPeriode(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate debut,
@@ -33,14 +33,19 @@ public class StatistiqueController {
         return ResponseEntity.ok(statistiqueService.obtenirStatistiquesParPeriode(debut, fin));
     }
 
-    // Récupérer la liste des produits les plus vendus
+    // Produits les plus vendus. Période optionnelle : sans dates, vue globale.
     @GetMapping("/ventes-produits")
-    public ResponseEntity<List<VenteProduitStatResponse>> obtenirTopProduitsVendus() {
-        return ResponseEntity.ok(statistiqueService.obtenirTopProduitsVendus());
+    public ResponseEntity<List<VenteProduitStatResponse>> obtenirTopProduitsVendus(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate debut,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fin) {
+        return ResponseEntity.ok(statistiqueService.obtenirTopProduitsVendus(debut, fin));
     }
 
+    // Commandes par jour de la semaine. Période optionnelle : sans dates, vue globale.
     @GetMapping("/commandes-par-jour")
-    public ResponseEntity<List<CommandesParJourResponse>> obtenirCommandesParJourSemaine() {
-        return ResponseEntity.ok(statistiqueService.obtenirCommandesParJourSemaine());
+    public ResponseEntity<List<CommandesParJourResponse>> obtenirCommandesParJourSemaine(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate debut,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fin) {
+        return ResponseEntity.ok(statistiqueService.obtenirCommandesParJourSemaine(debut, fin));
     }
 }

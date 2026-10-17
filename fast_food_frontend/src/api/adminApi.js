@@ -1,12 +1,6 @@
 import api from './axios';
 
 export const adminApi = {
-  // Statistiques
-  getStatsGlobales: () => api.get('/admin/statistiques/globales'),
-  getStatsParPeriode: (debut, fin) => api.get('/admin/statistiques/periode', { params: { debut, fin } }),
-  getVentesProduits: () => api.get('/admin/statistiques/ventes-produits'),
-  getCommandesParJour: () => api.get('/admin/statistiques/commandes-par-jour'),
-
   // Conservé jusqu'à la factorisation de VueCarteAdmin (étape 10), qui le basculera sur stockApi.
   getMatieresPremieres: () => api.get('/admin/approvisionnement/matieres-premieres'),
 
