@@ -12,12 +12,9 @@ export const adminApi = {
   creerFournisseur: (data) => api.post('/admin/approvisionnement/fournisseurs', data),
   supprimerFournisseur: (id) => api.delete(`/admin/approvisionnement/fournisseurs/${id}`),
 
-  // Matières Premières / Stock
+  // Conservé jusqu'à la factorisation de VueCarteAdmin (étape 10), qui le basculera sur stockApi.
   getMatieresPremieres: () => api.get('/admin/approvisionnement/matieres-premieres'),
-  creerMatierePremiere: (data) => api.post('/admin/approvisionnement/matieres-premieres', data),
-  modifierStock: (id, data) => api.put(`/admin/approvisionnement/matieres-premieres/${id}`, data),
-  supprimerMatierePremiere: (id) => api.delete(`/admin/approvisionnement/matieres-premieres/${id}`),
-  
+
   getCatalogueFournisseur: (idFournisseur) => api.get(`/admin/approvisionnement/fournisseurs/${idFournisseur}/catalogue`),
   uploadCatalogueCsv: (idFournisseur, file) => {
     const formData = new FormData();

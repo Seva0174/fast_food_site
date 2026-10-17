@@ -19,7 +19,8 @@ const tailles = {
   md: 'px-4 py-2.5 text-base',
   lg: 'px-4 py-3.5 text-base',
   icone: 'rounded-full p-1',
-    nu: '',
+  iconeCarree: 'p-1.5',
+  nu: '',
 };
 
 export const Bouton = ({
