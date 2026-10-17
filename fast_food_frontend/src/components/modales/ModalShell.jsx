@@ -1,6 +1,5 @@
 import { X } from 'lucide-react';
 
-// Le pied de page n'affiche le prix que si prixTotal est fourni.
 export const ModalShell = ({
   titre,
   sousTitre,
@@ -9,10 +8,13 @@ export const ModalShell = ({
   prixLibelle = 'Total produit',
   prixTotal,
   actions,
+  largeur = 'max-w-lg',
   children,
 }) => (
   <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-    <div className="flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden rounded-2xl bg-white shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+    <div
+      className={`flex max-h-[90vh] w-full ${largeur} flex-col overflow-hidden rounded-2xl bg-white shadow-2xl animate-in fade-in zoom-in-95 duration-200`}
+    >
       <header className="border-b bg-gray-50 p-4">
         <div className="flex items-center justify-between">
           <div>

@@ -219,7 +219,10 @@ CREATE TABLE option_groupe (
     id_produit      BIGINT NOT NULL REFERENCES produit_menu(id) ON DELETE CASCADE,
     nom             VARCHAR(100) NOT NULL,
     min_selection   INTEGER NOT NULL DEFAULT 1,
-    max_selection   INTEGER NOT NULL DEFAULT 1
+    max_selection   INTEGER NOT NULL DEFAULT 1,
+
+    CONSTRAINT check_option_groupe_selection
+        CHECK (min_selection >= 0 AND max_selection >= min_selection)
 );
 
 CREATE TABLE option_item (

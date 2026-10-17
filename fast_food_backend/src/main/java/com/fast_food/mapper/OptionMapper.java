@@ -20,6 +20,7 @@ public class OptionMapper {
         dto.setSurcout(item.getSurcout());
         if (item.getMatierePremiere() != null) {
             dto.setIdMatiere(item.getMatierePremiere().getId());
+            dto.setQuantiteDeduite(item.getQuantiteDeduite());
         }
         return dto;
     }

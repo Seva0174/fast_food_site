@@ -9,4 +9,5 @@ public class OptionItemResponse {
     private String nom;
     private BigDecimal surcout;
     private Long idMatiere;
+    private BigDecimal quantiteDeduite;
 }

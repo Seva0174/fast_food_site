@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { adminApi } from '../api/adminApi';
-import { GestionOptionsModal } from './GestionOptionsModal';
+import { GestionOptionsModal } from '@/components/admin/carte/GestionOptionsModal';
 import { GestionFormuleModal } from './GestionFormuleModal';
 import {
   Select,

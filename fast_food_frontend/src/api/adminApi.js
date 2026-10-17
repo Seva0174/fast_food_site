@@ -12,16 +12,6 @@ export const adminApi = {
   toggleDisponibilite: (id) => api.patch(`/produits/${id}/disponibilite`),
   supprimerProduit: (id) => api.delete(`/produits/${id}`),
 
-  // Groupes d'options & Items
-  getGroupesOptionsByProduit: (idProduit) => api.get(`/options/produit/${idProduit}`),
-  creerGroupeOption: (idProduit, data) => api.post(`/options/produit/${idProduit}`, data),
-  modifierGroupeOption: (idGroupe, data) => api.put(`/options/groupes/${idGroupe}`, data),
-  supprimerGroupeOption: (idGroupe) => api.delete(`/options/groupes/${idGroupe}`),
-
-  creerOptionItem: (idGroupe, data) => api.post(`/options/groupes/${idGroupe}/items`, data),
-  modifierOptionItem: (idItem, data) => api.put(`/options/items/${idItem}`, data),
-  supprimerOptionItem: (idItem) => api.delete(`/options/items/${idItem}`),
-
   // Composition des menus (formules) : emplacements & produits proposés
   getGroupesFormule: (idFormule) => api.get(`/admin/formules/${idFormule}/groupes`),
   creerGroupeFormule: (idFormule, data) => api.post(`/admin/formules/${idFormule}/groupes`, data),

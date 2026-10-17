@@ -2,6 +2,8 @@ package com.fast_food.service;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.Comparator;
+import java.math.BigDecimal;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,22 +35,34 @@ public class OptionService {
     private final StockMatierePremiereRepository stockMatierePremiereRepository;
     private final OptionMapper optionMapper;
 
+    private void validerSelection(OptionGroupeRequest request) {
+        if (request.getMinSelection() == null || request.getMaxSelection() == null) {
+            throw new IllegalArgumentException("Les sélections minimale et maximale sont obligatoires.");
+        }
+        if (request.getMinSelection() > request.getMaxSelection()) {
+            throw new IllegalArgumentException("La sélection minimale ne peut pas dépasser la sélection maximale.");
+        }
+    }
+
     @Transactional(readOnly = true)
     public List<OptionGroupeResponse> getGroupesByProduit(Long produitId) {
         ProduitMenu produit = produitMenuRepository.findById(produitId)
                 .orElseThrow(() -> new ResourceNotFoundException("Produit non trouvé avec l'id : " + produitId));
         return optionGroupeRepository.findByProduitMenu(produit).stream()
+                .sorted(Comparator.comparing(OptionGroupe::getId))
                 .map(optionMapper::toGroupeResponse)
                 .collect(Collectors.toList());
     }
 
     @Transactional
     public OptionGroupeResponse createGroupe(Long produitId, OptionGroupeRequest request) {
+        validerSelection(request);
+
         ProduitMenu produit = produitMenuRepository.findById(produitId)
                 .orElseThrow(() -> new ResourceNotFoundException("Produit non trouvé avec l'id : " + produitId));
 
         OptionGroupe groupe = new OptionGroupe();
-        groupe.setNom(request.getNom());
+        groupe.setNom(request.getNom().trim());
         groupe.setMinSelection(request.getMinSelection());
         groupe.setMaxSelection(request.getMaxSelection());
         groupe.setProduitMenu(produit);
@@ -58,10 +72,12 @@ public class OptionService {
 
     @Transactional
     public OptionGroupeResponse updateGroupe(Long groupeId, OptionGroupeRequest request) {
+        validerSelection(request);
+
         OptionGroupe groupe = optionGroupeRepository.findById(groupeId)
                 .orElseThrow(() -> new ResourceNotFoundException("Groupe d'option non trouvé avec l'id : " + groupeId));
 
-        groupe.setNom(request.getNom());
+        groupe.setNom(request.getNom().trim());
         groupe.setMinSelection(request.getMinSelection());
         groupe.setMaxSelection(request.getMaxSelection());
 
@@ -85,15 +101,15 @@ public class OptionService {
                 .orElseThrow(() -> new ResourceNotFoundException("Groupe d'option non trouvé avec l'id : " + targetGroupeId));
 
         OptionItem item = new OptionItem();
-        item.setNom(request.getNom());
-        item.setSurcout(request.getSurcout());
+        item.setNom(request.getNom().trim());
+        item.setSurcout(request.getSurcout() != null ? request.getSurcout() : BigDecimal.ZERO);
         item.setGroupe(groupe);
 
         if (request.getMatierePremiereId() != null) {
             StockMatierePremiere mp = stockMatierePremiereRepository.findById(request.getMatierePremiereId())
                     .orElseThrow(() -> new ResourceNotFoundException("Matière première non trouvée : " + request.getMatierePremiereId()));
             item.setMatierePremiere(mp);
-            item.setQuantiteDeduite(request.getQuantiteDeduite());
+            item.setQuantiteDeduite(request.getQuantiteDeduite() != null ? request.getQuantiteDeduite() : BigDecimal.ONE);
         }
 
         return optionMapper.toItemResponse(optionItemRepository.save(item));
@@ -104,8 +120,8 @@ public class OptionService {
         OptionItem item = optionItemRepository.findById(itemId)
                 .orElseThrow(() -> new ResourceNotFoundException("Option non trouvée avec l'id : " + itemId));
 
-        item.setNom(request.getNom());
-        item.setSurcout(request.getSurcout());
+        item.setNom(request.getNom().trim());
+        item.setSurcout(request.getSurcout() != null ? request.getSurcout() : BigDecimal.ZERO);
 
         // Si groupeId est renseigné dans le DTO de mise à jour, on réaffecte le groupe
         if (request.getGroupeId() != null) {
@@ -118,7 +134,7 @@ public class OptionService {
             StockMatierePremiere mp = stockMatierePremiereRepository.findById(request.getMatierePremiereId())
                     .orElseThrow(() -> new ResourceNotFoundException("Matière première non trouvée : " + request.getMatierePremiereId()));
             item.setMatierePremiere(mp);
-            item.setQuantiteDeduite(request.getQuantiteDeduite());
+            item.setQuantiteDeduite(request.getQuantiteDeduite() != null ? request.getQuantiteDeduite() : BigDecimal.ONE);
         } else {
             item.setMatierePremiere(null);
             item.setQuantiteDeduite(null);
