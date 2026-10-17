@@ -1,6 +1,7 @@
 package com.fast_food.repositorie;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -13,8 +14,11 @@ import com.fast_food.entite.StockMatierePremiere;
 
 @Repository
 public interface StockMatierePremiereRepository extends JpaRepository<StockMatierePremiere,Long>{
-    
+
     Optional<StockMatierePremiere> findByNomIgnoreCase(String nom);
+
+    // Liste complète triée par identifiant croissant, pour un affichage stable.
+    List<StockMatierePremiere> findAllByOrderByIdAsc();
 
     @Modifying
     @Query("""

@@ -77,13 +77,6 @@ public class ApprovisionnementController {
         return ResponseEntity.ok(approvisionnementService.changerStatutCommande(id, request.getStatus()));
     }
 
-    @GetMapping("/commandes/{id}/details")
-    public ResponseEntity<List<CommandeDetailDTO>> getDetailsCommande(@PathVariable Long id) {
-        List<CommandeDetailDTO> details = approvisionnementService.getDetailsCommande(id);
-        return ResponseEntity.ok(details);
-    }
-
-
     // --- MATIÈRES PREMIÈRES / STOCK ---
 
     @GetMapping("/matieres-premieres")

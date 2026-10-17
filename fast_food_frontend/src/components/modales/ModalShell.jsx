@@ -1,5 +1,6 @@
 import { X } from 'lucide-react';
 
+// Le pied de page n'affiche le prix que si prixTotal est fourni.
 export const ModalShell = ({
   titre,
   sousTitre,
@@ -32,11 +33,17 @@ export const ModalShell = ({
 
       <div className="flex-1 space-y-6 overflow-y-auto p-4">{children}</div>
 
-      <footer className="flex items-center justify-between gap-4 border-t bg-white p-4">
-        <div>
-          <span className="block text-xs text-gray-500">{prixLibelle}</span>
-          <span className="text-xl font-extrabold text-gray-900">{prixTotal.toFixed(2)} €</span>
-        </div>
+      <footer
+        className={`flex items-center gap-4 border-t bg-white p-4 ${
+          prixTotal === undefined ? 'justify-end' : 'justify-between'
+        }`}
+      >
+        {prixTotal !== undefined && (
+          <div>
+            <span className="block text-xs text-gray-500">{prixLibelle}</span>
+            <span className="text-xl font-extrabold text-gray-900">{prixTotal.toFixed(2)} €</span>
+          </div>
+        )}
         <div className="flex items-center gap-2">{actions}</div>
       </footer>
     </div>

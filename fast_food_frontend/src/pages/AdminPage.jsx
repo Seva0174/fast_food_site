@@ -1,65 +1,27 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
+import { Onglets } from '@/components/ui/onglets';
 import { VueStatistiques } from '../components/VueStatistiques';
 import { VueCarteAdmin } from '../components/VueCarteAdmin';
 import { VueStockAdmin } from '../components/VueStockAdmin';
 import { VuePersonnel } from '../components/VuePersonnel';
 
+// Chaque onglet associe un identifiant, un libellé et la vue à afficher.
+const ONGLETS = [
+  { id: 'statistiques', libelle: 'Statistiques', Vue: VueStatistiques },
+  { id: 'carte', libelle: 'Carte & Produits', Vue: VueCarteAdmin },
+  { id: 'stock', libelle: 'Stock & Fournisseurs', Vue: VueStockAdmin },
+  { id: 'personnel', libelle: 'Personnel', Vue: VuePersonnel },
+];
+
 export function AdminPage() {
-  const [ongletActif, setOngletActif] = useState('statistiques');
+  const [ongletActif, setOngletActif] = useState(ONGLETS[0].id);
+  const { Vue } = ONGLETS.find((onglet) => onglet.id === ongletActif);
 
+  // Le padding et la largeur maximale viennent de MainLayout.
   return (
-    <div className="min-h-screen bg-gray-100 p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
-        {/* Navigation par onglets */}
-        <div className="flex border-b border-gray-200 bg-white rounded-t-lg px-4 pt-3 gap-2">
-          <button
-            onClick={() => setOngletActif('statistiques')}
-            className={`py-2 px-4 border-b-2 font-medium text-sm transition-colors ${
-              ongletActif === 'statistiques'
-                ? 'border-red-500 text-red-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            Statistiques
-          </button>
-          <button
-            onClick={() => setOngletActif('carte')}
-            className={`py-2 px-4 border-b-2 font-medium text-sm transition-colors ${
-              ongletActif === 'carte'
-                ? 'border-red-500 text-red-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            Carte & Produits
-          </button>
-          <button
-            onClick={() => setOngletActif('stock')}
-            className={`py-2 px-4 border-b-2 font-medium text-sm transition-colors ${
-              ongletActif === 'stock'
-                ? 'border-red-500 text-red-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            Stock & Fournisseurs
-          </button>
-          <button
-            onClick={() => setOngletActif('personnel')}
-            className={`py-2 px-4 border-b-2 font-medium text-sm transition-colors ${
-              ongletActif === 'personnel'
-                ? 'border-red-500 text-red-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            Personnel
-          </button>
-        </div>
-
-        {/* Rendu des vues isolées */}
-        {ongletActif === 'statistiques' && <VueStatistiques />}
-        {ongletActif === 'carte' && <VueCarteAdmin />}
-        {ongletActif === 'stock' && <VueStockAdmin />}
-        {ongletActif === 'personnel' && <VuePersonnel />}
-      </div>
+    <div className="space-y-6">
+      <Onglets onglets={ONGLETS} actif={ongletActif} onChange={setOngletActif} />
+      <Vue />
     </div>
   );
 }

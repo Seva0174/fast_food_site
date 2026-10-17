@@ -9,12 +9,8 @@ import java.math.BigDecimal;
 public class CommandeFournisseurItemRequest {
     @NotNull
     private Long idStock;
-    
+
     @NotNull
     @Positive
     private BigDecimal quantite;
-    
-    @NotNull
-    @Positive
-    private BigDecimal prixUnitaire;
 }

@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.data.domain.Sort;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -18,6 +19,10 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.EnumSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.Comparator;
 
 @Service
 @RequiredArgsConstructor
@@ -33,10 +38,30 @@ public class ApprovisionnementService {
     private final CatalogueFournisseurMapper catalogueFournisseurMapper;
     private final CommandeFournisseurMapper commandeFournisseurMapper;
 
+    // Transitions de statut autorisées pour une commande fournisseur.
+    // 'recue' et 'annulee' sont des états finaux.
+    private static final Map<CommandeFournisseur.Status, Set<CommandeFournisseur.Status>> TRANSITIONS_AUTORISEES = Map.of(
+            CommandeFournisseur.Status.en_attente,
+            EnumSet.of(CommandeFournisseur.Status.expediee, CommandeFournisseur.Status.annulee),
+            CommandeFournisseur.Status.expediee,
+            EnumSet.of(CommandeFournisseur.Status.recue, CommandeFournisseur.Status.annulee),
+            CommandeFournisseur.Status.recue,
+            EnumSet.noneOf(CommandeFournisseur.Status.class),
+            CommandeFournisseur.Status.annulee,
+            EnumSet.noneOf(CommandeFournisseur.Status.class)
+    );
+
+    private void verifierTransition(CommandeFournisseur.Status actuel, CommandeFournisseur.Status nouveau) {
+        if (!TRANSITIONS_AUTORISEES.get(actuel).contains(nouveau)) {
+            throw new IllegalArgumentException(
+                    "Changement de statut interdit : " + actuel + " vers " + nouveau);
+        }
+    }
+
     // --- FOURNISSEURS ---
 
     public List<FournisseurResponse> getAllFournisseurs() {
-        return fournisseurRepository.findAll().stream()
+        return fournisseurRepository.findAll(Sort.by("id")).stream()
                 .map(fournisseurMapper::toResponse)
                 .collect(Collectors.toList());
     }
@@ -71,6 +96,7 @@ public class ApprovisionnementService {
 
     public List<CatalogueFournisseurResponse> getCatalogueByFournisseur(Long idFournisseur) {
         return catalogueFournisseurRepository.findByFournisseurId(idFournisseur).stream()
+                .sorted(Comparator.comparing(CatalogueFournisseur::getId))
                 .map(catalogueFournisseurMapper::toResponse)
                 .collect(Collectors.toList());
     }
@@ -149,6 +175,14 @@ public class ApprovisionnementService {
         Fournisseur fournisseur = fournisseurRepository.findById(request.getIdFournisseur())
                 .orElseThrow(() -> new ResourceNotFoundException("Fournisseur non trouvé"));
 
+        // Les prix viennent du catalogue du fournisseur, jamais du client
+        Map<Long, BigDecimal> prixCatalogue = catalogueFournisseurRepository
+                .findByFournisseurId(request.getIdFournisseur()).stream()
+                .collect(Collectors.toMap(
+                        article -> article.getStock().getId(),
+                        CatalogueFournisseur::getPrixUnitaire,
+                        (premier, doublon) -> premier));
+
         CommandeFournisseur commande = new CommandeFournisseur();
         commande.setFournisseur(fournisseur);
         commande.setDateCommande(LocalDate.now());
@@ -161,11 +195,17 @@ public class ApprovisionnementService {
             StockMatierePremiere stock = stockMatierePremiereRepository.findById(itemReq.getIdStock())
                     .orElseThrow(() -> new ResourceNotFoundException("Matière première non trouvée : " + itemReq.getIdStock()));
 
+            BigDecimal prixUnitaire = prixCatalogue.get(stock.getId());
+            if (prixUnitaire == null) {
+                throw new IllegalArgumentException(
+                        "Cet article n'appartient pas au catalogue du fournisseur : " + stock.getNom());
+            }
+
             CommandeFournisseurDetail detail = new CommandeFournisseurDetail();
             detail.setCommandeFournisseur(savedCommande);
             detail.setStock(stock);
             detail.setQuantite(itemReq.getQuantite());
-            detail.setPrixUnitaire(itemReq.getPrixUnitaire());
+            detail.setPrixUnitaire(prixUnitaire);
 
             details.add(commandeFournisseurDetailRepository.save(detail));
         }
@@ -185,10 +225,13 @@ public class ApprovisionnementService {
             throw new IllegalArgumentException("Statut invalide : " + statusStr);
         }
 
+        // Refuse les transitions interdites avant toute modification du stock
+        verifierTransition(commande.getStatus(), nouveauStatut);
+
         List<CommandeFournisseurDetail> details = commandeFournisseurDetailRepository.findByCommandeFournisseurId(idCommande);
 
-        // Si la commande passe au statut 'recue' alors qu'elle ne l'était pas encore
-        if (nouveauStatut == CommandeFournisseur.Status.recue && commande.getStatus() != CommandeFournisseur.Status.recue) {
+        // La transition étant validée, 'recue' n'est atteint que depuis 'expediee' : le stock est crédité une seule fois
+        if (nouveauStatut == CommandeFournisseur.Status.recue) {
             for (CommandeFournisseurDetail detail : details) {
                 StockMatierePremiere stock = detail.getStock();
                 stock.setQuantite(stock.getQuantite().add(detail.getQuantite()));
@@ -204,36 +247,18 @@ public class ApprovisionnementService {
     }
 
     public List<CommandeFournisseurResponse> getAllCommandes() {
-        List<CommandeFournisseur> commandes = commandeFournisseurRepository.findAll();
+        List<CommandeFournisseur> commandes = commandeFournisseurRepository.findAll(Sort.by(Sort.Direction.DESC, "id"));
         return commandes.stream().map(cmd -> {
             List<CommandeFournisseurDetail> details = commandeFournisseurDetailRepository.findByCommandeFournisseurId(cmd.getId());
             return commandeFournisseurMapper.toResponse(cmd, details);
         }).collect(Collectors.toList());
     }
 
-    @Transactional(readOnly = true)
-    public List<CommandeDetailDTO> getDetailsCommande(Long idCommande) {
-        if (!commandeFournisseurRepository.existsById(idCommande)) {
-            throw new ResourceNotFoundException("Commande non trouvée avec l'ID : " + idCommande);
-        }
-
-        return commandeFournisseurDetailRepository.findByCommandeFournisseurId(idCommande)
-                .stream()
-                .map(d -> new CommandeDetailDTO(
-                    (d.getStock() != null && d.getStock().getNom() != null) 
-                            ? d.getStock().getNom() 
-                            : "Article inconnu",
-                    d.getQuantite() != null ? d.getQuantite().intValue() : 0,
-                    d.getPrixUnitaire()
-                ))
-                .collect(Collectors.toList());
-    }
-
     //   ---- STOCK -----
 
     @Transactional(readOnly = true)
     public List<StockMatierePremiere> getAllMatieresPremieres() {
-        return stockMatierePremiereRepository.findAll();
+        return stockMatierePremiereRepository.findAllByOrderByIdAsc();    
     }
 
     @Transactional
@@ -250,16 +275,16 @@ public class ApprovisionnementService {
         return stockMatierePremiereRepository.save(stock);
     }
 
-    // Ajouter en fin de classe dans ApprovisionnementService.java
-
     @Transactional
     public StockMatierePremiere creerMatierePremiere(CreerMatierePremiereRequest request) {
-        if (stockMatierePremiereRepository.findByNomIgnoreCase(request.getNom()).isPresent()) {
+        String nom = request.getNom().trim();
+
+        if (stockMatierePremiereRepository.findByNomIgnoreCase(nom).isPresent()) {
             throw new IllegalArgumentException("Une matière première avec ce nom existe déjà.");
         }
 
         StockMatierePremiere matiere = new StockMatierePremiere();
-        matiere.setNom(request.getNom().trim());
+        matiere.setNom(nom);
         matiere.setQuantite(request.getQuantite());
         matiere.setUniteMesure(request.getUniteMesure() != null ? request.getUniteMesure() : "unite");
 

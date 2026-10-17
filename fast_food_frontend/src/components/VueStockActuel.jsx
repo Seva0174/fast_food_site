@@ -2,17 +2,24 @@ import { useState } from 'react';
 import { Package, Plus } from 'lucide-react';
 import { Bouton } from '@/components/ui/bouton';
 import { BandeauMessage } from '@/components/admin/BandeauMessage';
+import { ModalConfirmation } from '@/components/admin/ModalConfirmation';
 import { FormulaireAjoutStock } from '@/components/admin/stock/FormulaireAjoutStock';
 import { TableauStocks } from '@/components/admin/stock/TableauStocks';
+import { useConfirmation } from '@/hooks/useConfirmation';
 import { useStocks } from '@/hooks/useStocks';
 
 export function VueStockActuel() {
   const { stocks, chargement, message, charger, creer, modifier, supprimer } = useStocks();
+  const { confirmer, modaleProps } = useConfirmation();
   const [formAjoutOuvert, setFormAjoutOuvert] = useState(false);
 
   const demanderSuppression = async (stock) => {
-    if (!window.confirm(`Voulez-vous vraiment supprimer "${stock.nom}" ?`)) return;
-    await supprimer(stock.id);
+    const confirme = await confirmer({
+      titre: 'Supprimer la matière première',
+      message: `Voulez-vous vraiment supprimer "${stock.nom}" ?`,
+      libelleConfirmer: 'Supprimer',
+    });
+    if (confirme) await supprimer(stock.id);
   };
 
   return (
@@ -48,6 +55,8 @@ export function VueStockActuel() {
         onModifier={modifier}
         onSupprimer={demanderSuppression}
       />
+
+      <ModalConfirmation {...modaleProps} />
     </div>
   );
 }

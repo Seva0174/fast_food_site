@@ -7,30 +7,9 @@ export const adminApi = {
   getVentesProduits: () => api.get('/admin/statistiques/ventes-produits'),
   getCommandesParJour: () => api.get('/admin/statistiques/commandes-par-jour'),
 
-  // Approvisionnement & Fournisseurs
-  getFournisseurs: () => api.get('/admin/approvisionnement/fournisseurs'),
-  creerFournisseur: (data) => api.post('/admin/approvisionnement/fournisseurs', data),
-  supprimerFournisseur: (id) => api.delete(`/admin/approvisionnement/fournisseurs/${id}`),
-
   // Conservé jusqu'à la factorisation de VueCarteAdmin (étape 10), qui le basculera sur stockApi.
   getMatieresPremieres: () => api.get('/admin/approvisionnement/matieres-premieres'),
 
-  getCatalogueFournisseur: (idFournisseur) => api.get(`/admin/approvisionnement/fournisseurs/${idFournisseur}/catalogue`),
-  uploadCatalogueCsv: (idFournisseur, file) => {
-    const formData = new FormData();
-    formData.append('file', file);
-    return api.post(`/admin/approvisionnement/fournisseurs/${idFournisseur}/catalogue/upload`, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    });
-  },
-  reinitialiserCatalogue: (idFournisseur) => api.delete(`/admin/approvisionnement/fournisseurs/${idFournisseur}/catalogue`),
-
-  getCommandesFournisseurs: () => api.get('/admin/approvisionnement/commandes'),
-  creerCommandeFournisseur: (data) => api.post('/admin/approvisionnement/commandes', data),
-  changerStatutCommandeFournisseur: (id, status) =>
-    api.patch(`/admin/approvisionnement/commandes/${id}/statut`, { status }),
-  getDetailsCommandeFournisseur: (id) => api.get(`/admin/approvisionnement/commandes/${id}/details`),
-  
   // Gestion des Produits / Carte
   getProduits: () => api.get('/produits'),
   getCategories: () => api.get('/categories'),
@@ -44,7 +23,7 @@ export const adminApi = {
   creerGroupeOption: (idProduit, data) => api.post(`/options/produit/${idProduit}`, data),
   modifierGroupeOption: (idGroupe, data) => api.put(`/options/groupes/${idGroupe}`, data),
   supprimerGroupeOption: (idGroupe) => api.delete(`/options/groupes/${idGroupe}`),
-  
+
   creerOptionItem: (idGroupe, data) => api.post(`/options/groupes/${idGroupe}/items`, data),
   modifierOptionItem: (idItem, data) => api.put(`/options/items/${idItem}`, data),
   supprimerOptionItem: (idItem) => api.delete(`/options/items/${idItem}`),
