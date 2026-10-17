@@ -175,7 +175,7 @@ CREATE TABLE commandes_menu (
 CREATE TABLE employe_heure (
     id          BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     id_employe  BIGINT NOT NULL REFERENCES employe(id) ON DELETE CASCADE,
-    nb_heure    NUMERIC(5,2) NOT NULL,
+    nb_heure    NUMERIC(6,4) NOT NULL,
     date        DATE NOT NULL
 );
 

@@ -7,6 +7,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -43,13 +44,14 @@ public class EmployeController {
     @PutMapping("/{id}")
     public ResponseEntity<EmployeResponse> modifierEmploye(
             @PathVariable Long id,
-            @Valid @RequestBody EmployeRequest request) {
-        return ResponseEntity.ok(employeService.modifierEmploye(id, request));
+            @Valid @RequestBody EmployeRequest request,
+            Authentication authentication) {
+        return ResponseEntity.ok(employeService.modifierEmploye(id, request, authentication.getName()));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> supprimerEmploye(@PathVariable Long id) {
-        employeService.supprimerEmploye(id);
+    public ResponseEntity<Void> supprimerEmploye(@PathVariable Long id, Authentication authentication) {
+        employeService.supprimerEmploye(id, authentication.getName());
         return ResponseEntity.noContent().build();
     }
 

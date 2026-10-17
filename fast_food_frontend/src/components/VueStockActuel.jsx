@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Package, Plus } from 'lucide-react';
 import { Bouton } from '@/components/ui/bouton';
 import { BandeauMessage } from '@/components/admin/BandeauMessage';
-import { ModalConfirmation } from '@/components/admin/ModalConfirmation';
+import { ModalConfirmation } from '@/components/modales/ModalConfirmation';
 import { FormulaireAjoutStock } from '@/components/admin/stock/FormulaireAjoutStock';
 import { TableauStocks } from '@/components/admin/stock/TableauStocks';
 import { useConfirmation } from '@/hooks/useConfirmation';

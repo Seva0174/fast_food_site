@@ -31,22 +31,4 @@ export const adminApi = {
   ajouterProduitGroupeFormule: (idGroupe, data) => api.post(`/admin/formules/groupes/${idGroupe}/produits`, data),
   modifierSurcoutFormule: (idLien, data) => api.put(`/admin/formules/produits/${idLien}`, data),
   retirerProduitGroupeFormule: (idLien) => api.delete(`/admin/formules/produits/${idLien}`),
-
-  // Employés, Heures & Salaires
-  getEmployes: () => api.get('/admin/employes'),
-  getEmployeParId: (id) => api.get(`/admin/employes/${id}`),
-  creerEmploye: (data) => api.post('/admin/employes', data),
-  modifierEmploye: (id, data) => api.put(`/admin/employes/${id}`, data),
-  supprimerEmploye: (id) => api.delete(`/admin/employes/${id}`),
-
-  // Heures & Planning
-  ajouterHeuresEmploye: (data) => api.post('/admin/employes/heures', data),
-  getHeuresEmploye: (id) => api.get(`/admin/employes/${id}/heures`),
-  getHeuresEmployeParPeriode: (id, debut, fin) =>
-    api.get(`/admin/employes/${id}/heures/periode`, { params: { debut, fin } }),
-  supprimerHeuresEmploye: (idHeure) => api.delete(`/admin/employes/heures/${idHeure}`),
-
-  // Salaires
-  getSalaireMensuelEmploye: (id, annee, mois) =>
-    api.get(`/admin/employes/${id}/salaire`, { params: { annee, mois } })
 };

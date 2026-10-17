@@ -11,6 +11,7 @@ const variantes = {
   lien: 'text-red-600 hover:underline',
   discret: 'text-gray-400 hover:underline',
   sombre: 'bg-gray-900 text-white hover:bg-black',
+  info: 'bg-blue-600 text-white shadow-sm hover:bg-blue-700',
 };
 
 const tailles = {

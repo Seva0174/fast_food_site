@@ -3,7 +3,7 @@ import { Onglets } from '@/components/ui/onglets';
 import { VueStatistiques } from '../components/VueStatistiques';
 import { VueCarteAdmin } from '../components/VueCarteAdmin';
 import { VueStockAdmin } from '../components/VueStockAdmin';
-import { VuePersonnel } from '../components/VuePersonnel';
+import { VuePersonnel } from '../components/admin/personnel/VuePersonnel';
 
 // Chaque onglet associe un identifiant, un libellé et la vue à afficher.
 const ONGLETS = [

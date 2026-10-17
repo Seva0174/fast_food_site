@@ -13,12 +13,15 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.Sort;
 
+import java.math.RoundingMode;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.util.List;
+import java.util.Comparator;
 
 @Service
 @RequiredArgsConstructor
@@ -29,6 +32,7 @@ public class EmployeService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final EmployeHeureMapper employeHeureMapper;
+    private static final String DOMAINE_EMAIL_PRO = "@tacoburger.fr";
 
     // ==========================================
     // GESTION DES EMPLOYES
@@ -63,9 +67,23 @@ public class EmployeService {
                 .build();
     }
 
+    // Vrai si l'employé est le compte actuellement connecté (comparaison par email).
+    private static boolean estCompteConnecte(Employe employe, String emailConnecte) {
+        return employe.getUser() != null
+                && emailConnecte != null
+                && emailConnecte.equalsIgnoreCase(employe.getUser().getEmail());
+    }
+
+
     @Transactional
     public EmployeResponse creerEmploye(EmployeRequest request) {
-        if (userRepository.existsByEmail(request.getEmail())) {
+        String email = request.getEmail().trim();
+
+        if (!email.toLowerCase().endsWith(DOMAINE_EMAIL_PRO)) {
+            throw new IllegalArgumentException("L'adresse email doit se terminer par " + DOMAINE_EMAIL_PRO);
+        }
+
+        if (userRepository.existsByEmail(email)) {
             throw new IllegalArgumentException("Un compte utilisateur existe déjà avec cet email.");
         }
 
@@ -73,16 +91,14 @@ public class EmployeService {
             throw new IllegalArgumentException("Un employé ne peut pas avoir le rôle système client.");
         }
 
-        User user = new User();
-        user.setNom(request.getNom());
-        user.setEmail(request.getEmail());
-        
-        // Le mot de passe est désormais strictement obligatoire
         if (request.getMdp() == null || request.getMdp().isBlank()) {
             throw new IllegalArgumentException("Le mot de passe est obligatoire.");
         }
+
+        User user = new User();
+        user.setNom(request.getNom());
+        user.setEmail(email);
         user.setMdp(passwordEncoder.encode(request.getMdp()));
-        
         user.setRole(request.getRoleSysteme() != null ? request.getRoleSysteme() : User.Role.employe);
         user.setEstVerif(true);
         user.setDateCreation(LocalDateTime.now());
@@ -91,11 +107,11 @@ public class EmployeService {
         Employe employe = new Employe();
         employe.setUser(userSauvegarde);
         employe.setNom(request.getNom());
-        
+
         if (request.getRole() != null && !request.getRole().isBlank()) {
             employe.setRole(Employe.Role.valueOf(request.getRole().toUpperCase()));
         }
-        
+
         employe.setSalaire_heure(request.getSalaireHeure());
         Employe employeSauvegarde = employeRepository.save(employe);
 
@@ -110,21 +126,28 @@ public class EmployeService {
     }
 
     @Transactional
-    public EmployeResponse modifierEmploye(Long id, EmployeRequest request) {
+    public EmployeResponse modifierEmploye(Long id, EmployeRequest request, String emailConnecte) {
         Employe employe = employeRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Employé introuvable avec l'id : " + id));
 
+        if (request.getRoleSysteme() == User.Role.client) {
+            throw new IllegalArgumentException("Un employé ne peut pas avoir le rôle système client.");
+        }
+
+        // Un admin qui se rétrograde perdrait l'accès à l'administration (403 puis déconnexion)
+        User user = employe.getUser();
+        if (estCompteConnecte(employe, emailConnecte) && request.getRoleSysteme() != user.getRole()) {
+            throw new IllegalArgumentException("Vous ne pouvez pas modifier votre propre rôle d'accès.");
+        }
+
         employe.setNom(request.getNom());
-        
-        // Conversion String -> Enum Employe.Role
+
         if (request.getRole() != null && !request.getRole().isBlank()) {
             employe.setRole(Employe.Role.valueOf(request.getRole().toUpperCase()));
         }
-        
+
         employe.setSalaire_heure(request.getSalaireHeure());
 
-        // Mise à jour du User lié
-        User user = employe.getUser();
         if (user != null) {
             user.setNom(request.getNom());
             if (request.getRoleSysteme() != null) {
@@ -146,10 +169,14 @@ public class EmployeService {
     }
 
     @Transactional
-    public void supprimerEmploye(Long id) {
+    public void supprimerEmploye(Long id, String emailConnecte) {
         Employe employe = employeRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Employé introuvable avec l'id : " + id));
-        
+
+        if (estCompteConnecte(employe, emailConnecte)) {
+            throw new IllegalArgumentException("Vous ne pouvez pas supprimer votre propre compte.");
+        }
+
         if (employe.getUser() != null) {
             userRepository.delete(employe.getUser());
         } else {
@@ -178,6 +205,7 @@ public class EmployeService {
         }
         return employeHeureRepository.findByEmployeId(employeId)
                 .stream()
+                .sorted(Comparator.comparing(EmployeHeure::getDate).reversed())
                 .map(employeHeureMapper::toResponse)
                 .toList();
     }
@@ -187,8 +215,12 @@ public class EmployeService {
         if (!employeRepository.existsById(employeId)) {
             throw new ResourceNotFoundException("Employé introuvable avec l'id : " + employeId);
         }
+        if (fin.isBefore(debut)) {
+            throw new IllegalArgumentException("La date de fin doit être postérieure à la date de début.");
+        }
         return employeHeureRepository.findByEmployeIdAndDateBetween(employeId, debut, fin)
                 .stream()
+                .sorted(Comparator.comparing(EmployeHeure::getDate).reversed())
                 .map(employeHeureMapper::toResponse)
                 .toList();
     }
@@ -207,6 +239,10 @@ public class EmployeService {
 
     @Transactional(readOnly = true)
     public EmployeSalaireResponse calculerSalaireMensuel(Long employeId, int annee, int mois) {
+        if (mois < 1 || mois > 12) {
+            throw new IllegalArgumentException("Le mois doit être compris entre 1 et 12.");
+        }
+
         Employe employe = employeRepository.findById(employeId)
                 .orElseThrow(() -> new ResourceNotFoundException("Employé introuvable avec l'id : " + employeId));
 
@@ -221,7 +257,7 @@ public class EmployeService {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         BigDecimal salaireHeure = employe.getSalaire_heure() != null ? employe.getSalaire_heure() : BigDecimal.ZERO;
-        BigDecimal salaireTotal = totalHeures.multiply(salaireHeure);
+        BigDecimal salaireTotal = totalHeures.multiply(salaireHeure).setScale(2, RoundingMode.HALF_UP);
 
         return EmployeSalaireResponse.builder()
                 .employeId(employe.getId())
