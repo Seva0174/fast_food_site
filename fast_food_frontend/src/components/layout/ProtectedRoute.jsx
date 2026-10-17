@@ -1,19 +1,14 @@
 import { useContext } from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
 import { AuthContext } from '../../context/AuthProvider';
+import { aUnRole } from '../../lib/roles';
 
-export const ProtectedRoute = ({ allowedRoles }) => {
-  const { user, loading } = useContext(AuthContext);
+export const ProtectedRoute = ({ rolesAutorises }) => {
+  const { user } = useContext(AuthContext);
 
-  if (loading) return <div>Chargement...</div>;
+  if (!user) return <Navigate to="/login" replace />;
 
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
-
-  if (allowedRoles && !allowedRoles.includes(user.role)) {
-    return <Navigate to="/" replace />; // Redirige si le rôle n'a pas la permission
-  }
+  if (rolesAutorises && !aUnRole(user, rolesAutorises)) return <Navigate to="/" replace />;
 
   return <Outlet />;
 };

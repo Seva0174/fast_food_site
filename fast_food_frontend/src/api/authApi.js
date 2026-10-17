@@ -1,13 +1,11 @@
 import api from './axios';
 
-const API_URL = 'http://localhost:8080/api/auth';
-
 export const loginApi = async (email, mdp) => {
-  const response = await api.post(`${API_URL}/login`, { email, mdp });
-  return response.data; // Renvoie AuthResponse (token, id, email, nom, role)
+  const response = await api.post('/auth/login', { email, mdp });
+  return response.data; // AuthResponse : token, id, email, nom, role
 };
 
 export const registerApi = async (nom, email, mdp) => {
-  const response = await api.post(`${API_URL}/register`, { nom, email, mdp });
-  return response.data; // Renvoie le message de confirmation
+  const response = await api.post('/auth/register', { nom, email, mdp });
+  return response.data; // Message de confirmation
 };

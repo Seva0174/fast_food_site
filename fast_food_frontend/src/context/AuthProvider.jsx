@@ -1,47 +1,28 @@
 import { createContext, useState } from 'react';
 import { loginApi } from '../api/authApi';
+import { effacerSession, lireToken, lireUtilisateur, sauvegarderSession } from '../lib/session';
 
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(() => {
-    try {
-      const savedUser = localStorage.getItem('fastfood_user');
-      return savedUser ? JSON.parse(savedUser) : null;
-    } catch {
-      localStorage.removeItem('fastfood_user');
-      return null;
-    }
-  });
-
-  const [token, setToken] = useState(() => {
-    return localStorage.getItem('token') || null;
-  });
+  const [user, setUser] = useState(lireUtilisateur);
+  const [token, setToken] = useState(lireToken);
 
   const login = async (email, mdp) => {
     const data = await loginApi(email, mdp);
-    
-    const userData = {
-      id: data.id,
-      email: data.email,
-      nom: data.nom,
-      role: data.role
-    };
+    const utilisateur = { id: data.id, email: data.email, nom: data.nom, role: data.role };
 
-    setUser(userData);
+    sauvegarderSession(data.token, utilisateur);
+    setUser(utilisateur);
     setToken(data.token);
-
-    localStorage.setItem('fastfood_user', JSON.stringify(userData));
-    localStorage.setItem('token', data.token);
 
     return data;
   };
 
   const logout = () => {
+    effacerSession();
     setUser(null);
     setToken(null);
-    localStorage.removeItem('fastfood_user');
-    localStorage.removeItem('token');
   };
 
   return (

@@ -159,7 +159,7 @@ export const PageUser = () => {
               ))}
             </div>
 
-            <Bouton type="submit" variante="neutre" className="w-full bg-gray-900 text-white hover:bg-black">
+            <Bouton type="submit" variante="sombre" className="w-full">
               <Save className="h-4 w-4" />
               <span>Enregistrer l'adresse</span>
             </Bouton>

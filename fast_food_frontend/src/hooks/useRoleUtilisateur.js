@@ -1,14 +1,10 @@
 import { useContext } from 'react';
 import { AuthContext } from '../context/AuthProvider';
+import { estAdmin, estStaff } from '../lib/roles';
 
-// Centralise la lecture du rôle de l'utilisateur connecté.
+// Centralise la lecture du role de l'utilisateur connecte.
 export const useRoleUtilisateur = () => {
   const { user } = useContext(AuthContext);
-  const role = user?.role?.toLowerCase().replace('role_', '');
 
-  return {
-    user,
-    estStaff: ['admin', 'employe'].includes(role),
-    estAdmin: role === 'admin',
-  };
+  return { user, estStaff: estStaff(user), estAdmin: estAdmin(user) };
 };

@@ -1,25 +1,27 @@
-const styleFiltre = (actif) =>
-  `whitespace-nowrap rounded-full px-5 py-2.5 text-sm font-medium transition ${
-    actif
-      ? 'bg-red-600 text-white shadow'
-      : 'border border-gray-200 bg-white text-gray-600 hover:bg-gray-50'
-  }`;
+import { Bouton } from '../ui/bouton';
+
+// Filtre en forme de pastille : actif en rouge, inactif en blanc
+const Filtre = ({ actif, onClick, children }) => (
+  <Bouton
+    variante={actif ? 'principal' : 'secondaire'}
+    taille="sm"
+    className="whitespace-nowrap rounded-full px-5 py-2.5"
+    onClick={onClick}
+  >
+    {children}
+  </Bouton>
+);
 
 export const FiltresCategories = ({ categories, categorieActive, onChange }) => (
   <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none">
-    <button type="button" onClick={() => onChange(null)} className={styleFiltre(categorieActive === null)}>
+    <Filtre actif={categorieActive === null} onClick={() => onChange(null)}>
       Tous les produits
-    </button>
+    </Filtre>
 
     {categories.map((cat) => (
-      <button
-        key={cat.id}
-        type="button"
-        onClick={() => onChange(cat.id)}
-        className={styleFiltre(categorieActive === cat.id)}
-      >
+      <Filtre key={cat.id} actif={categorieActive === cat.id} onClick={() => onChange(cat.id)}>
         {cat.nom}
-      </button>
+      </Filtre>
     ))}
   </div>
 );

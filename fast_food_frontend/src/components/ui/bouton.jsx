@@ -8,6 +8,9 @@ const variantes = {
   fantome: 'text-gray-500 hover:bg-gray-100 hover:text-gray-800',
   succes: 'bg-green-600 text-white shadow-sm hover:bg-green-700',
   neutre: 'bg-gray-100 text-gray-700 hover:bg-gray-200',
+  lien: 'text-red-600 hover:underline',
+  discret: 'text-gray-400 hover:underline',
+  sombre: 'bg-gray-900 text-white hover:bg-black',
 };
 
 const tailles = {
@@ -16,6 +19,7 @@ const tailles = {
   md: 'px-4 py-2.5 text-base',
   lg: 'px-4 py-3.5 text-base',
   icone: 'rounded-full p-1',
+    nu: '',
 };
 
 export const Bouton = ({

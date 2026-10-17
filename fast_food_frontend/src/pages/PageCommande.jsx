@@ -1,5 +1,5 @@
 import { useState, useContext } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { ContextePanier } from '../context/ContextePanier';
 import { AuthContext } from '../context/AuthProvider';
 import { passerCommandeApi } from '../api/commandeApi';
@@ -11,6 +11,7 @@ import { FormulaireRetrait } from '../components/commande/FormulaireRetrait';
 
 const MESSAGE_ERREUR_PAR_DEFAUT = 'Une erreur est survenue lors de la validation de la commande.';
 
+// Page protegee par ProtectedRoute (voir App.jsx) : l'utilisateur est toujours connecte ici.
 export const PageCommande = () => {
   const { panier, viderPanier, totalPrix, incrementerQuantite, retirerDuPanier, supprimerDuPanier } =
     useContext(ContextePanier);
@@ -18,7 +19,7 @@ export const PageCommande = () => {
   const navigate = useNavigate();
 
   const [typeRetrait, setTypeRetrait] = useState(TYPE_RETRAIT.LIVRAISON);
-  const { adresse, modifierChamp } = useAdresseLivraison(user?.id);
+  const { adresse, modifierChamp } = useAdresseLivraison(user.id);
   const [chargement, setChargement] = useState(false);
   const [erreur, setErreur] = useState('');
 
@@ -44,23 +45,6 @@ export const PageCommande = () => {
       setChargement(false);
     }
   };
-
-  if (!user) {
-    return (
-      <div className="max-w-md mx-auto my-12 p-6 bg-white shadow-md rounded-lg text-center border border-gray-100">
-        <h2 className="text-2xl font-bold mb-3 text-gray-800">Connexion requise</h2>
-        <p className="text-gray-600 mb-6">
-          Veuillez vous connecter à votre compte pour finaliser votre commande.
-        </p>
-        <Link
-          to="/login"
-          className="inline-block px-6 py-2.5 bg-yellow-500 text-white font-semibold rounded-md shadow hover:bg-yellow-600 transition duration-200"
-        >
-          Se connecter / S'inscrire
-        </Link>
-      </div>
-    );
-  }
 
   return (
     <div className="max-w-5xl mx-auto p-4 sm:p-6 grid grid-cols-1 md:grid-cols-2 gap-8">

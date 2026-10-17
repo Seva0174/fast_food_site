@@ -1,55 +1,81 @@
 import { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { LogIn, UserPlus, Mail, Lock, User, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { AuthContext } from '../context/AuthProvider';
 import { registerApi } from '../api/authApi';
-import { LogIn, UserPlus, Mail, Lock, User, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { extraireMessageErreur } from '../lib/erreurs';
+import { ChampAuth } from '../components/auth/ChampAuth';
+import { Bouton } from '../components/ui/bouton';
 
-export const PageAuth = () => {
-  const [estConnexion, setEstConnexion] = useState(true);
+const FORMULAIRE_VIDE = { nom: '', email: '', mdp: '', confirmationMdp: '' };
+const MESSAGE_ERREUR_PAR_DEFAUT = 'Une erreur est survenue lors du traitement.';
+const MESSAGE_INSCRIPTION_PAR_DEFAUT = 'Inscription réussie ! Veuillez vérifier votre boîte mail.';
+
+const STYLES_MESSAGE = {
+  erreur: { classes: 'bg-red-50 border-red-200 text-red-700', icone: AlertCircle },
+  succes: { classes: 'bg-green-50 border-green-200 text-green-700', icone: CheckCircle2 },
+};
+
+const MessageFormulaire = ({ type, texte }) => {
+  const { classes, icone: Icone } = STYLES_MESSAGE[type];
+
+  return (
+    <div className={`mb-6 p-4 border text-sm rounded-xl flex items-center gap-2 ${classes}`}>
+      <Icone className="w-5 h-5 flex-shrink-0" />
+      <span>{texte}</span>
+    </div>
+  );
+};
+
+export const PageAuth = ({ inscription = false }) => {
+  const [estConnexion, setEstConnexion] = useState(!inscription);
+  const [formulaire, setFormulaire] = useState(FORMULAIRE_VIDE);
   const [erreur, setErreur] = useState('');
   const [succes, setSucces] = useState('');
   const [chargement, setChargement] = useState(false);
 
-  const [formData, setFormData] = useState({
-    nom: '',
-    email: '',
-    mdp: '',
-    confirmationMdp: ''
-  });
-
   const { login } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  const modifierChamp = (nom, valeur) => setFormulaire((prev) => ({ ...prev, [nom]: valeur }));
+
+  const basculerMode = () => {
+    setEstConnexion((connexion) => !connexion);
+    setErreur('');
+    setSucces('');
   };
 
-  const handleSubmit = async (e) => {
+  const valider = async (e) => {
     e.preventDefault();
     setErreur('');
     setSucces('');
+
+    if (!estConnexion && formulaire.mdp !== formulaire.confirmationMdp) {
+      setErreur('Les mots de passe ne correspondent pas.');
+      return;
+    }
+
     setChargement(true);
 
     try {
       if (estConnexion) {
-        await login(formData.email, formData.mdp);
+        await login(formulaire.email, formulaire.mdp);
         navigate('/');
       } else {
-        if (formData.mdp !== formData.confirmationMdp) {
-          setErreur('Les mots de passe ne correspondent pas.');
-          setChargement(false);
-          return;
-        }
-
-        const message = await registerApi(formData.nom, formData.email, formData.mdp);
-        setSucces(message || 'Inscription réussie ! Veuillez vérifier votre boîte mail.');
+        const message = await registerApi(formulaire.nom, formulaire.email, formulaire.mdp);
+        setSucces(message || MESSAGE_INSCRIPTION_PAR_DEFAUT);
         setEstConnexion(true);
       }
     } catch (err) {
-      setErreur(err.response?.data?.message || 'Une erreur est survenue lors du traitement.');
+      setErreur(extraireMessageErreur(err) ?? MESSAGE_ERREUR_PAR_DEFAUT);
     } finally {
       setChargement(false);
     }
+  };
+
+  const libelleSoumission = () => {
+    if (chargement) return 'Traitement...';
+    return estConnexion ? 'Se connecter' : "S'inscrire";
   };
 
   return (
@@ -68,115 +94,68 @@ export const PageAuth = () => {
         </p>
       </div>
 
-      {erreur && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl flex items-center gap-2">
-          <AlertCircle className="w-5 h-5 flex-shrink-0" />
-          <span>{erreur}</span>
-        </div>
-      )}
+      {erreur && <MessageFormulaire type="erreur" texte={erreur} />}
+      {succes && <MessageFormulaire type="succes" texte={succes} />}
 
-      {succes && (
-        <div className="mb-6 p-4 bg-green-50 border border-green-200 text-green-700 text-sm rounded-xl flex items-center gap-2">
-          <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
-          <span>{succes}</span>
-        </div>
-      )}
-
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={valider} className="space-y-4">
         {!estConnexion && (
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Nom complet</label>
-            <div className="relative">
-              <User className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
-              <input
-                type="text"
-                name="nom"
-                required={!estConnexion}
-                value={formData.nom}
-                onChange={handleChange}
-                placeholder="Jean Dupont"
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm outline-none transition"
-              />
-            </div>
-          </div>
+          <ChampAuth
+            libelle="Nom complet"
+            icone={User}
+            name="nom"
+            value={formulaire.nom}
+            onChange={modifierChamp}
+            placeholder="Jean Dupont"
+          />
         )}
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Adresse e-mail</label>
-          <div className="relative">
-            <Mail className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
-            <input
-              type="email"
-              name="email"
-              required
-              value={formData.email}
-              onChange={handleChange}
-              placeholder="exemple@domaine.com"
-              className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm outline-none transition"
-            />
-          </div>
-        </div>
+        <ChampAuth
+          libelle="Adresse e-mail"
+          icone={Mail}
+          name="email"
+          type="email"
+          value={formulaire.email}
+          onChange={modifierChamp}
+          placeholder="exemple@domaine.com"
+        />
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Mot de passe</label>
-          <div className="relative">
-            <Lock className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
-            <input
-              type="password"
-              name="mdp"
-              required
-              value={formData.mdp}
-              onChange={handleChange}
-              placeholder="••••••••"
-              className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm outline-none transition"
-            />
-          </div>
-        </div>
+        <ChampAuth
+          libelle="Mot de passe"
+          icone={Lock}
+          name="mdp"
+          type="password"
+          value={formulaire.mdp}
+          onChange={modifierChamp}
+          placeholder="••••••••"
+        />
 
         {!estConnexion && (
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Confirmer le mot de passe</label>
-            <div className="relative">
-              <Lock className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
-              <input
-                type="password"
-                name="confirmationMdp"
-                required={!estConnexion}
-                value={formData.confirmationMdp}
-                onChange={handleChange}
-                placeholder="••••••••"
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm outline-none transition"
-              />
-            </div>
-          </div>
+          <ChampAuth
+            libelle="Confirmer le mot de passe"
+            icone={Lock}
+            name="confirmationMdp"
+            type="password"
+            value={formulaire.confirmationMdp}
+            onChange={modifierChamp}
+            placeholder="••••••••"
+          />
         )}
 
-        <button
+        <Bouton
           type="submit"
+          taille="lg"
+          className="mt-2 w-full rounded-xl font-bold shadow-md"
           disabled={chargement}
-          className="w-full bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white font-bold py-3 rounded-xl transition shadow-md flex items-center justify-center gap-2 mt-2"
         >
-          {chargement
-            ? 'Traitement...'
-            : estConnexion
-            ? 'Se connecter'
-            : "S'inscrire"}
-        </button>
+          {libelleSoumission()}
+        </Bouton>
       </form>
 
       <p className="text-center text-sm text-gray-600 mt-6">
         {estConnexion ? 'Pas encore de compte ?' : 'Déjà un compte ?'}{' '}
-        <button
-          type="button"
-          onClick={() => {
-            setEstConnexion(!estConnexion);
-            setErreur('');
-            setSucces('');
-          }}
-          className="text-red-600 font-semibold hover:underline bg-transparent border-none cursor-pointer"
-        >
+        <Bouton variante="lien" taille="nu" onClick={basculerMode}>
           {estConnexion ? 'Créer un compte' : 'Se connecter'}
-        </button>
+        </Bouton>
       </p>
     </div>
   );

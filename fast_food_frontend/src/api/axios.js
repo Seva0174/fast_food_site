@@ -1,30 +1,29 @@
 import axios from 'axios';
+import { effacerSession, lireToken } from '../lib/session';
 
 const api = axios.create({
-  baseURL: 'http://localhost:8080/api',
+  // VITE_API_URL permet de changer l'adresse de l'API au build (Docker, production)
+  baseURL: import.meta.env.VITE_API_URL ?? 'http://localhost:8080/api',
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
+api.interceptors.request.use((config) => {
+  const token = lireToken();
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
 
-// Intercepteur : redirige vers /login si le token est expiré ou invalide (401 ou 403)
+// Redirige vers /login si le token est expire ou invalide (401 ou 403)
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response && (error.response.status === 401 || error.response.status === 403)) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('fastfood_user');
+    const statut = error.response?.status;
+    if (statut === 401 || statut === 403) {
+      effacerSession();
 
       if (window.location.pathname !== '/login') {
         window.location.href = '/login';

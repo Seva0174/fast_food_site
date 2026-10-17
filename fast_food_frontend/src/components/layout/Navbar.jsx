@@ -131,13 +131,11 @@ export const Navbar = () => {
           )}
 
           {user ? (
-            <button
-              type="button"
-              onClick={deconnecter}
-              className="w-full border-t border-gray-100 py-2 text-left font-medium text-red-600"
-            >
-              Déconnexion
-            </button>
+            <div className="border-t border-gray-100">
+              <Bouton variante="lien" taille="nu" onClick={deconnecter} className="w-full py-2">
+                <span className="w-full text-left">Déconnexion</span>
+              </Bouton>
+            </div>
           ) : (
             <Link
               to="/login"
