@@ -1,4 +1,4 @@
-import { BandeauMessage } from '@/components/admin/BandeauMessage';
+import { BandeauMessage } from '@/components/ui/bandeau';
 import { FormulaireGroupe } from '@/components/admin/groupes/FormulaireGroupe';
 import { ModalConfirmation } from '@/components/modales/ModalConfirmation';
 import { ModalShell } from '@/components/modales/ModalShell';

@@ -14,6 +14,10 @@ const variantes = {
   info: 'bg-blue-600 text-white shadow-sm hover:bg-blue-700',
   contour: 'border border-red-200 bg-white text-red-600 hover:border-red-300 hover:text-red-700',
   lienInfo: 'text-blue-600 hover:underline',
+  succesDoux: 'bg-green-100 text-green-700 hover:bg-green-200',
+  dangerDoux: 'bg-red-100 text-red-700 hover:bg-red-200',
+  contourInfo: 'border border-blue-200 text-blue-600 hover:border-blue-400 hover:text-blue-800',
+  contourAccent: 'border border-purple-200 text-purple-600 hover:border-purple-400 hover:text-purple-800',
 };
 
 const tailles = {
@@ -23,6 +27,7 @@ const tailles = {
   lg: 'px-4 py-3.5 text-base',
   icone: 'rounded-full p-1',
   iconeCarree: 'p-1.5',
+  pastille: 'rounded-full px-3 py-1 text-xs',
   nu: '',
 };
 

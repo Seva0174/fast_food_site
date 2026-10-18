@@ -31,10 +31,5 @@ export const CARTES_STATISTIQUES = [
   },
 ];
 
-// Renvoie le message d'erreur d'une période invalide, ou null si elle est valide.
-// Les dates sont au format AAAA-MM-JJ, donc comparables comme du texte.
-export const erreurPeriode = (debut, fin) =>
-  debut && fin && fin < debut ? 'La date de fin doit être postérieure à la date de début.' : null;
-
 // Paramètres de requête d'une période ; objet vide pour la vue globale.
 export const paramsPeriode = (periode) => (periode ? { debut: periode.debut, fin: periode.fin } : {});

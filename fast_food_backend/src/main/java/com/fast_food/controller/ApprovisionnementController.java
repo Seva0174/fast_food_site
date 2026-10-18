@@ -52,12 +52,6 @@ public class ApprovisionnementController {
         return ResponseEntity.ok(approvisionnementService.importerCatalogueCsv(idFournisseur, file));
     }
 
-    @DeleteMapping("/fournisseurs/{idFournisseur}/catalogue")
-    public ResponseEntity<Void> reinitialiserCatalogue(@PathVariable Long idFournisseur) {
-        approvisionnementService.reinitialiserCatalogue(idFournisseur);
-        return ResponseEntity.noContent().build();
-    }
-
     // --- COMMANDES FOURNISSEURS ---
 
     @GetMapping("/commandes")

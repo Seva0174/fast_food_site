@@ -94,11 +94,8 @@ public class OptionService {
 
     @Transactional
     public OptionItemResponse createItem(Long groupeId, OptionItemRequest request) {
-        // On priorise l'ID du groupe envoyé dans le DTO s'il existe, sinon celui du PATH
-        Long targetGroupeId = (request.getGroupeId() != null) ? request.getGroupeId() : groupeId;
-
-        OptionGroupe groupe = optionGroupeRepository.findById(targetGroupeId)
-                .orElseThrow(() -> new ResourceNotFoundException("Groupe d'option non trouvé avec l'id : " + targetGroupeId));
+        OptionGroupe groupe = optionGroupeRepository.findById(groupeId)
+            .orElseThrow(() -> new ResourceNotFoundException("Groupe d'option non trouvé avec l'id : " + groupeId));
 
         OptionItem item = new OptionItem();
         item.setNom(request.getNom().trim());
@@ -122,14 +119,7 @@ public class OptionService {
 
         item.setNom(request.getNom().trim());
         item.setSurcout(request.getSurcout() != null ? request.getSurcout() : BigDecimal.ZERO);
-
-        // Si groupeId est renseigné dans le DTO de mise à jour, on réaffecte le groupe
-        if (request.getGroupeId() != null) {
-            OptionGroupe groupe = optionGroupeRepository.findById(request.getGroupeId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Groupe d'option non trouvé avec l'id : " + request.getGroupeId()));
-            item.setGroupe(groupe);
-        }
-
+        
         if (request.getMatierePremiereId() != null) {
             StockMatierePremiere mp = stockMatierePremiereRepository.findById(request.getMatierePremiereId())
                     .orElseThrow(() -> new ResourceNotFoundException("Matière première non trouvée : " + request.getMatierePremiereId()));

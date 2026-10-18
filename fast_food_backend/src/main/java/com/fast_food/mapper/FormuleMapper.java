@@ -36,9 +36,9 @@ public class FormuleMapper {
 
         List<FormuleGroupeProduitResponse> produits = new ArrayList<>();
         if (groupe.getProduits() != null) {
-            for (FormuleGroupeProduit lien : groupe.getProduits()) {
-                produits.add(toProduitResponse(lien));
-            }
+            groupe.getProduits().stream()
+                    .sorted(Comparator.comparing(FormuleGroupeProduit::getId))
+                    .forEach(lien -> produits.add(toProduitResponse(lien)));
         }
         response.setProduits(produits);
         return response;

@@ -7,10 +7,9 @@ import {
 } from '@/api/personnelApi';
 import { extraireMessageErreur } from '@/lib/erreurs';
 import { erreurSaisieHeures, heuresEnDecimal } from '@/lib/personnel';
-import { erreurPeriode } from '@/lib/statistiques';
+import { erreurPeriode } from '@/lib/periode';
 
 // Heures d'un employé : consultation (avec filtre par période), saisie et suppression.
-// Le composant qui l'utilise est recréé à chaque changement d'employé (key).
 export const useHeuresEmploye = (idEmploye, afficher) => {
   const [heures, setHeures] = useState([]);
   // Filtre actif { debut, fin }, ou null pour toutes les heures

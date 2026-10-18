@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { EnTeteGroupe } from '@/components/admin/groupes/EnTeteGroupe';
 import { Bouton } from '@/components/ui/bouton';
-import { formulaireDepuisOption } from '@/lib/options';
 import { FormulaireOption } from './FormulaireOption';
 import { LigneOption } from './LigneOption';
+import { aTropPeuDOptions, formulaireDepuisOption } from '@/lib/options';
 
 // Un groupe d'options : en-tête, liste des options, ajout et modification d'une option.
 export const CarteGroupeOption = ({
@@ -25,6 +25,12 @@ export const CarteGroupeOption = ({
       </div>
 
       <div className="space-y-3 p-4">
+        {aTropPeuDOptions(groupe) && (
+          <p className="rounded border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">
+            Ce groupe impose plus de choix que d'options proposées : les clients ne pourront pas commander
+            ce produit.
+          </p>
+        )}
         {groupe.options.length === 0 ? (
           <p className="text-xs italic text-gray-400">
             Aucune option dans ce groupe. Ajoutez-en une ci-dessous.

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Bouton } from '@/components/ui/bouton';
-import { erreurPeriode } from '@/lib/statistiques';
+import { erreurPeriode } from '@/lib/periode';
 
 const MODE_GLOBAL = 'global';
 const MODE_PERSONNALISE = 'personnalise';

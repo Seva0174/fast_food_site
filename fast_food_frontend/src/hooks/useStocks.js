@@ -5,9 +5,9 @@ import {
   modifierStockApi,
   supprimerMatierePremiereApi,
 } from '@/api/stockApi';
-import { extraireMessageErreur } from '@/lib/erreurs';
 import { erreurNouveauStock } from '@/lib/stock';
 import { useMessage } from './useMessage';
+import { useExecuter } from './useExecuter';
 
 // Chargement et modification des stocks de matières premières.
 export const useStocks = () => {
@@ -30,24 +30,22 @@ export const useStocks = () => {
     charger();
   }, [charger]);
 
+  const executerBase = useExecuter(afficher, charger);
+
   // Exécute une action puis recharge la liste. Renvoie true si l'action a réussi.
-  const executer = useCallback(
-    async (action, messageSucces, messageEchec) => {
-      setChargement(true);
-      try {
-        await action();
-        afficher(messageSucces);
-      } catch (err) {
-        afficher(extraireMessageErreur(err) || messageEchec, 'erreur');
-        return false;
-      } finally {
-        setChargement(false);
-      }
-      await charger();
-      return true;
-    },
-    [afficher, charger]
-  );
+ const executer = (action, messageSucces, messageEchec) =>
+    executerBase(
+      async () => {
+        setChargement(true);
+        try {
+          await action();
+        } finally {
+          setChargement(false);
+        }
+      },
+      messageSucces,
+      messageEchec
+    );
 
   const creer = async (donnees) => {
     const erreur = erreurNouveauStock(donnees);

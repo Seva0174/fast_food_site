@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Truck } from 'lucide-react';
-import { BandeauMessage } from '@/components/admin/BandeauMessage';
+import { BandeauMessage } from '@/components/ui/bandeau';
 import { ModalConfirmation } from '@/components/modales/ModalConfirmation';
 import { BarreFournisseurs } from '@/components/admin/stock/BarreFournisseurs';
 import { BonCommande } from '@/components/admin/stock/BonCommande';

@@ -8,7 +8,7 @@ import {
   supprimerGroupeOptionApi,
   supprimerOptionApi,
 } from '@/api/optionsApi';
-import { extraireMessageErreur } from '@/lib/erreurs';
+import { useExecuter } from './useExecuter';
 import {
   construirePayloadGroupe,
   construirePayloadOption,
@@ -40,22 +40,12 @@ export const useOptionsProduit = (idProduit, onChange) => {
     charger();
   }, [charger]);
 
-  // Exécute une action puis recharge les groupes. Renvoie true si l'action a réussi.
-  const executer = useCallback(
-    async (action, messageSucces, messageEchec) => {
-      try {
-        await action();
-        afficher(messageSucces);
-      } catch (err) {
-        afficher(extraireMessageErreur(err) || messageEchec, 'erreur');
-        return false;
-      }
-      await charger();
-      if (onChange) onChange();
-      return true;
-    },
-    [afficher, charger, onChange]
-  );
+  const apresSucces = useCallback(async () => {
+    await charger();
+    if (onChange) onChange();
+  }, [charger, onChange]);
+
+  const executer = useExecuter(afficher, apresSucces);
 
   // Valide le contenu d'un formulaire avant l'appel : renvoie le corps de la requête, ou null.
   const preparerGroupe = (formulaire) => {

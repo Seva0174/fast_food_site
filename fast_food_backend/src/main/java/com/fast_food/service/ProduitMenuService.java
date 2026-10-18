@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.fast_food.dto.ProduitMenuRequest;
@@ -119,12 +120,6 @@ public class ProduitMenuService {
                 StockMatierePremiere matiere = stockMatierePremiereRepository.findById(item.getIdMatiere())
                         .orElseThrow(() -> new ResourceNotFoundException("Matière première introuvable : " + item.getIdMatiere()));
 
-                // Mise à jour de l'unité de mesure si spécifiée dans la requête
-                if (item.getUniteMesure() != null && !item.getUniteMesure().isBlank()) {
-                    matiere.setUniteMesure(item.getUniteMesure());
-                    stockMatierePremiereRepository.save(matiere);
-                }
-
                 Recette r = new Recette();
                 r.setProduitMenu(produit);
                 r.setMatierePremiere(matiere);
@@ -180,6 +175,14 @@ public class ProduitMenuService {
         }
 
         recetteRepository.deleteByProduitMenu(produit);
-        produitMenuRepository.delete(produit);
+
+        try {
+            produitMenuRepository.delete(produit);
+            // Force le DELETE SQL immédiatement pour intercepter les violations de clé étrangère
+            produitMenuRepository.flush();
+        } catch (DataIntegrityViolationException e) {
+            throw new IllegalArgumentException("Impossible de supprimer '" + produit.getNom()
+                    + "' : il figure dans des commandes. Passez-le plutôt en rupture pour le retirer de la carte.");
+        }
     }
 }

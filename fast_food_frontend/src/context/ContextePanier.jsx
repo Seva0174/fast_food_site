@@ -1,5 +1,6 @@
 import { createContext, useState, useEffect, useContext, useRef } from 'react';
 import { extraireMessageErreur } from '../lib/erreurs';
+import { useMessage } from '../hooks/useMessage';
 import {
   getPanierApi,
   ajouterProduitApi,
@@ -33,6 +34,7 @@ export const FournisseurPanier = ({ children }) => {
   const { isAuthenticated } = useContext(AuthContext);
   const [panier, setPanier] = useState(() => (isAuthenticated ? [] : chargerPanierInviteLocal()));
   const [chargement, setChargement] = useState(false);
+  const { message, afficher } = useMessage();
 
   const dejaSynchronise = useRef(false);
   const etaitAuthentifie = useRef(isAuthenticated);
@@ -114,10 +116,9 @@ export const FournisseurPanier = ({ children }) => {
         await mettreAJourPanier(res);
       } catch (error) {
         console.error("Erreur lors de l'ajout au panier :", error);
-        const message = extraireMessageErreur(error);
-        if (message) alert(message);
+        const messageErreur = extraireMessageErreur(error);
+        if (messageErreur) afficher(messageErreur, 'erreur');
       }
-      return;
     }
 
     const article = creerArticleInvite(Date.now(), produit, optionItemIds, choixFormule);
@@ -236,6 +237,7 @@ export const FournisseurPanier = ({ children }) => {
       value={{
         panier,
         chargement,
+        message,
         ajouterAuPanier,
         incrementerQuantite,
         modifierItemPanier,

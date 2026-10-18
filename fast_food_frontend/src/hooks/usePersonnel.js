@@ -5,8 +5,8 @@ import {
   modifierEmployeApi,
   supprimerEmployeApi,
 } from '@/api/personnelApi';
-import { extraireMessageErreur } from '@/lib/erreurs';
 import { useMessage } from './useMessage';
+import { useExecuter } from './useExecuter';
 
 // Liste des employés, création, modification et suppression.
 // `afficher` est exposé pour partager le même bandeau avec les heures et la fiche de paie.
@@ -15,7 +15,7 @@ export const usePersonnel = () => {
   const [chargement, setChargement] = useState(true);
   const [erreur, setErreur] = useState('');
   const { message, afficher } = useMessage();
-
+  
   const charger = useCallback(async () => {
     try {
       setEmployes(await getEmployesApi());
@@ -26,26 +26,13 @@ export const usePersonnel = () => {
       setChargement(false);
     }
   }, []);
+  
+  const executer = useExecuter(afficher, charger);
 
   useEffect(() => {
     charger();
   }, [charger]);
 
-  // Exécute une action puis recharge la liste. Renvoie true si l'action a réussi.
-  const executer = useCallback(
-    async (action, messageSucces, messageEchec) => {
-      try {
-        await action();
-        afficher(messageSucces);
-      } catch (err) {
-        afficher(extraireMessageErreur(err) || messageEchec, 'erreur');
-        return false;
-      }
-      await charger();
-      return true;
-    },
-    [afficher, charger]
-  );
 
   const creer = (donnees) =>
     executer(() => creerEmployeApi(donnees), 'Employé créé avec succès', 'Erreur lors de la création');

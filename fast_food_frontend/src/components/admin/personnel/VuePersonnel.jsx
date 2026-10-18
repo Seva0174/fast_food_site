@@ -1,5 +1,5 @@
 import { useContext, useState } from 'react';
-import { BandeauMessage } from '@/components/admin/BandeauMessage';
+import { BandeauMessage } from '@/components/ui/bandeau';
 import { ModalConfirmation } from '@/components/modales/ModalConfirmation';
 import { AuthContext } from '@/context/AuthProvider';
 import { useConfirmation } from '@/hooks/useConfirmation';

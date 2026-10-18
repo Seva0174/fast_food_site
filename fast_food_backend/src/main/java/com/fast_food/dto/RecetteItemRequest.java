@@ -7,12 +7,10 @@ import lombok.Data;
 
 @Data
 public class RecetteItemRequest {
-    @NotNull
+    @NotNull(message = "La matière première est obligatoire")
     private Long idMatiere;
 
-    @NotNull
-    @Positive
+    @NotNull(message = "La quantité requise est obligatoire")
+    @Positive(message = "La quantité requise doit être supérieure à 0")
     private BigDecimal quantiteRequise;
-
-    private String uniteMesure;
 }

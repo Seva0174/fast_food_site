@@ -5,11 +5,11 @@ import com.fast_food.entite.*;
 import com.fast_food.exception.ResourceNotFoundException;
 import com.fast_food.mapper.*;
 import com.fast_food.repositorie.*;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.data.domain.Sort;
+import lombok.RequiredArgsConstructor;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -160,12 +160,6 @@ public class ApprovisionnementService {
         return nouveauxArticles.stream()
                 .map(catalogueFournisseurMapper::toResponse)
                 .collect(Collectors.toList());
-    }
-
-    @Transactional
-    public void reinitialiserCatalogue(Long idFournisseur) {
-        List<CatalogueFournisseur> catalogue = catalogueFournisseurRepository.findByFournisseurId(idFournisseur);
-        catalogueFournisseurRepository.deleteAll(catalogue);
     }
 
     // --- COMMANDES D'ACHAT ---

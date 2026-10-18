@@ -156,3 +156,60 @@ export const construireChoixFormule = (groupes, selections, produits) =>
       };
     })
   );
+
+// --- Administration : composition d'un menu ---
+
+export const FORMULAIRE_PRODUIT_FORMULE_VIDE = { idProduit: '', surcout: '0' };
+
+// Renvoie le message d'erreur d'un surcoût invalide, ou null s'il est valide.
+export const erreurSurcout = (surcout) =>
+  Number.isNaN(surcout) || surcout < 0 ? 'Le surcoût ne peut pas être négatif.' : null;
+
+// Produits simples qui ne figurent pas encore dans l'emplacement.
+export const produitsAjoutables = (produits, groupe) =>
+  (produits ?? []).filter(
+    (p) => !p.estFormule && !groupe.produits.some((lien) => lien.idProduit === p.id)
+  );
+
+// Regroupe des produits par catégorie, au format attendu par ListeDeroulante (prop "groupes").
+export const grouperParCategorie = (produits) => {
+  const parCategorie = {};
+  produits.forEach((p) => {
+    const libelle = p.categorie?.nom || 'Autres';
+    (parCategorie[libelle] ??= []).push({
+      value: p.id,
+      label: `${p.nom} (${Number(p.prix).toFixed(2)} €)`,
+    });
+  });
+  return Object.entries(parCategorie).map(([libelle, options]) => ({ libelle, options }));
+};
+
+// Avertissements d'un emplacement : { gravite: 'attention' | 'erreur', texte }.
+export const avertissementsEmplacement = (groupe) => {
+  const avertissements = [];
+
+  if (groupe.produits.length < groupe.minSelection) {
+    avertissements.push({
+      gravite: 'attention',
+      texte:
+        'Cet emplacement propose moins de produits que le minimum de choix demandé : les clients ne pourront pas valider ce menu.',
+    });
+  }
+  if (
+    groupe.minSelection > 0 &&
+    groupe.produits.length > 0 &&
+    !groupe.produits.some((lien) => lien.estDispo)
+  ) {
+    avertissements.push({
+      gravite: 'erreur',
+      texte: 'Tous les produits de cet emplacement sont en rupture : le menu est indisponible.',
+    });
+  }
+  return avertissements;
+};
+
+// Corps de la requête d'ajout d'un produit dans un emplacement.
+export const construirePayloadProduitFormule = (formulaire) => ({
+  idProduit: Number(formulaire.idProduit),
+  surcout: parseFloat(formulaire.surcout || 0),
+});

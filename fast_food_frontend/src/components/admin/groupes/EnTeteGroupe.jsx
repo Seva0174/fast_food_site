@@ -5,8 +5,9 @@ import { estObligatoire } from '@/lib/options';
 const classeChamp = 'rounded border bg-white px-2 py-1 text-xs';
 
 // En-tête d'un groupe : badge obligatoire ou optionnel, maximum, et modification en place.
+// avecOrdre : affiche et permet de modifier la position d'affichage (emplacements de menu).
 // onModifier reçoit (idGroupe, formulaire) et renvoie true si le groupe a été modifié.
-export const EnTeteGroupe = ({ groupe, onModifier, onSupprimer }) => {
+export const EnTeteGroupe = ({ groupe, avecOrdre = false, onModifier, onSupprimer }) => {
   const [enEdition, setEnEdition] = useState(false);
   const [formulaire, setFormulaire] = useState(null);
 
@@ -15,6 +16,7 @@ export const EnTeteGroupe = ({ groupe, onModifier, onSupprimer }) => {
       nom: groupe.nom,
       minSelection: groupe.minSelection,
       maxSelection: groupe.maxSelection,
+      ...(avecOrdre && { ordre: groupe.ordre }),
     });
     setEnEdition(true);
   };
@@ -28,7 +30,9 @@ export const EnTeteGroupe = ({ groupe, onModifier, onSupprimer }) => {
   if (enEdition) {
     return (
       <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
-        <div className="grid flex-1 grid-cols-1 gap-2 sm:grid-cols-3">
+        <div
+          className={`grid flex-1 grid-cols-1 gap-2 ${avecOrdre ? 'sm:grid-cols-4' : 'sm:grid-cols-3'}`}
+        >
           <input
             type="text"
             required
@@ -59,6 +63,19 @@ export const EnTeteGroupe = ({ groupe, onModifier, onSupprimer }) => {
               className={`${classeChamp} w-16`}
             />
           </div>
+          {avecOrdre && (
+            <div className="flex items-center gap-1 text-xs">
+              <span className="text-[10px] text-gray-500">Ordre:</span>
+              <input
+                type="number"
+                min="0"
+                required
+                value={formulaire.ordre}
+                onChange={modifier('ordre')}
+                className={`${classeChamp} w-16`}
+              />
+            </div>
+          )}
         </div>
         <div className="flex items-center justify-end gap-2">
           <Bouton variante="succes" taille="xs" onClick={enregistrer}>
@@ -90,6 +107,7 @@ export const EnTeteGroupe = ({ groupe, onModifier, onSupprimer }) => {
         <span className="text-xs text-gray-500">
           Max : <strong className="text-gray-700">{groupe.maxSelection}</strong>
         </span>
+        {avecOrdre && <span className="text-xs text-gray-400">Ordre : {groupe.ordre}</span>}
       </div>
 
       <div className="flex items-center gap-2">

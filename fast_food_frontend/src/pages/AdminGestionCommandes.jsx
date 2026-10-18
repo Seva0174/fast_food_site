@@ -5,6 +5,8 @@ import { CommandeCard } from '../components/commande/CommandeCard';
 import { CommandeDetailModal } from '../components/commande/CommandeDetailModal';
 import { BarreFiltresCommandes } from '../components/commande/BarreFiltresCommandes';
 import { Bouton } from '../components/ui/bouton';
+import { BandeauMessage } from '../components/ui/bandeau';
+
 import {
   FILTRE_STATUT,
   FILTRE_TYPE_TOUS,
@@ -20,7 +22,7 @@ const FILTRES_INITIAUX = {
 };
 
 export const AdminGestionCommandes = () => {
-  const { commandes, chargement, erreur, miseAJourId, charger, changerStatut } =
+    const { commandes, chargement, erreur, message, miseAJourId, charger, changerStatut } =
     useCommandesAdmin();
 
   const [commandeSelectionnee, setCommandeSelectionnee] = useState(null);
@@ -73,7 +75,12 @@ export const AdminGestionCommandes = () => {
         onChangerOrdre={() => setOrdre((o) => (o === 'desc' ? 'asc' : 'desc'))}
         compteurs={compteurs}
       />
-
+      {message && (
+        <div className="mb-6">
+          <BandeauMessage message={message} />
+        </div>
+      )}
+      
       {erreur && (
         <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-600">
           {erreur}

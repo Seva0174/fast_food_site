@@ -80,11 +80,19 @@ export const construirePayloadGroupe = (formulaire) => ({
   nom: formulaire.nom.trim(),
   minSelection: parseInt(formulaire.minSelection, 10),
   maxSelection: parseInt(formulaire.maxSelection, 10),
+  ...(formulaire.ordre !== undefined && { ordre: parseInt(formulaire.ordre, 10) }),
 });
 
 // Renvoie le message d'erreur d'un groupe invalide, ou null s'il est valide.
-export const erreurGroupe = ({ nom, minSelection, maxSelection }) =>
-  nom ? erreurRegleSelection(minSelection, maxSelection) : 'Le nom du groupe est obligatoire.';
+export const erreurGroupe = ({ nom, minSelection, maxSelection, ordre }) => {
+  if (!nom) return 'Le nom du groupe est obligatoire.';
+  if (ordre !== undefined && (Number.isNaN(ordre) || ordre < 0)) {
+    return "L'ordre doit être un nombre positif ou nul.";
+  }
+  return erreurRegleSelection(minSelection, maxSelection);
+};
+
+export const aTropPeuDOptions = (groupe) => groupe.minSelection > groupe.options.length;
 
 // Valeurs du formulaire d'une option existante.
 export const formulaireDepuisOption = (option) => ({

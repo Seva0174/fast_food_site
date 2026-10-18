@@ -8,9 +8,6 @@ import lombok.Data;
 
 @Data
 public class OptionItemRequest {
-
-    private Long groupeId;
-
     @NotBlank(message = "Le nom de l'option est obligatoire")
     private String nom;
 

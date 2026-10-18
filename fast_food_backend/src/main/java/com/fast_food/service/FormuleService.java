@@ -165,6 +165,9 @@ public class FormuleService {
         if (max < min) {
             throw new IllegalArgumentException("Le maximum de choix ne peut pas être inférieur au minimum.");
         }
+        if (request.getOrdre() != null && request.getOrdre() < 0) {
+            throw new IllegalArgumentException("L'ordre d'affichage ne peut pas être négatif.");
+        }
         return new int[] { min, max };
     }
 
