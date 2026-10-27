@@ -128,9 +128,7 @@
 
 ## A faire :
 
-- réorganiser proprement le code
-- factoriser fichiers si trop long
-- Rendre plus beau le front et factoriser le fronted composant réutilisable
+- Rendre plus beau le front en ajoutant des images et des design (deja exisant ou pas)
 - Tester toute les fonctionnalités pour trouver les bug
 - Docker
 - Faire la doc sur github

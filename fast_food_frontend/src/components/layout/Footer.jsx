@@ -17,7 +17,7 @@ export const Footer = () => (
       </p>
 
       <div className="mt-3 text-xs">
-        <Link to="/mentions-legales">Mentions légales</Link>
+        <Link to="/mentions-legales" className="hover:underline" >Mentions légales</Link>
       </div>
 
       <Bouton

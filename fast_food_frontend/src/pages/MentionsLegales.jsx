@@ -38,12 +38,29 @@ export const MentionsLegales = () => (
         </p>
       </SectionLegale>
 
+      
       <SectionLegale titre="Propriété intellectuelle">
         <p>
-          Les contenus de ce site (textes, images, interface) sont utilisés dans un cadre
-          pédagogique. Toute reproduction n’est pas autorisée sans accord préalable.
+          Les textes, éléments graphiques et éléments d'interface créés
+          dans le cadre de ce projet sont protégés par les droits
+          applicables à la propriété intellectuelle.
+        </p>
+        <p>
+          Certaines images utilisées sur ce site proviennent de {' '} 
+          <a
+            href="https://unsplash.com/fr/licence"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-red-600 hover:underline"
+          >
+             Unsplash
+          </a>
+          . Elles sont utilisées conformément à la licence Unsplash.
+          Les droits relatifs à ces images restent soumis aux conditions
+          de cette licence et aux éventuels droits de tiers.
         </p>
       </SectionLegale>
+
 
       <SectionLegale titre="Projet personnel">
         <p>
