@@ -11,7 +11,7 @@ import { SectionCategorie } from '../components/carte/SectionCategorie';
 import { ModalPersonnalisation } from '../components/modales/ModalPersonnalisation';
 
 export const Home = () => {
-  const { ajouterAuPanier, modifierItemPanier } = useContext(ContextePanier);
+  const { ajouterAuPanier, modifierItemPanier, totalArticles } = useContext(ContextePanier);
   const { categories, produits, chargement } = useCarte();
   const estDesktop = useIsDesktop();
 
@@ -47,7 +47,7 @@ export const Home = () => {
   };
 
   if (chargement) {
-    return <div className="py-12 text-center text-gray-500">Chargement de la carte...</div>;
+    return <div className="py-12 text-center text-muted-foreground">Chargement de la carte...</div>;
   }
 
   // Categories a afficher, avec leurs produits. Les categories vides sont ignorees.
@@ -56,34 +56,37 @@ export const Home = () => {
     .map((cat) => ({ categorie: cat, produits: produitsDeCategorie(produits, cat.id) }))
     .filter((section) => section.produits.length > 0);
 
+  // Sur mobile, la barre fixe du panier ne doit pas masquer le bas de la carte
+  const espaceBarrePanier = !estDesktop && totalArticles > 0 ? 'pb-24' : '';
+
   return (
-    <div className="flex items-start gap-8">
-      <div className="min-w-0 flex-1 space-y-8">
-        <HeroBanner />
+    <div>
+      <HeroBanner />
 
-        <FiltresCategories
-          categories={categories}
-          categorieActive={categorieActive}
-          onChange={setCategorieActive}
-        />
+      <div className="mx-auto flex max-w-7xl items-start gap-8 px-4 pb-10 sm:px-6 lg:px-8">
+        <div className={`min-w-0 flex-1 ${espaceBarrePanier}`}>
+          <FiltresCategories
+            categories={categories}
+            categorieActive={categorieActive}
+            onChange={setCategorieActive}
+          />
 
-        <div className="space-y-10">
-          {sections.map(({ categorie, produits: produitsSection }) => (
-            <SectionCategorie
-              key={categorie.id}
-              categorie={categorie}
-              produits={produitsSection}
-              onOpenModal={ouvrirModal}
-            />
-          ))}
+          <div className="space-y-10 pt-6">
+            {sections.map(({ categorie, produits: produitsSection }) => (
+              <SectionCategorie
+                key={categorie.id}
+                categorie={categorie}
+                produits={produitsSection}
+                onOpenModal={ouvrirModal}
+              />
+            ))}
+          </div>
         </div>
+
+        {estDesktop && <PanierSidebarDesktop onEditItem={modifierItem} />}
       </div>
 
-      {estDesktop ? (
-        <PanierSidebarDesktop onEditItem={modifierItem} />
-      ) : (
-        <PanierMobileSheet onEditItem={modifierItem} />
-      )}
+      {!estDesktop && <PanierMobileSheet onEditItem={modifierItem} />}
 
       <ModalPersonnalisation
         produit={produitEnCours}

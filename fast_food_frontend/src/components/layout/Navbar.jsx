@@ -8,8 +8,8 @@ import { LienNav } from './LienNav';
 import { Badge } from '../ui/badge';
 import { Bouton } from '../ui/bouton';
 
-const couleurStaff = 'text-blue-600 hover:text-blue-800';
-const couleurAdmin = 'text-purple-600 hover:text-purple-800';
+const classeConnexion =
+  'rounded-lg bg-primary px-4 py-2 font-semibold text-primary-foreground transition-colors hover:bg-primary/90';
 
 export const Navbar = () => {
   const [menuOuvert, setMenuOuvert] = useState(false);
@@ -33,11 +33,11 @@ export const Navbar = () => {
   );
 
   return (
-    <nav className="sticky top-0 z-50 border-b border-gray-200 bg-white">
+    <nav className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
-          <Link to="/" className="flex items-center gap-2 text-xl font-bold text-red-600">
-            FastFood
+          <Link to="/" className="titre-marque text-3xl text-foreground">
+            Fast<span className="text-primary">Food</span>
           </Link>
 
           {/* Navigation bureau */}
@@ -45,30 +45,30 @@ export const Navbar = () => {
             <LienNav to="/">Carte</LienNav>
 
             <LienNav to="/commander" icone={ShoppingBag}>
-              Commander
+              Panier
               {badgePanier}
             </LienNav>
 
             {estStaff && (
-              <LienNav to="/commandes" icone={ClipboardList} couleur={couleurStaff}>
+              <LienNav to="/commandes" icone={ClipboardList}>
                 Commandes
               </LienNav>
             )}
 
             {estAdmin && (
-              <LienNav to="/admin" icone={Shield} couleur={couleurAdmin}>
+              <LienNav to="/admin" icone={Shield}>
                 Admin
               </LienNav>
             )}
 
             {user ? (
-              <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-3">
                 <Link
                   to="/user"
                   title="Mon compte"
-                  className="flex items-center gap-1 rounded-lg px-3 py-1.5 text-sm font-medium text-gray-700 transition hover:bg-gray-100 hover:text-red-600"
+                  className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-foreground/80 transition-colors hover:bg-accent hover:text-foreground"
                 >
-                  <User className="h-4 w-4 text-red-600" />
+                  <User className="h-4 w-4 text-primary" />
                   <span>{libelleUtilisateur}</span>
                 </Link>
 
@@ -77,10 +77,7 @@ export const Navbar = () => {
                 </Bouton>
               </div>
             ) : (
-              <Link
-                to="/login"
-                className="rounded-lg bg-red-600 px-4 py-2 font-medium text-white transition hover:bg-red-700"
-              >
+              <Link to="/login" className={classeConnexion}>
                 Connexion
               </Link>
             )}
@@ -93,6 +90,7 @@ export const Navbar = () => {
               taille="icone"
               onClick={() => setMenuOuvert((ouvert) => !ouvert)}
               aria-label="Ouvrir le menu"
+              aria-expanded={menuOuvert}
             >
               {menuOuvert ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </Bouton>
@@ -102,37 +100,37 @@ export const Navbar = () => {
 
       {/* Navigation mobile */}
       {menuOuvert && (
-        <div className="space-y-3 border-t border-gray-100 bg-white px-4 pb-4 pt-2 md:hidden">
+        <div className="space-y-1 border-t border-border bg-background px-4 pb-4 pt-2 md:hidden">
           <LienNav to="/" mobile onClick={fermerMenu}>
             Carte
           </LienNav>
 
           <LienNav to="/commander" mobile onClick={fermerMenu} icone={ShoppingBag}>
-            Commander
+            Panier
             {badgePanier}
           </LienNav>
 
           {estStaff && (
-            <LienNav to="/commandes" mobile onClick={fermerMenu} icone={ClipboardList} couleur={couleurStaff}>
+            <LienNav to="/commandes" mobile onClick={fermerMenu} icone={ClipboardList}>
               Commandes
             </LienNav>
           )}
 
-          {user && (
-            <LienNav to="/user" mobile onClick={fermerMenu} couleur="text-red-600">
-              Mon compte ({libelleUtilisateur})
-            </LienNav>
-          )}
-
           {estAdmin && (
-            <LienNav to="/admin" mobile onClick={fermerMenu} icone={Shield} couleur={couleurAdmin}>
+            <LienNav to="/admin" mobile onClick={fermerMenu} icone={Shield}>
               Admin
             </LienNav>
           )}
 
+          {user && (
+            <LienNav to="/user" mobile onClick={fermerMenu} icone={User}>
+              Mon compte ({libelleUtilisateur})
+            </LienNav>
+          )}
+
           {user ? (
-            <div className="border-t border-gray-100">
-              <Bouton variante="lien" taille="nu" onClick={deconnecter} className="w-full py-2">
+            <div className="border-t border-border pt-1">
+              <Bouton variante="discret" taille="nu" onClick={deconnecter} className="w-full py-2">
                 <span className="w-full text-left">Déconnexion</span>
               </Bouton>
             </div>
@@ -140,7 +138,7 @@ export const Navbar = () => {
             <Link
               to="/login"
               onClick={fermerMenu}
-              className="mt-2 block rounded-lg bg-red-600 py-2 text-center font-medium text-white"
+              className={`mt-2 block text-center ${classeConnexion}`}
             >
               Connexion
             </Link>

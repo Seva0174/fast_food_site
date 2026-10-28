@@ -7,9 +7,9 @@ import { choixDuGroupe } from '../../lib/formule';
 import { decrireRegle } from '../../lib/options';
 
 const BarreProgression = ({ valeur }) => (
-  <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-gray-200">
+  <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-accent">
     <div
-      className="h-full bg-red-600 transition-all duration-300"
+      className="h-full bg-primary transition-all duration-300"
       style={{ width: `${valeur * 100}%` }}
     />
   </div>
@@ -22,8 +22,8 @@ const EtapeEmplacement = ({ groupe, choisis, onChoisir }) => {
   return (
     <>
       <div>
-        <h4 className="font-bold text-gray-900">{groupe.nom}</h4>
-        <p className="text-xs text-gray-500">{decrireRegle(groupe)}</p>
+        <h4 className="font-bold">{groupe.nom}</h4>
+        <p className="text-xs text-muted-foreground">{decrireRegle(groupe)}</p>
       </div>
 
       <div className="space-y-2">
@@ -43,7 +43,7 @@ const EtapeEmplacement = ({ groupe, choisis, onChoisir }) => {
               onClick={() => onChoisir(groupe, lien)}
               droite={
                 indisponible ? (
-                  <span className="shrink-0 text-xs font-bold text-gray-500">Épuisé</span>
+                  <span className="shrink-0 text-xs font-bold text-muted-foreground">Épuisé</span>
                 ) : (
                   <Surcout valeur={lien.surcout} />
                 )
@@ -60,8 +60,8 @@ const EtapeEmplacement = ({ groupe, choisis, onChoisir }) => {
 const EtapeOptions = ({ etape, onChoisirOption }) => (
   <>
     <div>
-      <h4 className="font-bold text-gray-900">Personnalisez : {etape.produit.nom}</h4>
-      <p className="text-xs text-gray-500">{etape.groupe.nom}</p>
+      <h4 className="font-bold">Personnalisez : {etape.produit.nom}</h4>
+      <p className="text-xs text-muted-foreground">{etape.groupe.nom}</p>
     </div>
 
     {(etape.produit.groupesOptions ?? []).map((groupeOption) => (
@@ -141,7 +141,7 @@ export const FormuleCompositionModal = ({
       }
     >
       {!etape && (
-        <p className="py-6 text-center text-sm text-gray-500">
+        <p className="py-6 text-center text-sm text-muted-foreground">
           Ce menu n'est pas encore configuré.
         </p>
       )}
@@ -164,7 +164,7 @@ export const FormuleCompositionModal = ({
       )}
 
       {erreur && (
-        <p role="alert" className="text-xs font-semibold text-red-600">
+        <p role="alert" className="text-xs font-semibold text-destructive">
           {erreur}
         </p>
       )}

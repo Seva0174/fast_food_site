@@ -110,20 +110,21 @@ export const FournisseurPanier = ({ children }) => {
   // produit : produit de la carte (voir ProduitMenuResponse)
   // choixFormule : produits choisis dans un menu (voir FormuleCompositionModal)
   const ajouterAuPanier = async (produit, optionItemIds = [], choixFormule = []) => {
-    if (isAuthenticated) {
-      try {
-        const res = await ajouterProduitApi(produit.id, 1, optionItemIds, choixFormule);
-        await mettreAJourPanier(res);
-      } catch (error) {
-        console.error("Erreur lors de l'ajout au panier :", error);
-        const messageErreur = extraireMessageErreur(error);
-        if (messageErreur) afficher(messageErreur, 'erreur');
-      }
+  if (isAuthenticated) {
+    try {
+      const res = await ajouterProduitApi(produit.id, 1, optionItemIds, choixFormule);
+      await mettreAJourPanier(res);
+    } catch (error) {
+      console.error("Erreur lors de l'ajout au panier :", error);
+      const messageErreur = extraireMessageErreur(error);
+      if (messageErreur) afficher(messageErreur, 'erreur');
     }
+    return;
+  }
 
-    const article = creerArticleInvite(Date.now(), produit, optionItemIds, choixFormule);
-    mettreAJourInvite((prev) => regrouperArticlesIdentiques([...prev, article]));
-  };
+  const article = creerArticleInvite(Date.now(), produit, optionItemIds, choixFormule);
+  mettreAJourInvite((prev) => regrouperArticlesIdentiques([...prev, article]));
+};
 
   const incrementerQuantite = async (itemId) => {
     const item = panier.find((i) => i.id === itemId);

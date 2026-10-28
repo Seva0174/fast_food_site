@@ -22,7 +22,7 @@ export const ModalConfirmation = ({ demande, onRepondre }) => {
         </>
       }
     >
-      <p className="text-sm text-gray-600">{message}</p>
+      <p className="text-sm text-muted-foreground">{message}</p>
     </ModalShell>
   );
 };

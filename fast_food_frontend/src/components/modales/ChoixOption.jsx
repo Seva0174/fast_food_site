@@ -2,7 +2,7 @@ import { Check } from 'lucide-react';
 
 export const Surcout = ({ valeur }) =>
   Number(valeur) > 0 ? (
-    <span className="shrink-0 text-xs font-bold text-red-600">
+    <span className="shrink-0 text-xs font-bold text-primary">
       +{Number(valeur).toFixed(2)} €
     </span>
   ) : null;
@@ -22,17 +22,21 @@ export const ChoixOption = ({
     aria-checked={actif}
     disabled={desactive}
     onClick={onClick}
-    className={`flex w-full items-center justify-between gap-3 rounded-lg border p-2.5 text-left text-sm transition ${
+    className={`flex w-full items-center justify-between gap-3 rounded-lg border p-2.5 text-left text-sm transition-colors ${
       actif
-        ? 'border-red-600 bg-red-50/40 font-medium'
-        : 'border-gray-200 bg-white hover:border-gray-300'
+        ? 'border-primary bg-primary/10 font-medium'
+        : 'border-border bg-transparent hover:border-muted-foreground/60'
     } ${desactive ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
   >
     <span className="flex min-w-0 items-center gap-3">
       <span
         className={`flex h-4 w-4 shrink-0 items-center justify-center border ${
           radio ? 'rounded-full' : 'rounded-md'
-        } ${actif ? 'border-red-600 bg-red-600 text-white' : 'border-gray-300'}`}
+        } ${
+          actif
+            ? 'border-primary bg-primary text-primary-foreground'
+            : 'border-muted-foreground/60'
+        }`}
       >
         {actif && <Check className="h-3 w-3 stroke-[3]" />}
       </span>
@@ -48,7 +52,7 @@ export const ChoixOption = ({
         />
       )}
 
-      <span className="truncate text-gray-800">{libelle}</span>
+      <span className="truncate">{libelle}</span>
     </span>
 
     {droite}
