@@ -2,6 +2,7 @@ import { useContext, useState } from 'react';
 import { ContextePanier } from '../context/ContextePanier';
 import { useCarte } from '../hooks/useCarte';
 import { useIsDesktop } from '../hooks/useIsDesktop';
+import { useDiapositiveHero } from '../hooks/useDiapositiveHero';
 import { estPersonnalisable, trouverProduit, produitsDeCategorie } from '../lib/produit';
 import { PanierSidebarDesktop } from '../components/panier/PanierSidebarDesktop';
 import { PanierMobileSheet } from '../components/panier/PanierMobileSheet';
@@ -14,6 +15,7 @@ export const Home = () => {
   const { ajouterAuPanier, modifierItemPanier, totalArticles } = useContext(ContextePanier);
   const { categories, produits, chargement } = useCarte();
   const estDesktop = useIsDesktop();
+  const { refHero, descendre } = useDiapositiveHero(estDesktop && !chargement);
 
   const [categorieActive, setCategorieActive] = useState(null);
   const [produitEnCours, setProduitEnCours] = useState(null);
@@ -61,7 +63,7 @@ export const Home = () => {
 
   return (
     <div>
-      <HeroBanner />
+      <HeroBanner ref={refHero} onCommander={descendre} />
 
       <div className="mx-auto flex max-w-7xl items-start gap-8 px-4 pb-10 sm:px-6 lg:px-8">
         <div className={`min-w-0 flex-1 ${espaceBarrePanier}`}>
