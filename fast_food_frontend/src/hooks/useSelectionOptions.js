@@ -9,7 +9,8 @@ import {
 
 // Gere les choix d'options d'un produit : selection, validation et surcout.
 export const useSelectionOptions = (groupes, itemPanier) => {
-  const [selections, setSelections] = useState(() => selectionsInitiales(groupes, itemPanier));
+  const [initiales] = useState(() => selectionsInitiales(groupes, itemPanier));
+  const [selections, setSelections] = useState(initiales);
   const [erreurs, setErreurs] = useState({});
 
   const optionIds = Object.values(selections).flat();
@@ -36,7 +37,10 @@ export const useSelectionOptions = (groupes, itemPanier) => {
     }
   };
 
-  // Renvoie true si toutes les selections obligatoires sont respectees.
+  // Vrai si l'utilisateur a change quelque chose : fermer demande alors confirmation
+  const aDesModifications = JSON.stringify(selections) !== JSON.stringify(initiales);
+
+  // Renvoie le premier groupe invalide (pour y amener l'utilisateur), ou null si tout est bon.
   const verifier = () => {
     const invalides = groupesNonValides(groupes, optionIds);
 
@@ -44,12 +48,14 @@ export const useSelectionOptions = (groupes, itemPanier) => {
       Object.fromEntries(
         invalides.map((groupe) => [
           groupe.id,
-          `Veuillez sélectionner au moins ${groupe.minSelection} option(s).`,
+          estRadio(groupe)
+            ? 'Choisissez une option.'
+            : `Choisissez au moins ${groupe.minSelection} option${groupe.minSelection > 1 ? 's' : ''}.`,
         ])
       )
     );
 
-    return invalides.length === 0;
+    return invalides[0] ?? null;
   };
 
   return {
@@ -57,6 +63,7 @@ export const useSelectionOptions = (groupes, itemPanier) => {
     erreurs,
     choisir,
     verifier,
+    aDesModifications,
     optionIds,
     surcout: calculerSurcouts(groupes, selections),
   };

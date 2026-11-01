@@ -1,3 +1,5 @@
+import { formaterSupplement } from './prix';
+
 // Valeurs du champ typeRetrait attendues par le backend.
 export const TYPE_RETRAIT = {
   LIVRAISON: 'livraison',
@@ -79,7 +81,7 @@ const surcoutOption = (option) => Number(option.surcoutHistorise);
 // Libelle d'une option avec son surcout s'il y en a un : "Extra Cheddar (+1.00 €)".
 export const libelleOption = (option) => {
   const surcout = surcoutOption(option);
-  return surcout > 0 ? `${option.nomOption} (+${surcout.toFixed(2)} €)` : option.nomOption;
+  return surcout > 0 ? `${option.nomOption} (${formaterSupplement(surcout)})` : option.nomOption;
 };
 
 export const libellesOptions = (options) => options.map(libelleOption).join(', ');
@@ -145,3 +147,29 @@ export const compterCommandes = (commandes) => ({
     STATUTS_FILTRABLES.map((statut) => [statut, commandes.filter((c) => c.status === statut).length])
   ),
 });
+// --- Suivi d'une commande en cours (compte client) ---
+
+// Etapes affichees pour une commande en cours ; la derniere depend du mode de retrait.
+export const etapesSuivi = (commande) => [
+  'Reçue',
+  'En préparation',
+  estClickAndCollect(commande) ? 'Prête à retirer' : 'Prête à livrer',
+];
+
+// Index de l'etape atteinte (0 a 2), ou -1 si la commande n'est plus suivie (terminee).
+export const etapeSuivi = (commande) => {
+  const index = [
+    STATUT_COMMANDE.EN_ATTENTE,
+    STATUT_COMMANDE.EN_PREPARATION,
+    STATUT_COMMANDE.PRETE,
+  ].indexOf(commande.status);
+  return estEnCours(commande) ? index : -1;
+};
+
+// Commandes triees de la plus recente a la plus ancienne, avec celle a mettre en avant en tete.
+export const ordonnerCommandesClient = (commandes, idEnAvant) =>
+  [...commandes].sort((a, b) => {
+    if (a.id === idEnAvant) return -1;
+    if (b.id === idEnAvant) return 1;
+    return new Date(b.dateCreation) - new Date(a.dateCreation);
+  });

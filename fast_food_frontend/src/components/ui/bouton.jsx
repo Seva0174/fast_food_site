@@ -27,7 +27,8 @@ const tailles = {
   sm: 'px-3 py-2 text-sm',
   md: 'px-4 py-2.5 text-base',
   lg: 'px-4 py-3.5 text-base',
-  icone: 'rounded-full p-1',
+  // 44px au doigt, 36px a la souris (lg)
+  icone: 'size-11 shrink-0 rounded-full lg:size-9',
   iconeCarree: 'p-1.5',
   pastille: 'rounded-full px-3 py-1 text-xs',
   nu: '',

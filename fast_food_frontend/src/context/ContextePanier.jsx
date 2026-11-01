@@ -1,4 +1,4 @@
-import { createContext, useState, useEffect, useContext, useRef } from 'react';
+import { createContext, useState, useEffect, useContext, useRef, useCallback } from 'react';
 import { extraireMessageErreur } from '../lib/erreurs';
 import { useMessage } from '../hooks/useMessage';
 import {
@@ -22,9 +22,15 @@ export const ContextePanier = createContext();
 
 const CLE_PANIER_INVITE = 'panier_invite';
 
+// Un panier sauvegarde illisible (modifie a la main, ancienne version) est ignore plutot que de bloquer le site.
 const chargerPanierInviteLocal = () => {
-  const sauvegarde = localStorage.getItem(CLE_PANIER_INVITE);
-  return sauvegarde ? JSON.parse(sauvegarde) : [];
+  try {
+    const articles = JSON.parse(localStorage.getItem(CLE_PANIER_INVITE) ?? '[]');
+    return Array.isArray(articles) ? articles : [];
+  } catch {
+    localStorage.removeItem(CLE_PANIER_INVITE);
+    return [];
+  }
 };
 
 const sauvegarderPanierInviteLocal = (articles) =>
@@ -33,8 +39,27 @@ const sauvegarderPanierInviteLocal = (articles) =>
 export const FournisseurPanier = ({ children }) => {
   const { isAuthenticated } = useContext(AuthContext);
   const [panier, setPanier] = useState(() => (isAuthenticated ? [] : chargerPanierInviteLocal()));
-  const [chargement, setChargement] = useState(false);
+  // Connecte au chargement de la page : le panier du compte arrive du backend,
+  // il est donc "en chargement" des le premier rendu (evite d'afficher un panier vide).
+  const [chargement, setChargement] = useState(isAuthenticated);
   const { message, afficher } = useMessage();
+
+  // Incremente a chaque ajout : la navbar et la barre mobile s'en servent pour rejouer une animation.
+  const [nombreAjouts, setNombreAjouts] = useState(0);
+
+  // Demande d'ouverture du panier (lien "Panier" de la navbar), lue par la page d'accueil.
+  const [ouvertureDemandee, setOuvertureDemandee] = useState(false);
+  const demanderOuverturePanier = useCallback(() => setOuvertureDemandee(true), []);
+  const consommerOuverturePanier = useCallback(() => setOuvertureDemandee(false), []);
+
+  const signalerErreur = (error, messageParDefaut) => {
+    afficher(extraireMessageErreur(error) ?? messageParDefaut, 'erreur');
+  };
+
+  const confirmerAjout = (produit) => {
+    setNombreAjouts((n) => n + 1);
+    afficher(`${produit.nom} ajouté au panier`, 'succes');
+  };
 
   const dejaSynchronise = useRef(false);
   const etaitAuthentifie = useRef(isAuthenticated);
@@ -109,22 +134,26 @@ export const FournisseurPanier = ({ children }) => {
 
   // produit : produit de la carte (voir ProduitMenuResponse)
   // choixFormule : produits choisis dans un menu (voir FormuleCompositionModal)
+  // Renvoie true si l'article a bien ete ajoute.
   const ajouterAuPanier = async (produit, optionItemIds = [], choixFormule = []) => {
-  if (isAuthenticated) {
-    try {
-      const res = await ajouterProduitApi(produit.id, 1, optionItemIds, choixFormule);
-      await mettreAJourPanier(res);
-    } catch (error) {
-      console.error("Erreur lors de l'ajout au panier :", error);
-      const messageErreur = extraireMessageErreur(error);
-      if (messageErreur) afficher(messageErreur, 'erreur');
+    if (isAuthenticated) {
+      try {
+        const res = await ajouterProduitApi(produit.id, 1, optionItemIds, choixFormule);
+        await mettreAJourPanier(res);
+      } catch (error) {
+        console.error("Erreur lors de l'ajout au panier :", error);
+        signalerErreur(error, `${produit.nom} n’a pas pu être ajouté. Réessayez.`);
+        return false;
+      }
+      confirmerAjout(produit);
+      return true;
     }
-    return;
-  }
 
-  const article = creerArticleInvite(Date.now(), produit, optionItemIds, choixFormule);
-  mettreAJourInvite((prev) => regrouperArticlesIdentiques([...prev, article]));
-};
+    const article = creerArticleInvite(Date.now(), produit, optionItemIds, choixFormule);
+    mettreAJourInvite((prev) => regrouperArticlesIdentiques([...prev, article]));
+    confirmerAjout(produit);
+    return true;
+  };
 
   const incrementerQuantite = async (itemId) => {
     const item = panier.find((i) => i.id === itemId);
@@ -136,6 +165,7 @@ export const FournisseurPanier = ({ children }) => {
         await mettreAJourPanier(data);
       } catch (error) {
         console.error("Erreur lors de l'incrementation du produit :", error);
+        signalerErreur(error, 'La quantité n’a pas pu être modifiée.');
       }
       return;
     }
@@ -159,8 +189,7 @@ export const FournisseurPanier = ({ children }) => {
         await mettreAJourPanier(data);
       } catch (error) {
         console.error('Erreur lors de la modification du produit :', error);
-        const message = extraireMessageErreur(error);
-        if (message) alert(message);
+        signalerErreur(error, 'La modification n’a pas pu être enregistrée.');
       }
       return;
     }
@@ -190,6 +219,7 @@ export const FournisseurPanier = ({ children }) => {
         await mettreAJourPanier(data);
       } catch (error) {
         console.error('Erreur lors de la mise a jour du panier :', error);
+        signalerErreur(error, 'La quantité n’a pas pu être modifiée.');
       }
       return;
     }
@@ -208,6 +238,7 @@ export const FournisseurPanier = ({ children }) => {
         await mettreAJourPanier(data);
       } catch (error) {
         console.error('Erreur lors de la suppression du produit :', error);
+        signalerErreur(error, 'Le produit n’a pas pu être retiré.');
       }
       return;
     }
@@ -222,6 +253,7 @@ export const FournisseurPanier = ({ children }) => {
         setPanier([]);
       } catch (error) {
         console.error('Erreur lors du vidage du panier :', error);
+        signalerErreur(error, 'Le panier n’a pas pu être vidé.');
       }
       return;
     }
@@ -247,6 +279,10 @@ export const FournisseurPanier = ({ children }) => {
         viderPanier,
         totalArticles,
         totalPrix,
+        nombreAjouts,
+        ouvertureDemandee,
+        demanderOuverturePanier,
+        consommerOuverturePanier,
       }}
     >
       {children}

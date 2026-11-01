@@ -1,35 +1,54 @@
 import { Truck, Store } from 'lucide-react';
 import { Bouton } from '../ui/bouton';
+import { BandeauMessage } from '../ui/bandeau';
 import { TYPE_RETRAIT } from '../../lib/commande';
 
-// Tuile de choix du mode de retrait (bouton avec icone, different d'un Bouton classique)
-const TuileRetrait = ({ actif, icone: Icone, libelle, onClick }) => (
+// Tuile de choix du mode de retrait : un bouton radio de grande taille
+const TuileRetrait = ({ actif, icone: Icone, libelle, detail, onClick }) => (
   <button
     type="button"
+    role="radio"
+    aria-checked={actif}
     onClick={onClick}
-    className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 transition ${
+    className={`flex flex-col items-start gap-1 rounded-xl border p-4 text-left transition-colors ${
       actif
-        ? 'border-red-600 bg-red-50 text-red-700 font-bold'
-        : 'border-gray-200 hover:border-gray-300 text-gray-600'
+        ? 'border-primary bg-primary/10'
+        : 'border-border bg-secondary/40 hover:border-muted-foreground/60'
     }`}
   >
-    <Icone className="w-6 h-6 mb-1" />
-    <span className="text-sm">{libelle}</span>
+    <Icone className={`h-6 w-6 ${actif ? 'text-primary' : 'text-muted-foreground'}`} aria-hidden="true" />
+    <span className="mt-1 font-semibold">{libelle}</span>
+    <span className="text-xs text-muted-foreground">{detail}</span>
   </button>
 );
 
-const ChampAdresse = ({ libelle, name, value, placeholder, onChange }) => (
+// Champ d'adresse. L'erreur s'affiche sous le champ (pas de bulle native du navigateur).
+const ChampAdresse = ({ libelle, name, value, placeholder, autoComplete, inputMode, erreur, onChange }) => (
   <div>
-    <label className="block text-sm font-medium text-gray-700 mb-1">{libelle}</label>
+    <label htmlFor={name} className="mb-1.5 block text-sm font-medium">
+      {libelle}
+    </label>
     <input
+      id={name}
       type="text"
       name={name}
-      required
+      aria-required="true"
+      aria-invalid={erreur ? 'true' : undefined}
+      aria-describedby={erreur ? `${name}-erreur` : undefined}
       value={value}
+      autoComplete={autoComplete}
+      inputMode={inputMode}
       onChange={(e) => onChange(name, e.target.value)}
       placeholder={placeholder}
-      className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500 border-gray-300"
+      className={`w-full rounded-lg border bg-background/60 px-3 py-3 text-base text-foreground transition-colors placeholder:text-muted-foreground sm:text-sm ${
+        erreur ? 'border-destructive' : 'border-input focus-visible:border-primary'
+      }`}
     />
+    {erreur && (
+      <p id={`${name}-erreur`} className="mt-1.5 text-xs font-semibold text-destructive">
+        {erreur}
+      </p>
+    )}
   </div>
 );
 
@@ -42,75 +61,81 @@ export const FormulaireRetrait = ({
   chargement,
   panierVide,
   erreur,
+  erreursAdresse = {},
 }) => (
-  <div className="bg-white p-6 shadow-md rounded-lg border border-gray-100">
-    <h2 className="text-xl font-bold mb-4 text-gray-800 border-b pb-2">Mode de retrait</h2>
+  <section className="rounded-2xl border border-border bg-card p-4 sm:p-6">
+    <h2 className="titre-marque text-3xl">Mode de retrait</h2>
 
-    {erreur && (
-      <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded text-sm">
-        {erreur}
-      </div>
-    )}
-
-    <form onSubmit={onSubmit} className="space-y-5">
-      <div className="grid grid-cols-2 gap-3">
+    {/* noValidate : l'adresse est verifiee par la page (lib/adresse), messages sous les champs */}
+    <form id="form-commande" noValidate onSubmit={onSubmit} className="mt-4 space-y-5">
+      <div role="radiogroup" aria-label="Mode de retrait" className="grid grid-cols-2 gap-3">
+        <TuileRetrait
+          actif={typeRetrait === TYPE_RETRAIT.CLICK_AND_COLLECT}
+          icone={Store}
+          libelle="Click & collect"
+          detail="Au comptoir"
+          onClick={() => onChangerType(TYPE_RETRAIT.CLICK_AND_COLLECT)}
+        />
         <TuileRetrait
           actif={typeRetrait === TYPE_RETRAIT.LIVRAISON}
           icone={Truck}
           libelle="Livraison"
+          detail="À votre adresse"
           onClick={() => onChangerType(TYPE_RETRAIT.LIVRAISON)}
-        />
-        <TuileRetrait
-          actif={typeRetrait === TYPE_RETRAIT.CLICK_AND_COLLECT}
-          icone={Store}
-          libelle="Click & Collect"
-          onClick={() => onChangerType(TYPE_RETRAIT.CLICK_AND_COLLECT)}
         />
       </div>
 
       {typeRetrait === TYPE_RETRAIT.LIVRAISON ? (
-        <div className="space-y-4 pt-2">
+        <div className="space-y-4">
           <ChampAdresse
-            libelle="Rue / Adresse"
+            libelle="Adresse"
             name="cpRue"
+            autoComplete="street-address"
             value={adresse.cpRue}
-            placeholder="ex: 12 Rue de la Paix"
+            placeholder="N° et nom de rue"
+            erreur={erreursAdresse.cpRue}
             onChange={onChangerChamp}
           />
 
           <div className="grid grid-cols-2 gap-4">
             <ChampAdresse
-              libelle="Code Postal"
+              libelle="Code postal"
               name="cpCodePostal"
+              autoComplete="postal-code"
               value={adresse.cpCodePostal}
-              placeholder="75000"
+              placeholder="5 chiffres"
+              inputMode="numeric"
+              erreur={erreursAdresse.cpCodePostal}
               onChange={onChangerChamp}
             />
             <ChampAdresse
               libelle="Ville"
               name="cpVille"
+              autoComplete="address-level2"
               value={adresse.cpVille}
-              placeholder="Paris"
+              placeholder="Ville"
+              erreur={erreursAdresse.cpVille}
               onChange={onChangerChamp}
             />
           </div>
         </div>
       ) : (
-        <div className="p-4 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-600 text-center">
-          Retrait en restaurant : Vous viendrez récupérer votre commande directement au comptoir une
-          fois qu'elle sera marquée comme "Prête".
-        </div>
+        <p className="rounded-lg border border-border bg-secondary/40 p-4 text-sm text-muted-foreground">
+          Vous récupérez votre commande au comptoir dès qu’elle est prête. Un e-mail vous prévient.
+        </p>
       )}
 
-      <Bouton
-        type="submit"
-        variante="succes"
-        taille="lg"
-        className="w-full mt-6"
-        disabled={chargement || panierVide}
-      >
-        {chargement ? 'Traitement en cours...' : 'Valider et commander'}
-      </Bouton>
+      <BandeauMessage message={erreur ? { type: 'erreur', texte: erreur } : null} />
+
+      {/* Sur mobile, le bouton est dans la barre fixe du bas (voir BarreValidationMobile) */}
+      <div className="hidden md:block">
+        <Bouton type="submit" taille="lg" className="w-full" disabled={chargement || panierVide}>
+          {chargement ? 'Envoi de la commande…' : 'Valider et commander'}
+        </Bouton>
+      </div>
+      <p className="text-center text-xs text-muted-foreground">
+        Aucun paiement en ligne n’est demandé.
+      </p>
     </form>
-  </div>
+  </section>
 );

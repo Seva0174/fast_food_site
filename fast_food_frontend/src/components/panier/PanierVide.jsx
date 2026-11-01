@@ -2,7 +2,7 @@ import { ShoppingBag, X } from 'lucide-react';
 import { Bouton } from '../ui/bouton';
 
 export const PanierVide = ({ onClose }) => (
-  <div className="relative flex h-full flex-col items-center justify-center p-6 text-center text-muted-foreground">
+  <div className="relative flex h-full flex-col items-center justify-center px-6 py-8 text-center text-muted-foreground">
     {onClose && (
       <Bouton
         variante="fantome"
@@ -15,8 +15,11 @@ export const PanierVide = ({ onClose }) => (
       </Bouton>
     )}
 
-    <ShoppingBag className="mb-4 h-16 w-16 text-muted-foreground/40" />
-    <p className="text-lg font-medium text-foreground">Votre panier est vide</p>
-    <p className="mt-1 text-sm">Ajoutez un produit de la carte pour commencer.</p>
+    <ShoppingBag className="mb-3 h-10 w-10 text-muted-foreground/50" aria-hidden="true" />
+    <h2 className="titre-marque text-2xl text-foreground">Votre panier est vide</h2>
+    <p className="mt-2 text-pretty text-sm">Ajoutez un produit de la carte pour commencer.</p>
+    <p className="mt-3 text-pretty text-xs">
+      Retrait au comptoir ou livraison, sans paiement en ligne.
+    </p>
   </div>
 );

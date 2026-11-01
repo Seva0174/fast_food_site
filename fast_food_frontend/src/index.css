@@ -73,7 +73,7 @@
     --accent-foreground: #F7F0E6;
     --destructive: #F87171;
     --border: rgb(247 240 230 / 12%);
-    --input: rgb(247 240 230 / 16%);
+    --input: rgb(247 240 230 / 40%);  /* bord des champs : >= 3:1 sur le fond (WCAG 1.4.11) */
     --ring: #FF783F;
     --chart-1: #FF783F;
     --chart-2: #F7F0E6;
@@ -117,7 +117,7 @@
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border;
   }
   body {
     @apply bg-background text-foreground;
@@ -125,9 +125,12 @@
   html {
     @apply font-sans;
   }
-  :focus-visible {
-    outline: 2px solid var(--ring);
-    outline-offset: 2px;
+  ::selection {
+    background-color: color-mix(in srgb, var(--primary) 35%, transparent);
+    color: var(--foreground);
+  }
+  input, textarea {
+    caret-color: var(--primary);
   }
 }
 
@@ -142,6 +145,18 @@
   }
 }
 
+/* Anneau de focus clavier : plein, decale du bord pour rester visible sur les boutons orange.
+   Hors @layer pour passer devant les styles de focus des utilitaires et de shadcn. */
+:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+/* Sur les choix (options, emplacements de menu), l'etat selectionne est deja orange :
+   le focus clavier passe en creme pour ne pas etre confondu avec une selection. */
+.choix-option:focus-visible {
+  outline-color: var(--foreground);
+}
+
 .scrollbar-thin {
   scrollbar-width: thin;
   scrollbar-color: var(--accent) transparent;
@@ -152,6 +167,26 @@
 }
 .scrollbar-none::-webkit-scrollbar {
   display: none;
+}
+
+/* Pulsation courte du compteur du panier apres un ajout */
+@keyframes pulsation-panier {
+  0% { transform: scale(1); }
+  35% { transform: scale(1.18); }
+  100% { transform: scale(1); }
+}
+.pulsation-panier {
+  animation: pulsation-panier 420ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Cartes squelettes pendant le chargement de la carte */
+@keyframes lueur-squelette {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}
+.squelette {
+  background-color: var(--secondary);
+  animation: lueur-squelette 1.4s ease-in-out infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {

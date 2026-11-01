@@ -1,16 +1,20 @@
+import { useContext } from 'react';
+import { ContextePanier } from '../../context/ContextePanier';
 import { PanierContent } from './PanierContent';
-import { useApparition } from '../../hooks/useApparition';
 
-// Le panier glisse depuis la droite quand il entre dans la fenetre.
+// Panier lateral (PC). Vide, il se reduit a un encart compact ;
+// il prend la hauteur de l'ecran des le premier article.
 export const PanierSidebarDesktop = ({ onEditItem }) => {
-  const [ref, visible] = useApparition();
+  const { panier } = useContext(ContextePanier);
+  const hauteur = panier.length > 0 ? 'h-[calc(100vh-6rem)]' : 'h-auto';
 
   return (
+    // id "panier" + tabIndex : cible du lien d'evitement et du lien "Panier" de la navbar
     <aside
-      ref={ref}
-      className={`sticky top-20 mt-3 flex h-[calc(100vh-6rem)] w-80 shrink-0 flex-col overflow-hidden rounded-2xl border border-border bg-card transition duration-700 ease-out ${
-        visible ? 'translate-x-0 opacity-100' : 'translate-x-8 opacity-0'
-      }`}
+      id="panier"
+      tabIndex={-1}
+      aria-label="Mon panier"
+      className={`sticky top-20 mt-3 flex ${hauteur} w-80 shrink-0 flex-col overflow-hidden rounded-2xl border border-border bg-card`}
     >
       <PanierContent onEditItem={onEditItem} />
     </aside>

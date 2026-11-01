@@ -21,6 +21,18 @@
     - Info perso + adresse
     - commande en cours et passé avec leur détaille
 
+## Comptes de démonstration
+
+Ces comptes sont créés par `sql/insert.sql`. Ils sont vérifiés et utilisent tous le mot de passe `password`.
+
+| Rôle | Email | Ce qu'on peut tester |
+|---|---|---|
+| Client | `julie.martin@mail.fr` | Commande, compte client (adresse, commandes en cours et passées) |
+| Employé | `karim.said@tacoburger.fr` | Gestion des commandes (`/commandes`) |
+| Admin | `admin@tacoburger.fr` | Tout l'espace admin (`/admin`) et la gestion des commandes |
+
+Ces identifiants ne servent qu'à la démonstration locale : ne pas les réutiliser sur un déploiement public.
+
 ## Architecture du site avec fonctionnalité:
 
 ### Barre de navigation :

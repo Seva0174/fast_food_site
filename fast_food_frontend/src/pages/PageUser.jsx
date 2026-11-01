@@ -1,206 +1,178 @@
-import { useState, useEffect, useContext } from 'react';
-import { User, MapPin, Package, Clock, History, Eye, CheckCircle2, Save } from 'lucide-react';
+import { useContext, useEffect, useRef, useState } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
+import { History, Package, RotateCcw } from 'lucide-react';
 import { AuthContext } from '../context/AuthProvider';
-import { getMesCommandesApi } from '../api/commandeApi';
+import { useMesCommandes } from '../hooks/useMesCommandes';
 import { CommandeDetailModal } from '../components/commande/CommandeDetailModal';
-import { BadgeStatutCommande } from '../components/commande/BadgeStatutCommande';
+import { CarteCommandeClient } from '../components/commande/CarteCommandeClient';
+import { AdresseParDefaut } from '../components/compte/AdresseParDefaut';
 import { Bouton } from '../components/ui/bouton';
-import { enregistrerAdresse, lireAdresseEnregistree } from '../lib/adresse';
-import { estEnCours, estTerminee } from '../lib/commande';
+import { estEnCours, estTerminee, ordonnerCommandesClient } from '../lib/commande';
 
-const ADRESSE_COMPTE_VIDE = { rue: '', ville: '', codePostal: '' };
-
-const CHAMPS_ADRESSE = [
-  { nom: 'rue', libelle: 'Rue', placeholder: '12 Rue de la Paix', pleine: true },
-  { nom: 'codePostal', libelle: 'Code postal', placeholder: '75000' },
-  { nom: 'ville', libelle: 'Ville', placeholder: 'Paris' },
+const ONGLETS = [
+  { id: 'encours', libelle: 'En cours', icone: Package, vide: 'Aucune commande en cours.' },
+  { id: 'historique', libelle: 'Historique', icone: History, vide: 'Aucune commande passée pour le moment.' },
 ];
 
-const VIDES = {
-  encours: { icone: Package, message: 'Aucune commande en cours pour le moment.' },
-  historique: { icone: History, message: 'Aucune commande passée enregistrée.' },
-};
+const CommandesEnChargement = () => (
+  <div role="status" className="space-y-4">
+    <span className="sr-only">Chargement de vos commandes…</span>
+    {[0, 1].map((i) => (
+      <div key={i} className="squelette h-36 rounded-2xl" aria-hidden="true" />
+    ))}
+  </div>
+);
 
-const CarteCommandeClient = ({ commande, onDetails }) => (
-  <div className="flex flex-col items-start justify-between gap-4 rounded-2xl border border-gray-100 bg-white p-5 shadow-sm sm:flex-row sm:items-center">
-    <div>
-      <div className="flex flex-wrap items-center gap-3">
-        <span className="font-extrabold text-gray-900">Commande #{commande.id}</span>
-        <BadgeStatutCommande statut={commande.status} />
-      </div>
-      <p className="mt-1 text-xs text-gray-500">
-        Total : <span className="font-bold text-gray-800">{Number(commande.total).toFixed(2)} €</span>
-      </p>
-    </div>
-
-    <Bouton variante="neutre" taille="xs" onClick={onDetails}>
-      <Eye className="h-4 w-4" /> Détails
+const CommandesEnErreur = ({ message, onReessayer }) => (
+  <div role="alert" className="rounded-2xl border border-destructive/40 bg-destructive/10 p-6 text-center">
+    <p className="font-semibold">{message}</p>
+    <p className="mt-1 text-sm text-muted-foreground">
+      Le serveur ne répond pas. Vos commandes ne sont pas perdues.
+    </p>
+    <Bouton variante="secondaire" className="mt-4" onClick={onReessayer}>
+      <RotateCcw className="h-4 w-4" aria-hidden="true" />
+      Réessayer
     </Bouton>
   </div>
 );
 
-const ListeCommandes = ({ commandes, chargement, onDetails, cle }) => {
-  if (chargement) {
-    return <p className="py-8 text-center text-gray-500">Chargement des commandes...</p>;
-  }
-
-  if (commandes.length === 0) {
-    const { icone: Icone, message } = VIDES[cle];
-    return (
-      <div className="space-y-3 rounded-2xl border border-gray-100 bg-white p-8 text-center">
-        <Icone className="mx-auto h-12 w-12 text-gray-300" />
-        <p className="font-medium text-gray-600">{message}</p>
-      </div>
-    );
-  }
-
-  return commandes.map((commande) => (
-    <CarteCommandeClient key={commande.id} commande={commande} onDetails={() => onDetails(commande)} />
-  ));
-};
+const CommandesVides = ({ message }) => (
+  <div className="rounded-2xl border border-border bg-card p-8 text-center">
+    <p className="text-muted-foreground">{message}</p>
+    <Link
+      to="/"
+      className="mt-4 inline-flex min-h-11 items-center justify-center rounded-lg bg-primary px-5 font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+    >
+      Voir la carte
+    </Link>
+  </div>
+);
 
 export const PageUser = () => {
   const { user } = useContext(AuthContext);
-  const idUser = user?.id;
-
-  const [adresse, setAdresse] = useState(ADRESSE_COMPTE_VIDE);
-  const [adresseSauvegardee, setAdresseSauvegardee] = useState(false);
-  const [commandes, setCommandes] = useState([]);
-  const [chargement, setChargement] = useState(true);
+  const { commandes, chargement, erreur, charger } = useMesCommandes();
+  const [parametres] = useSearchParams();
   const [commandeOuverte, setCommandeOuverte] = useState(null);
-  const [onglet, setOnglet] = useState('encours');
+  const [ongletChoisi, setOngletChoisi] = useState(null);
 
-  // Adresse enregistree de l'utilisateur
+  // Commande a mettre en avant : lien "Suivre ma commande" du ticket (/user?commande=23)
+  const idEnAvant = Number(parametres.get('commande')) || null;
+  const commandeEnAvant = commandes.find((c) => c.id === idEnAvant);
+  const refEnAvant = useRef(null);
+
+  const commandesEnCours = ordonnerCommandesClient(commandes.filter(estEnCours), idEnAvant);
+  const commandesPassees = ordonnerCommandesClient(commandes.filter(estTerminee), idEnAvant);
+
+  // Onglet par defaut : celui de la commande mise en avant, sinon "En cours"
+  const ongletParDefaut = commandeEnAvant && estTerminee(commandeEnAvant) ? 'historique' : 'encours';
+  const onglet = ongletChoisi ?? ongletParDefaut;
+  const listeAffichee = onglet === 'encours' ? commandesEnCours : commandesPassees;
+  const compteurs = { encours: commandesEnCours.length, historique: commandesPassees.length };
+
+  // La commande mise en avant est amenee a l'ecran une fois chargee
   useEffect(() => {
-    if (!idUser) return;
-    const enregistree = lireAdresseEnregistree(idUser);
-    if (enregistree) setAdresse(enregistree);
-  }, [idUser]);
+    if (!chargement && commandeEnAvant) {
+      refEnAvant.current?.scrollIntoView({ block: 'start' });
+    }
+  }, [chargement, commandeEnAvant]);
 
-  // Commandes de l'utilisateur
-  useEffect(() => {
-    let annule = false;
-
-    const charger = async () => {
-      try {
-        const data = await getMesCommandesApi();
-        if (!annule) setCommandes(data);
-      } catch (erreur) {
-        console.error('Erreur lors de la récupération des commandes :', erreur);
-      } finally {
-        if (!annule) setChargement(false);
-      }
-    };
-
-    charger();
-    return () => {
-      annule = true;
-    };
-  }, [idUser]);
-
-  const modifierChamp = (nom, valeur) => setAdresse((prev) => ({ ...prev, [nom]: valeur }));
-
-  const sauvegarderAdresse = (e) => {
-    e.preventDefault();
-    enregistrerAdresse(idUser, adresse);
-    setAdresseSauvegardee(true);
-    setTimeout(() => setAdresseSauvegardee(false), 3000);
+  // Onglets : fleches gauche/droite pour passer de l'un a l'autre
+  const surToucheOnglets = (e) => {
+    if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+    const suivant = onglet === 'encours' ? 'historique' : 'encours';
+    setOngletChoisi(suivant);
+    document.getElementById(`onglet-${suivant}`)?.focus();
   };
 
-  const commandesEnCours = commandes.filter(estEnCours);
-  const commandesPassees = commandes.filter(estTerminee);
-  const listeAffichee = onglet === 'encours' ? commandesEnCours : commandesPassees;
+  const ongletCourant = ONGLETS.find((o) => o.id === onglet);
 
   return (
-    <div className="mx-auto max-w-5xl space-y-8 pb-12">
-      <div className="border-b border-gray-200 pb-4">
-        <h1 className="flex items-center gap-3 text-3xl font-extrabold text-gray-900">
-          <User className="h-8 w-8 text-red-600" />
-          <span>Espace Mon Compte</span>
-        </h1>
-      </div>
+    <div className="mx-auto max-w-5xl">
+      <h1 className="titre-marque text-5xl sm:text-6xl">Mon compte</h1>
 
-      <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-3">
-        <div className="space-y-6">
-          <div className="space-y-3 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
-            <h2 className="border-b border-gray-100 pb-2 text-lg font-bold text-gray-800">Mes Informations</h2>
-            <div>
-              <p className="text-xs font-semibold uppercase text-gray-400">Nom</p>
-              <p className="font-semibold text-gray-800">{user?.nom || 'Non renseigné'}</p>
-            </div>
-            <div>
-              <p className="text-xs font-semibold uppercase text-gray-400">Email</p>
-              <p className="font-medium text-gray-700">{user?.email}</p>
-            </div>
-          </div>
+      <div className="mt-6 grid grid-cols-1 items-start gap-6 lg:grid-cols-3 lg:gap-8">
+        {/* Les commandes passent en premier : c'est le contenu vivant de la page */}
+        <section aria-labelledby="titre-commandes" className="lg:col-span-2">
+          <h2 id="titre-commandes" className="titre-marque text-3xl">
+            Mes commandes
+          </h2>
 
-          <form
-            onSubmit={sauvegarderAdresse}
-            className="space-y-4 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm"
+          <div
+            role="tablist"
+            aria-label="Mes commandes"
+            onKeyDown={surToucheOnglets}
+            className="mt-3 flex gap-1 border-b border-border"
           >
-            <div className="flex items-center gap-2 border-b border-gray-100 pb-2">
-              <MapPin className="h-5 w-5 text-red-600" />
-              <h2 className="text-lg font-bold text-gray-800">Adresse par défaut</h2>
-            </div>
+            {ONGLETS.map(({ id, libelle, icone: Icone }) => {
+              const actif = onglet === id;
+              return (
+                <button
+                  key={id}
+                  id={`onglet-${id}`}
+                  type="button"
+                  role="tab"
+                  aria-selected={actif}
+                  aria-controls="panneau-commandes"
+                  tabIndex={actif ? 0 : -1}
+                  onClick={() => setOngletChoisi(id)}
+                  className={`-mb-px inline-flex min-h-11 items-center gap-2 border-b-2 px-3 text-sm font-semibold transition-colors ${
+                    actif
+                      ? 'border-foreground text-foreground'
+                      : 'border-transparent text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  <Icone className="h-4 w-4" aria-hidden="true" />
+                  {libelle}
+                  {!chargement && !erreur && (
+                    <span className="tabular-nums text-muted-foreground">({compteurs[id]})</span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
 
-            <div className="grid grid-cols-2 gap-2">
-              {CHAMPS_ADRESSE.map((champ) => (
-                <div key={champ.nom} className={champ.pleine ? 'col-span-2' : ''}>
-                  <label className="mb-1 block text-xs font-semibold text-gray-600">{champ.libelle}</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder={champ.placeholder}
-                    value={adresse[champ.nom]}
-                    onChange={(e) => modifierChamp(champ.nom, e.target.value)}
-                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
-                  />
-                </div>
-              ))}
-            </div>
-
-            <Bouton type="submit" variante="sombre" className="w-full">
-              <Save className="h-4 w-4" />
-              <span>Enregistrer l'adresse</span>
-            </Bouton>
-
-            {adresseSauvegardee && (
-              <p className="flex items-center justify-center gap-1 pt-1 text-xs font-medium text-emerald-600">
-                <CheckCircle2 className="h-4 w-4" /> Enregistrée avec succès !
-              </p>
+          <div
+            id="panneau-commandes"
+            role="tabpanel"
+            aria-labelledby={`onglet-${onglet}`}
+            className="mt-4 space-y-4"
+          >
+            {chargement && <CommandesEnChargement />}
+            {!chargement && erreur && <CommandesEnErreur message={erreur} onReessayer={charger} />}
+            {!chargement && !erreur && listeAffichee.length === 0 && (
+              <CommandesVides message={ongletCourant.vide} />
             )}
-          </form>
-        </div>
-
-        <div className="space-y-6 lg:col-span-2">
-          <div className="flex gap-2 border-b border-gray-200 pb-2">
-            <Bouton
-              variante={onglet === 'encours' ? 'principal' : 'secondaire'}
-              taille="sm"
-              onClick={() => setOnglet('encours')}
-            >
-              <Clock className="h-4 w-4" />
-              Commandes en cours ({commandesEnCours.length})
-            </Bouton>
-            <Bouton
-              variante={onglet === 'historique' ? 'principal' : 'secondaire'}
-              taille="sm"
-              onClick={() => setOnglet('historique')}
-            >
-              <History className="h-4 w-4" />
-              Historique ({commandesPassees.length})
-            </Bouton>
+            {!chargement &&
+              !erreur &&
+              listeAffichee.map((commande) => (
+                <CarteCommandeClient
+                  key={commande.id}
+                  ref={commande.id === idEnAvant ? refEnAvant : undefined}
+                  commande={commande}
+                  enAvant={commande.id === idEnAvant}
+                  onDetails={() => setCommandeOuverte(commande)}
+                />
+              ))}
           </div>
+        </section>
 
-          <div className="space-y-4">
-            <ListeCommandes
-              cle={onglet}
-              commandes={listeAffichee}
-              chargement={chargement}
-              onDetails={setCommandeOuverte}
-            />
-          </div>
-        </div>
+        <aside className="space-y-6">
+          <section className="rounded-2xl border border-border bg-card p-5">
+            <h2 className="titre-marque text-2xl">Mes informations</h2>
+            <dl className="mt-3 space-y-3 text-sm">
+              <div>
+                <dt className="text-muted-foreground">Nom</dt>
+                <dd className="font-semibold">{user?.nom || 'Non renseigné'}</dd>
+              </div>
+              <div>
+                <dt className="text-muted-foreground">E-mail</dt>
+                <dd className="break-all font-semibold">{user?.email}</dd>
+              </div>
+            </dl>
+          </section>
+
+          <AdresseParDefaut key={user?.id} idUser={user?.id} />
+        </aside>
       </div>
 
       <CommandeDetailModal commande={commandeOuverte} onClose={() => setCommandeOuverte(null)} />

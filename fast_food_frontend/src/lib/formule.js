@@ -73,16 +73,30 @@ export const erreurEtape = (etape, selections) => {
   if (etape.type === 'groupe') {
     const { groupe } = etape;
     if (estSousMinimum(groupe, choixDuGroupe(selections, groupe).length)) {
-      return `Veuillez choisir au moins ${groupe.minSelection} produit(s) pour : ${groupe.nom}.`;
+      return groupe.maxSelection === 1
+        ? `Faites un choix pour « ${groupe.nom} ».`
+        : `Choisissez au moins ${groupe.minSelection} produits pour « ${groupe.nom} ».`;
     }
     return null;
   }
 
-  const manquant = groupesNonValides(optionsDuProduit(etape.produit), etape.choix.optionIds)[0];
+  const manquants = groupesOptionsEnErreur(etape, selections);
+  return manquants.length > 0 ? messageGroupeOptions(manquants[0]) : null;
+};
 
-  return manquant
-    ? `Veuillez sélectionner au moins ${manquant.minSelection} option(s) pour : ${manquant.nom} (${etape.produit.nom}).`
-    : null;
+// Message d'un groupe d'options incomplet, adapte au choix unique ou multiple.
+export const messageGroupeOptions = (groupe) =>
+  estRadio(groupe)
+    ? `Choisissez une option pour « ${groupe.nom} ».`
+    : `Choisissez au moins ${groupe.minSelection} option${groupe.minSelection > 1 ? 's' : ''} pour « ${groupe.nom} ».`;
+
+// Tous les groupes d'options incomplets d'un ecran d'options : ils sont signales en une fois.
+export const groupesOptionsEnErreur = (etape, selections) => {
+  if (etape?.type !== 'options') return [];
+  const choix =
+    choixDuGroupe(selections, etape.groupe).find((c) => c.idProduit === etape.choix.idProduit) ??
+    etape.choix;
+  return groupesNonValides(optionsDuProduit(etape.produit), choix.optionIds);
 };
 
 export const basculerProduitChoisi = (selections, groupe, lien) => {
@@ -213,3 +227,16 @@ export const construirePayloadProduitFormule = (formulaire) => ({
   idProduit: Number(formulaire.idProduit),
   surcout: parseFloat(formulaire.surcout || 0),
 });
+// Resume des choix d'un menu, emplacement par emplacement (recapitulatif avant enregistrement).
+export const resumerSelections = (groupes, selections, produits) =>
+  groupes.map((groupe) => ({
+    groupe,
+    choix: choixDuGroupe(selections, groupe).map((choix) => {
+      const lien = trouverLien(groupe, choix.idProduit);
+      const nomsOptions = optionsDuProduit(trouverProduit(produits, choix.idProduit))
+        .flatMap((g) => g.options)
+        .filter((item) => choix.optionIds.includes(item.id))
+        .map((item) => item.nom);
+      return { idProduit: choix.idProduit, nom: lien?.nomProduit ?? '', options: nomsOptions };
+    }),
+  }));

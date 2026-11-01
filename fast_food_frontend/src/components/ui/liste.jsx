@@ -34,7 +34,7 @@ export const ListeDeroulante = ({
         {groupes
           ? groupes.map((groupe) => (
               <SelectGroup key={groupe.libelle}>
-                <SelectLabel className="text-[10px] uppercase text-gray-500">{groupe.libelle}</SelectLabel>
+                <SelectLabel className="text-xs font-semibold text-muted-foreground">{groupe.libelle}</SelectLabel>
                 {groupe.options.map(rendreOption)}
               </SelectGroup>
             ))

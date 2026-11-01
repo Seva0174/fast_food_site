@@ -31,7 +31,7 @@ export const decrireRegle = (groupe) => {
   const { minSelection: min, maxSelection: max } = groupe;
   if (min === 1 && max === 1) return 'Choisissez 1 produit';
   if (min === max) return `Choisissez ${max} produits`;
-  if (min === 0) return `Optionnel (jusqu'à ${max} produit(s))`;
+  if (min === 0) return `Optionnel (jusqu'à ${max} produit${max > 1 ? 's' : ''})`;
   return `Choisissez de ${min} à ${max} produits`;
 };
 

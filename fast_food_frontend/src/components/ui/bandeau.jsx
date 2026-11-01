@@ -1,20 +1,24 @@
 import { AlertCircle, CheckCircle2 } from 'lucide-react';
 
+const STYLES = {
+  erreur: { classes: 'border-destructive/40 bg-destructive/15 text-foreground', icone: AlertCircle, couleurIcone: 'text-destructive' },
+  succes: { classes: 'border-primary/40 bg-card text-foreground', icone: CheckCircle2, couleurIcone: 'text-primary' },
+};
+
 // Bandeau affichant un message { texte, type } ('succes' ou 'erreur'), ou rien si message est nul.
-export const BandeauMessage = ({ message }) => {
+// Les erreurs sont annoncees immediatement aux lecteurs d'ecran, les succes poliment.
+export const BandeauMessage = ({ message, className = '' }) => {
   if (!message) return null;
+  const { classes, icone: Icone, couleurIcone } = STYLES[message.type] ?? STYLES.succes;
   const estErreur = message.type === 'erreur';
 
   return (
     <div
-      className={`flex items-center gap-2 rounded-lg p-3 text-sm ${
-        estErreur
-          ? 'border border-red-200 bg-red-50 text-red-700'
-          : 'border border-green-200 bg-green-50 text-green-700'
-      }`}
+      role={estErreur ? 'alert' : 'status'}
+      className={`flex items-center gap-2.5 rounded-lg border p-3 text-sm ${classes} ${className}`}
     >
-      {estErreur ? <AlertCircle className="h-4 w-4" /> : <CheckCircle2 className="h-4 w-4" />}
-      {message.texte}
+      <Icone className={`h-5 w-5 shrink-0 ${couleurIcone}`} aria-hidden="true" />
+      <span>{message.texte}</span>
     </div>
   );
 };

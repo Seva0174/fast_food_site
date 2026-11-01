@@ -10,3 +10,13 @@ fast_food_frontend/dist-ssr/
 fast_food_frontend/.vite/
 fast_food_frontend/.env*
 fast_food_frontend/*.log
+fast_food_frontend/.claude/settings.local.json
+fast_food_frontend/.playwright-mcp/
+fast_food_frontend/.impeccable/
+
+CLAUDE.md
+**/CLAUDE.md
+.claude/
+**/.claude/
+**/PRODUCT.md
+**/DESIGN.md

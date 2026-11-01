@@ -5,15 +5,21 @@ import { useSelectionOptions } from '../../hooks/useSelectionOptions';
 
 export const ProductOptionModal = ({ produit, itemPanier, isOpen, onClose, onConfirm }) => {
   const groupes = produit?.groupesOptions ?? [];
-  const { selections, erreurs, choisir, verifier, optionIds, surcout } = useSelectionOptions(
-    groupes,
-    itemPanier
-  );
+  const { selections, erreurs, choisir, verifier, aDesModifications, optionIds, surcout } =
+    useSelectionOptions(groupes, itemPanier);
 
   if (!isOpen || !produit) return null;
 
   const confirmer = () => {
-    if (verifier()) onConfirm(produit, optionIds);
+    const groupeInvalide = verifier();
+    if (!groupeInvalide) {
+      onConfirm(produit, optionIds);
+      return;
+    }
+    // Amene le premier groupe en erreur a l'ecran (il peut etre sous le bord de la modale)
+    const section = document.getElementById(`section-groupe-${groupeInvalide.id}`);
+    section?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    section?.querySelector('button:not([disabled])')?.focus({ preventScroll: true });
   };
 
   return (
@@ -21,10 +27,18 @@ export const ProductOptionModal = ({ produit, itemPanier, isOpen, onClose, onCon
       titre={produit.nom}
       sousTitre="Personnalisez votre commande"
       onClose={onClose}
+      confirmerFermeture={
+        aDesModifications
+          ? {
+              question: itemPanier ? 'Abandonner vos modifications ?' : 'Abandonner ces choix ?',
+              libelleAbandon: 'Abandonner',
+            }
+          : null
+      }
       prixTotal={Number(produit.prix ?? 0) + surcout}
       actions={
         <Bouton taille="lg" onClick={confirmer}>
-          {itemPanier ? 'Enregistrer les modifications' : 'Ajouter au panier'}
+          {itemPanier ? 'Enregistrer' : 'Ajouter au panier'}
         </Bouton>
       }
     >
