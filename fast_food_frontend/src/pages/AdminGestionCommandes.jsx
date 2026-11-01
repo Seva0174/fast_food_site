@@ -1,17 +1,22 @@
 import { useState, useMemo, useCallback } from 'react';
 import { RefreshCw } from 'lucide-react';
 import { useCommandesAdmin } from '../hooks/useCommandesAdmin';
+import { useConfirmation } from '../hooks/useConfirmation';
 import { CommandeCard } from '../components/commande/CommandeCard';
 import { CommandeDetailModal } from '../components/commande/CommandeDetailModal';
 import { BarreFiltresCommandes } from '../components/commande/BarreFiltresCommandes';
+import { ModalConfirmation } from '../components/modales/ModalConfirmation';
 import { Bouton } from '../components/ui/bouton';
 import { BandeauMessage } from '../components/ui/bandeau';
 
 import {
   FILTRE_STATUT,
   FILTRE_TYPE_TOUS,
+  INTERVALLE_ACTUALISATION_MS,
+  STATUT_COMMANDE,
   compterCommandes,
   filtrerCommandes,
+  formaterHeure,
   trierParDate,
 } from '../lib/commande';
 
@@ -22,8 +27,18 @@ const FILTRES_INITIAUX = {
 };
 
 export const AdminGestionCommandes = () => {
-    const { commandes, chargement, erreur, message, miseAJourId, charger, changerStatut } =
-    useCommandesAdmin();
+  const {
+    commandes,
+    chargement,
+    erreur,
+    message,
+    miseAJourId,
+    derniereMaj,
+    nouvellesIds,
+    charger,
+    changerStatut,
+  } = useCommandesAdmin();
+  const { confirmer, modaleProps } = useConfirmation();
 
   const [commandeSelectionnee, setCommandeSelectionnee] = useState(null);
   const [filtres, setFiltres] = useState(FILTRES_INITIAUX);
@@ -44,26 +59,43 @@ export const AdminGestionCommandes = () => {
   // Stable grace a useCallback : CommandeCard (memo) ne se redessine pas inutilement.
   const handleChangerStatut = useCallback(
     async (id, statut) => {
+      if (statut === STATUT_COMMANDE.ANNULEE) {
+        const confirme = await confirmer({
+          titre: `Annuler la commande #${id} ?`,
+          message: 'La commande passera au statut « Annulée » et ne sera plus préparée.',
+          libelleConfirmer: 'Annuler la commande',
+          libelleRefuser: 'Garder la commande',
+          destructif: true,
+        });
+        if (!confirme) return;
+      }
+
       const modifiee = await changerStatut(id, statut);
       if (modifiee) {
         setCommandeSelectionnee((prev) => (prev?.id === id ? modifiee : prev));
       }
     },
-    [changerStatut]
+    [changerStatut, confirmer]
   );
 
+  // Premier chargement seulement : une actualisation garde la liste affichee.
+  const premierChargement = chargement && commandes.length === 0;
+
   return (
-    <div className="mx-auto max-w-7xl p-4 sm:p-6 lg:p-8">
+    <div>
       <div className="mb-6 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
         <div>
-          <h1 className="text-2xl font-extrabold text-gray-900 sm:text-3xl">Gestion des Commandes</h1>
-          <p className="mt-1 text-sm text-gray-500">
-            Suivez et mettez à jour l'état des commandes en temps réel.
+          <h1 className="titre-marque text-4xl">Gestion des commandes</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            La liste s'actualise toute seule toutes les {INTERVALLE_ACTUALISATION_MS / 1000} secondes.
+            {derniereMaj && (
+              <span className="tabular-nums"> Dernière mise à jour à {formaterHeure(derniereMaj)}.</span>
+            )}
           </p>
         </div>
 
         <Bouton variante="secondaire" onClick={charger} disabled={chargement}>
-          <RefreshCw className={`h-4 w-4 ${chargement ? 'animate-spin' : ''}`} />
+          <RefreshCw className={`h-4 w-4 ${chargement ? 'animate-spin' : ''}`} aria-hidden="true" />
           Actualiser
         </Bouton>
       </div>
@@ -75,29 +107,29 @@ export const AdminGestionCommandes = () => {
         onChangerOrdre={() => setOrdre((o) => (o === 'desc' ? 'asc' : 'desc'))}
         compteurs={compteurs}
       />
-      {message && (
-        <div className="mb-6">
-          <BandeauMessage message={message} />
-        </div>
-      )}
-      
+
       {erreur && (
-        <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-600">
-          {erreur}
+        <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center">
+          <BandeauMessage message={{ texte: erreur, type: 'erreur' }} className="flex-1" />
+          <Bouton variante="secondaire" onClick={charger} disabled={chargement}>
+            Réessayer
+          </Bouton>
         </div>
       )}
 
-      {chargement ? (
-        <div className="py-12 text-center">
-          <RefreshCw className="mx-auto mb-2 h-8 w-8 animate-spin text-red-600" />
-          <p className="text-gray-500">Chargement des commandes...</p>
+      {premierChargement ? (
+        <div className="py-12 text-center" role="status">
+          <RefreshCw className="mx-auto mb-2 h-8 w-8 animate-spin text-primary" aria-hidden="true" />
+          <p className="text-muted-foreground">Chargement des commandes...</p>
         </div>
       ) : commandesAffichees.length === 0 ? (
-        <div className="rounded-xl border border-gray-200 bg-white p-8 text-center text-gray-500">
-          Aucune commande correspondant aux filtres.
-        </div>
+        !erreur && (
+          <div className="rounded-xl border border-border bg-card p-8 text-center text-muted-foreground">
+            Aucune commande correspondant aux filtres.
+          </div>
+        )
       ) : (
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           {commandesAffichees.map((commande) => (
             <CommandeCard
               key={commande.id}
@@ -105,6 +137,9 @@ export const AdminGestionCommandes = () => {
               onChangerStatut={handleChangerStatut}
               onVoirDetail={setCommandeSelectionnee}
               enCours={miseAJourId === commande.id}
+              nouvelle={
+                commande.status === STATUT_COMMANDE.EN_ATTENTE && nouvellesIds.includes(commande.id)
+              }
             />
           ))}
         </div>
@@ -114,6 +149,17 @@ export const AdminGestionCommandes = () => {
         commande={commandeSelectionnee}
         onClose={() => setCommandeSelectionnee(null)}
       />
+      <ModalConfirmation {...modaleProps} />
+
+      {/* Retour d'action : en bas de l'ecran pour ne pas decaler la liste */}
+      {message && (
+        <div className="pointer-events-none fixed bottom-6 left-1/2 z-[70] w-full max-w-md -translate-x-1/2 px-4">
+          <BandeauMessage
+            message={message}
+            className="shadow-xl shadow-black/40 animate-in fade-in slide-in-from-bottom-2 duration-200"
+          />
+        </div>
+      )}
     </div>
   );
 };

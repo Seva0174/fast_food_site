@@ -1,78 +1,92 @@
-import { useState } from 'react';
-import { Bouton } from '@/components/ui/bouton';
-import { erreurPeriode } from '@/lib/periode';
+import { useRef, useState } from 'react';
+import { Popover } from 'radix-ui';
+import { CalendarDays } from 'lucide-react';
+import { CalendrierPeriode } from './CalendrierPeriode';
+import {
+  PERIODE_GLOBALE,
+  PERIODE_PERSONNALISEE,
+  PERIODES_RAPIDES,
+  libellePeriode,
+  periodeRapide,
+} from '@/lib/periode';
 
-const MODE_GLOBAL = 'global';
-const MODE_PERSONNALISE = 'personnalise';
+// Choix neutre (pas d'orange) : l'accent reste aux données et à l'action « Appliquer ».
+const classeChoix = (actif) =>
+  `inline-flex min-h-11 items-center gap-2 whitespace-nowrap rounded-lg px-3.5 text-sm font-semibold transition-colors ${
+    actif
+      ? 'bg-foreground text-background'
+      : 'border border-border bg-secondary text-secondary-foreground hover:bg-accent'
+  }`;
 
-const classeDate =
-  'rounded border border-gray-300 px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-red-500';
-
-// Choix entre la vue globale et une période personnalisée.
+// Périodes rapides et période personnalisée (calendrier).
 // onChanger reçoit null (vue globale) ou { debut, fin }.
-export const BarrePeriode = ({ onChanger }) => {
-  const [mode, setMode] = useState(MODE_GLOBAL);
-  const [debut, setDebut] = useState('');
-  const [fin, setFin] = useState('');
-  const erreur = erreurPeriode(debut, fin);
+// resume : rappel de la période affichée et de celle qui sert de comparaison.
+export const BarrePeriode = ({ onChanger, resume }) => {
+  const [choix, setChoix] = useState(PERIODE_GLOBALE);
+  const [periodePerso, setPeriodePerso] = useState(null);
+  const [calendrierOuvert, setCalendrierOuvert] = useState(false);
+  const contenuCalendrier = useRef(null);
 
-  const changerMode = (nouveauMode) => {
-    setMode(nouveauMode);
-    if (nouveauMode === MODE_GLOBAL) {
-      setDebut('');
-      setFin('');
-      onChanger(null);
-    }
+  const choisirRapide = (id) => {
+    setChoix(id);
+    onChanger(periodeRapide(id));
   };
 
-  const filtrer = (e) => {
-    e.preventDefault();
-    if (debut && fin && !erreur) onChanger({ debut, fin });
+  const appliquer = (periode) => {
+    setPeriodePerso(periode);
+    setChoix(PERIODE_PERSONNALISEE);
+    setCalendrierOuvert(false);
+    onChanger(periode);
   };
+
+  const persoActive = choix === PERIODE_PERSONNALISEE;
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-4 rounded-lg border bg-white p-4 shadow-sm">
-      <div className="flex gap-2">
-        <Bouton
-          variante={mode === MODE_GLOBAL ? 'principal' : 'neutre'}
-          taille="sm"
-          onClick={() => changerMode(MODE_GLOBAL)}
-        >
-          Vue globale
-        </Bouton>
-        <Bouton
-          variante={mode === MODE_PERSONNALISE ? 'principal' : 'neutre'}
-          taille="sm"
-          onClick={() => changerMode(MODE_PERSONNALISE)}
-        >
-          Période personnalisée
-        </Bouton>
+    <div className="space-y-3 rounded-xl border border-border bg-card p-4">
+      <div role="group" aria-label="Période" className="flex flex-wrap gap-2">
+        {PERIODES_RAPIDES.map(({ id, libelle }) => (
+          <button
+            key={id}
+            type="button"
+            aria-pressed={choix === id}
+            onClick={() => choisirRapide(id)}
+            className={classeChoix(choix === id)}
+          >
+            {libelle}
+          </button>
+        ))}
+
+        <Popover.Root open={calendrierOuvert} onOpenChange={setCalendrierOuvert}>
+          <Popover.Trigger asChild>
+            <button type="button" aria-pressed={persoActive} className={classeChoix(persoActive)}>
+              <CalendarDays className="h-4 w-4" aria-hidden="true" />
+              {persoActive && periodePerso ? libellePeriode(periodePerso) : 'Personnalisée'}
+            </button>
+          </Popover.Trigger>
+          {/* Sans portail : le calendrier hérite du thème de la page (clair dans l'admin) */}
+          <Popover.Content
+            ref={contenuCalendrier}
+            align="start"
+            sideOffset={8}
+            collisionPadding={16}
+            aria-label="Choisir une période"
+            // Le focus va directement sur le jour actif du calendrier
+            onOpenAutoFocus={(e) => {
+              e.preventDefault();
+              contenuCalendrier.current?.querySelector('[data-date][tabindex="0"]')?.focus();
+            }}
+            className="z-50 rounded-xl border border-border bg-popover p-4 text-popover-foreground shadow-md animate-in fade-in zoom-in-95 duration-150"
+          >
+            <CalendrierPeriode
+              valeur={periodePerso}
+              onAppliquer={appliquer}
+              onAnnuler={() => setCalendrierOuvert(false)}
+            />
+          </Popover.Content>
+        </Popover.Root>
       </div>
 
-      {mode === MODE_PERSONNALISE && (
-        <form onSubmit={filtrer} className="flex items-center gap-3">
-          <input
-            type="date"
-            value={debut}
-            onChange={(e) => setDebut(e.target.value)}
-            className={classeDate}
-            required
-          />
-          <span className="text-sm text-gray-500">au</span>
-          <input
-            type="date"
-            value={fin}
-            onChange={(e) => setFin(e.target.value)}
-            className={classeDate}
-            required
-          />
-          <Bouton type="submit" variante="sombre" taille="sm" disabled={Boolean(erreur)}>
-            Filtrer
-          </Bouton>
-        </form>
-      )}
-
-      {erreur && <p className="w-full text-xs font-medium text-red-600">{erreur}</p>}
+      {resume && <p className="text-sm text-muted-foreground tabular-nums">{resume}</p>}
     </div>
   );
 };

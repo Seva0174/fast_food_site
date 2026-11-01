@@ -1,14 +1,14 @@
 // Styles de chaque variante d'onglets.
 const STYLES = {
   soulignes: {
-    conteneur: 'flex gap-2 rounded-t-lg border-b border-gray-200 bg-white px-4 pt-3',
-    onglet: 'border-b-2 px-4 py-2 text-sm font-medium transition-colors',
+    conteneur: 'flex gap-2 overflow-x-auto rounded-t-lg border-b border-gray-200 bg-white px-4 pt-3',
+    onglet: 'shrink-0 whitespace-nowrap border-b-2 px-4 py-2 text-sm font-medium transition-colors',
     actif: 'border-red-500 text-red-600',
     inactif: 'border-transparent text-gray-500 hover:text-gray-700',
   },
   segments: {
-    conteneur: 'flex rounded-lg bg-gray-100 p-1',
-    onglet: 'rounded-md px-4 py-1.5 text-xs font-semibold transition',
+    conteneur: 'flex overflow-x-auto rounded-lg bg-gray-100 p-1',
+    onglet: 'shrink-0 whitespace-nowrap rounded-md px-4 py-1.5 text-xs font-semibold transition',
     actif: 'bg-white text-gray-900 shadow-sm',
     inactif: 'text-gray-500 hover:text-gray-700',
   },

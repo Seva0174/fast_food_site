@@ -54,6 +54,36 @@ export const statutsProposes = (commande) => {
   ].map((value) => ({ value, label: LIBELLES_STATUT[value] }));
 };
 
+// Delai entre deux actualisations automatiques de la liste (page staff).
+export const INTERVALLE_ACTUALISATION_MS = 30_000;
+
+// Parcours normal d'une commande, sans l'annulation.
+const parcoursStatuts = (commande) =>
+  statutsProposes(commande)
+    .map((statut) => statut.value)
+    .filter((valeur) => valeur !== STATUT_COMMANDE.ANNULEE);
+
+// Libelle du bouton qui fait passer la commande a l'etape suivante.
+export const LIBELLES_ACTION_STATUT = {
+  [STATUT_COMMANDE.EN_PREPARATION]: 'Passer en préparation',
+  [STATUT_COMMANDE.PRETE]: 'Marquer prête',
+  [STATUT_COMMANDE.LIVREE]: 'Marquer livrée',
+  [STATUT_COMMANDE.RETIREE]: 'Marquer retirée',
+};
+
+// Statut suivant dans le parcours, ou null si la commande est terminee ou annulee.
+export const statutSuivant = (commande) => {
+  const parcours = parcoursStatuts(commande);
+  const index = parcours.indexOf(commande.status);
+  return index >= 0 && index < parcours.length - 1 ? parcours[index + 1] : null;
+};
+
+// Statut precedent (pour corriger une erreur de manipulation), ou null en premiere etape.
+export const statutPrecedent = (commande) => {
+  const index = parcoursStatuts(commande).indexOf(commande.status);
+  return index > 0 ? parcoursStatuts(commande)[index - 1] : null;
+};
+
 // Nombre d'articles commandes (seules les lignes principales sont dans "items").
 export const nombreArticles = (commande) =>
   commande.items.reduce((total, item) => total + item.quantite, 0);
@@ -64,6 +94,21 @@ export const heureCommande = (commande) =>
   dateDe(commande).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
 
 export const dateCommande = (commande) => dateDe(commande).toLocaleDateString('fr-FR');
+
+// Heure "10:30" d'une date (ex : derniere actualisation de la liste).
+export const formaterHeure = (date) =>
+  date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+
+// "il y a 8 min", "il y a 1 h 05", puis la date au-dela de 24 h.
+export const ancienneteCommande = (commande, maintenant = Date.now()) => {
+  const minutes = Math.max(0, Math.floor((maintenant - dateDe(commande).getTime()) / 60000));
+  if (minutes < 1) return 'à l’instant';
+  if (minutes < 60) return `il y a ${minutes} min`;
+  if (minutes < 24 * 60) {
+    return `il y a ${Math.floor(minutes / 60)} h ${String(minutes % 60).padStart(2, '0')}`;
+  }
+  return dateCommande(commande);
+};
 
 // "Aujourd'hui à 10:30" pour une commande du jour, sinon "Le 14/10/2026 à 15:16".
 export const momentCommande = (commande, maintenant = new Date()) => {

@@ -9,7 +9,7 @@ import { ErreurBoundary } from './ErreurBoundary';
 // Pages deja migrees vers le theme sombre. Les autres restent en theme clair
 // (classe .theme-clair) tant que leur design n'est pas refait.
 // Ajouter ici chaque page au fur et a mesure de sa migration.
-const ROUTES_SOMBRES = ['/', '/login', '/register', '/commander', '/user', '/mentions-legales'];
+const ROUTES_SOMBRES = ['/', '/login', '/register', '/commander', '/user', '/mentions-legales', '/commandes'];
 
 // Pages qui gerent elles-memes leur largeur (banniere pleine largeur).
 const ROUTES_PLEINE_LARGEUR = ['/'];
