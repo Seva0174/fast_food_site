@@ -1,8 +1,11 @@
-import { useContext, useEffect, useRef, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
-import { History, Package, RotateCcw } from 'lucide-react';
+import { useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { History, Package, RefreshCw, RotateCcw } from 'lucide-react';
 import { AuthContext } from '../context/AuthProvider';
+import { ContextePanier } from '../context/ContextePanier';
 import { useMesCommandes } from '../hooks/useMesCommandes';
+import { useCarte } from '../hooks/useCarte';
+import { libelleRecommande, preparerRecommande } from '../lib/recommande';
 import { CommandeDetailModal } from '../components/commande/CommandeDetailModal';
 import { CarteCommandeClient } from '../components/commande/CarteCommandeClient';
 import { AdresseParDefaut } from '../components/compte/AdresseParDefaut';
@@ -27,7 +30,7 @@ const CommandesEnErreur = ({ message, onReessayer }) => (
   <div role="alert" className="rounded-2xl border border-destructive/40 bg-destructive/10 p-6 text-center">
     <p className="font-semibold">{message}</p>
     <p className="mt-1 text-sm text-muted-foreground">
-      Le serveur ne répond pas. Vos commandes ne sont pas perdues.
+      Elles ne sont pas perdues : réessayez dans un instant.
     </p>
     <Bouton variante="secondaire" className="mt-4" onClick={onReessayer}>
       <RotateCcw className="h-4 w-4" aria-hidden="true" />
@@ -51,14 +54,25 @@ const CommandesVides = ({ message }) => (
 export const PageUser = () => {
   const { user } = useContext(AuthContext);
   const { commandes, chargement, erreur, charger } = useMesCommandes();
-  const [parametres] = useSearchParams();
+  const { produits } = useCarte();
+  const { recommander } = useContext(ContextePanier);
+  const navigate = useNavigate();
+  const [parametres, setParametres] = useSearchParams();
   const [commandeOuverte, setCommandeOuverte] = useState(null);
   const [ongletChoisi, setOngletChoisi] = useState(null);
+  // Id de la commande en cours de recommande (desactive son bouton pendant l'ajout)
+  const [recommandeEnCours, setRecommandeEnCours] = useState(null);
+  const refPanneau = useRef(null);
 
-  // Commande a mettre en avant : lien "Suivre ma commande" du ticket (/user?commande=23)
-  const idEnAvant = Number(parametres.get('commande')) || null;
+  // Commande a mettre en avant : lien "Suivre ma commande" du ticket (/user?commande=23).
+  // Lue une seule fois puis retiree de l'URL : un rechargement ne la remet pas en avant.
+  const [idEnAvant] = useState(() => Number(parametres.get('commande')) || null);
   const commandeEnAvant = commandes.find((c) => c.id === idEnAvant);
   const refEnAvant = useRef(null);
+
+  useEffect(() => {
+    if (parametres.has('commande')) setParametres({}, { replace: true });
+  }, [parametres, setParametres]);
 
   const commandesEnCours = ordonnerCommandesClient(commandes.filter(estEnCours), idEnAvant);
   const commandesPassees = ordonnerCommandesClient(commandes.filter(estTerminee), idEnAvant);
@@ -69,12 +83,45 @@ export const PageUser = () => {
   const listeAffichee = onglet === 'encours' ? commandesEnCours : commandesPassees;
   const compteurs = { encours: commandesEnCours.length, historique: commandesPassees.length };
 
-  // La commande mise en avant est amenee a l'ecran une fois chargee
+  // La commande mise en avant est en tete de liste : on ne fait defiler que si elle est
+  // hors de l'ecran, pour garder le titre et les onglets visibles.
   useEffect(() => {
-    if (!chargement && commandeEnAvant) {
-      refEnAvant.current?.scrollIntoView({ block: 'start' });
-    }
+    const carte = refEnAvant.current;
+    if (chargement || !commandeEnAvant || !carte) return;
+    const { top, bottom } = carte.getBoundingClientRect();
+    if (top < 80 || bottom > window.innerHeight) carte.scrollIntoView({ block: 'center' });
   }, [chargement, commandeEnAvant]);
+
+  // Le focus suit le rechargement : sinon il retombe en haut de la page
+  const reessayer = () => {
+    charger();
+    refPanneau.current?.focus();
+  };
+
+  // Ce qu'une commande terminee permet de recommander, calcule une fois par commande :
+  // la carte et la modale annoncent avant le clic ce qui sera vraiment repris.
+  const recommandes = useMemo(
+    () =>
+      Object.fromEntries(
+        commandes.filter(estTerminee).map((c) => [c.id, preparerRecommande(c, produits)])
+      ),
+    [commandes, produits]
+  );
+
+  // "Recommander" : reprend les articles encore disponibles, puis va droit a la validation
+  const recommanderCommande = async (commande) => {
+    const preparation = recommandes[commande.id];
+    if (!preparation || preparation.articles.length === 0) return;
+    setRecommandeEnCours(commande.id);
+    const ajoutes = await recommander(preparation.articles, preparation.indisponibles);
+    setRecommandeEnCours(null);
+    if (ajoutes > 0) {
+      setCommandeOuverte(null);
+      navigate('/commander');
+    }
+  };
+
+  const recommandeOuverte = commandeOuverte ? recommandes[commandeOuverte.id] : null;
 
   // Onglets : fleches gauche/droite pour passer de l'un a l'autre
   const surToucheOnglets = (e) => {
@@ -133,12 +180,14 @@ export const PageUser = () => {
 
           <div
             id="panneau-commandes"
+            ref={refPanneau}
+            tabIndex={-1}
             role="tabpanel"
             aria-labelledby={`onglet-${onglet}`}
-            className="mt-4 space-y-4"
+            className="mt-4 space-y-4 outline-none"
           >
             {chargement && <CommandesEnChargement />}
-            {!chargement && erreur && <CommandesEnErreur message={erreur} onReessayer={charger} />}
+            {!chargement && erreur && <CommandesEnErreur message={erreur} onReessayer={reessayer} />}
             {!chargement && !erreur && listeAffichee.length === 0 && (
               <CommandesVides message={ongletCourant.vide} />
             )}
@@ -151,6 +200,9 @@ export const PageUser = () => {
                   commande={commande}
                   enAvant={commande.id === idEnAvant}
                   onDetails={() => setCommandeOuverte(commande)}
+                  recommande={recommandes[commande.id]}
+                  onRecommander={() => recommanderCommande(commande)}
+                  recommandeEnCours={recommandeEnCours === commande.id}
                 />
               ))}
           </div>
@@ -175,7 +227,27 @@ export const PageUser = () => {
         </aside>
       </div>
 
-      <CommandeDetailModal commande={commandeOuverte} onClose={() => setCommandeOuverte(null)} />
+      <CommandeDetailModal
+        commande={commandeOuverte}
+        onClose={() => setCommandeOuverte(null)}
+        suivi
+        idsIndisponibles={recommandeOuverte?.idsIndisponibles}
+        // Une commande en cours se suit, elle ne se recommande pas (evite les doublons)
+        actions={
+          recommandeOuverte ? (
+            <Bouton
+              taille="lg"
+              onClick={() => recommanderCommande(commandeOuverte)}
+              disabled={recommandeEnCours !== null || recommandeOuverte.articles.length === 0}
+            >
+              <RefreshCw className="h-4 w-4" aria-hidden="true" />
+              {recommandeEnCours === commandeOuverte.id
+                ? 'Ajout au panier…'
+                : libelleRecommande(recommandeOuverte)}
+            </Bouton>
+          ) : undefined
+        }
+      />
     </div>
   );
 };

@@ -1,15 +1,16 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-// Message de succès ou d'erreur qui disparaît tout seul après un délai.
+// Message (succes, erreur ou avertissement) qui disparait tout seul apres un delai.
+// Un message peut demander une duree plus longue (ex : liste d'articles non repris).
 export const useMessage = (duree = 5000) => {
   const [message, setMessage] = useState(null);
   const minuterie = useRef(null);
 
   const afficher = useCallback(
-    (texte, type = 'succes') => {
+    (texte, type = 'succes', dureeMessage = duree) => {
       clearTimeout(minuterie.current);
       setMessage({ texte, type });
-      minuterie.current = setTimeout(() => setMessage(null), duree);
+      minuterie.current = setTimeout(() => setMessage(null), dureeMessage);
     },
     [duree]
   );

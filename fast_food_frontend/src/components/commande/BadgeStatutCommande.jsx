@@ -1,5 +1,5 @@
 import { Clock, ChefHat, BellRing, CheckCircle2, XCircle, CircleHelp } from 'lucide-react';
-import { LIBELLES_STATUT, STATUT_COMMANDE } from '../../lib/commande';
+import { LIBELLES_STATUT, STATUT_COMMANDE, TYPE_RETRAIT } from '../../lib/commande';
 
 // Une seule couleur d'accent : l'orange marque la commande prete (le client doit agir).
 // Les autres statuts restent sur les paliers neutres du theme, l'icone fait la difference.
@@ -15,8 +15,13 @@ const STYLES = {
 // Statut inconnu (nouvelle valeur cote backend) : affiche tel quel au lieu de planter
 const STYLE_INCONNU = { classes: 'border-border bg-secondary text-foreground', icone: CircleHelp };
 
-export const BadgeStatutCommande = ({ statut }) => {
-  const { classes, icone: Icone } = STYLES[statut] ?? STYLE_INCONNU;
+// typeRetrait (facultatif) : en livraison, "Prête" n'attend rien du client, elle reste neutre.
+// Sans typeRetrait (page staff), le style d'origine est garde.
+export const BadgeStatutCommande = ({ statut, typeRetrait }) => {
+  const livraisonPrete = statut === STATUT_COMMANDE.PRETE && typeRetrait === TYPE_RETRAIT.LIVRAISON;
+  const { classes, icone: Icone } = livraisonPrete
+    ? { ...STYLES[STATUT_COMMANDE.EN_PREPARATION], icone: BellRing }
+    : (STYLES[statut] ?? STYLE_INCONNU);
 
   return (
     <span

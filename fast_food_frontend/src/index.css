@@ -118,6 +118,9 @@
 @layer base {
   * {
     @apply border-border;
+    /* Couleur de contour au repos = celle de l'anneau de focus : sinon transition-colors
+       fait passer l'anneau de la couleur du texte a l'orange en fondu. */
+    outline-color: var(--ring);
   }
   body {
     @apply bg-background text-foreground;
@@ -155,6 +158,11 @@
    le focus clavier passe en creme pour ne pas etre confondu avec une selection. */
 .choix-option:focus-visible {
   outline-color: var(--foreground);
+}
+/* Cibles de focus programmatique (titres de section, panneaux, panier lateral) :
+   le focus y est deplace pour le lecteur d'ecran, pas pour etre montre. */
+[tabindex="-1"]:focus-visible {
+  outline: none;
 }
 
 .scrollbar-thin {

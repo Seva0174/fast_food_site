@@ -14,7 +14,7 @@ export const LienNav = ({ to, icone: Icone, couleur, mobile = false, onClick, ch
         (isActive
           ? 'text-foreground underline decoration-2 underline-offset-8'
           : 'text-foreground/80 hover:text-foreground')
-      } ${mobile ? 'py-2' : ''}`
+      } min-h-11 ${mobile ? 'w-full' : ''}`
     }
   >
     {Icone && <Icone className="h-4 w-4" />}

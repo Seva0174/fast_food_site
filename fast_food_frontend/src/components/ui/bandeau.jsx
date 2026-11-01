@@ -1,8 +1,10 @@
-import { AlertCircle, CheckCircle2 } from 'lucide-react';
+import { AlertCircle, AlertTriangle, CheckCircle2 } from 'lucide-react';
 
 const STYLES = {
   erreur: { classes: 'border-destructive/40 bg-destructive/15 text-foreground', icone: AlertCircle, couleurIcone: 'text-destructive' },
   succes: { classes: 'border-primary/40 bg-card text-foreground', icone: CheckCircle2, couleurIcone: 'text-primary' },
+  // Action reussie en partie : le client doit lire ce qui manque
+  avertissement: { classes: 'border-primary bg-card text-foreground', icone: AlertTriangle, couleurIcone: 'text-primary' },
 };
 
 // Bandeau affichant un message { texte, type } ('succes' ou 'erreur'), ou rien si message est nul.

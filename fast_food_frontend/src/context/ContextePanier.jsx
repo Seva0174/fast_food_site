@@ -155,6 +155,54 @@ export const FournisseurPanier = ({ children }) => {
     return true;
   };
 
+  // "Recommander" (compte client) : ajoute plusieurs articles d'un coup, avec un seul message.
+  // articles : [{ produit, quantite, optionIds, choixFormule }] (voir lib/recommande.js)
+  // indisponibles : noms des articles qui n'ont pas pu etre repris. Renvoie le nombre ajoute.
+  const recommander = async (articles, indisponibles = []) => {
+    const refuses = [...indisponibles];
+    const dejaDansPanier = panier.reduce((total, item) => total + item.quantite, 0);
+    let ajoutes = 0;
+
+    if (isAuthenticated) {
+      let derniereReponse = null;
+      for (const { produit, quantite, optionIds, choixFormule } of articles) {
+        try {
+          derniereReponse = await ajouterProduitApi(produit.id, quantite, optionIds, choixFormule);
+          ajoutes += quantite;
+        } catch (error) {
+          console.error(`Impossible de reprendre "${produit.nom}" :`, error);
+          refuses.push(produit.nom);
+        }
+      }
+      if (derniereReponse) await mettreAJourPanier(derniereReponse);
+    } else {
+      const nouveaux = articles.map(({ produit, quantite, optionIds, choixFormule }, index) => ({
+        ...creerArticleInvite(Date.now() + index, produit, optionIds, choixFormule),
+        quantite,
+      }));
+      mettreAJourInvite((prev) => regrouperArticlesIdentiques([...prev, ...nouveaux]));
+      ajoutes = articles.reduce((total, a) => total + a.quantite, 0);
+    }
+
+    const pluriel = ajoutes > 1 ? 's' : '';
+    const contexte =
+      dejaDansPanier > 0
+        ? ` (il contenait déjà ${dejaDansPanier} article${dejaDansPanier > 1 ? 's' : ''})`
+        : '';
+    const listeRefuses = refuses.length > 0 ? ` Non repris (plus à la carte) : ${refuses.join(', ')}.` : '';
+
+    if (ajoutes === 0) {
+      afficher(`Aucun article de cette commande n’est disponible actuellement.${listeRefuses}`, 'erreur', 9000);
+    } else {
+      setNombreAjouts((n) => n + 1);
+      const texte = `${ajoutes} article${pluriel} ajouté${pluriel} à votre panier${contexte}.${listeRefuses}`;
+      // Reussite partielle : avertissement, affiche plus longtemps pour laisser lire la liste
+      if (refuses.length > 0) afficher(texte, 'avertissement', 9000);
+      else afficher(texte, 'succes');
+    }
+    return ajoutes;
+  };
+
   const incrementerQuantite = async (itemId) => {
     const item = panier.find((i) => i.id === itemId);
     if (!item) return;
@@ -272,6 +320,7 @@ export const FournisseurPanier = ({ children }) => {
         chargement,
         message,
         ajouterAuPanier,
+        recommander,
         incrementerQuantite,
         modifierItemPanier,
         retirerDuPanier,

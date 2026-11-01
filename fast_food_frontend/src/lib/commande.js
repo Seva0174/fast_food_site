@@ -65,6 +65,13 @@ export const heureCommande = (commande) =>
 
 export const dateCommande = (commande) => dateDe(commande).toLocaleDateString('fr-FR');
 
+// "Aujourd'hui à 10:30" pour une commande du jour, sinon "Le 14/10/2026 à 15:16".
+export const momentCommande = (commande, maintenant = new Date()) => {
+  const date = dateDe(commande);
+  const memeJour = date.toDateString() === maintenant.toDateString();
+  return `${memeJour ? 'Aujourd’hui' : `Le ${dateCommande(commande)}`} à ${heureCommande(commande)}`;
+};
+
 export const dateLongueCommande = (commande) =>
   dateDe(commande).toLocaleDateString('fr-FR', {
     day: 'numeric',
@@ -151,7 +158,8 @@ export const compterCommandes = (commandes) => ({
 
 // Etapes affichees pour une commande en cours ; la derniere depend du mode de retrait.
 export const etapesSuivi = (commande) => [
-  'Reçue',
+  // Meme formulation que le ticket de confirmation ("Commande envoyée en cuisine")
+  'Envoyée en cuisine',
   'En préparation',
   estClickAndCollect(commande) ? 'Prête à retirer' : 'Prête à livrer',
 ];
@@ -173,3 +181,9 @@ export const ordonnerCommandesClient = (commandes, idEnAvant) =>
     if (b.id === idEnAvant) return 1;
     return new Date(b.dateCreation) - new Date(a.dateCreation);
   });
+
+// Commande que le client vient de passer : en cours et creee il y a moins de 30 minutes.
+// Sert a la mise en avant "passée à l'instant" (jamais sur une ancienne commande).
+const DELAI_RECENTE_MS = 30 * 60 * 1000;
+export const estRecente = (commande, maintenant = Date.now()) =>
+  estEnCours(commande) && maintenant - new Date(commande.dateCreation).getTime() < DELAI_RECENTE_MS;

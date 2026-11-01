@@ -52,7 +52,7 @@ export const Navbar = () => {
       type="button"
       onClick={ouvrirPanier}
       className={`flex items-center gap-1.5 font-medium text-foreground/80 transition-colors hover:text-foreground ${
-        mobile ? 'min-h-11 w-full py-2' : ''
+        mobile ? 'min-h-11 w-full' : 'min-h-11'
       }`}
     >
       <ShoppingBag className="h-4 w-4" aria-hidden="true" />
@@ -65,7 +65,7 @@ export const Navbar = () => {
     <nav className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
-          <Link to="/" className="titre-marque text-3xl text-foreground" aria-label={`${NOM_SITE}, accueil`}>
+          <Link to="/" className="titre-marque flex min-h-11 items-center text-3xl text-foreground" aria-label={`${NOM_SITE}, accueil`}>
             Taco<span className="text-primary">Burger</span>
           </Link>
 
@@ -91,16 +91,22 @@ export const Navbar = () => {
               <div className="flex items-center space-x-3">
                 <Link
                   to="/user"
-                  title="Mon compte"
-                  className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-foreground/80 transition-colors hover:bg-accent hover:text-foreground"
+                  aria-current={pathname === '/user' ? 'page' : undefined}
+                  aria-label={`Mon compte (${libelleUtilisateur})`}
+                  className={`flex min-h-11 items-center gap-1.5 rounded-lg px-3 text-sm font-medium transition-colors hover:text-foreground ${
+                    pathname === '/user'
+                      ? 'text-foreground underline decoration-2 underline-offset-8'
+                      : 'text-foreground/80'
+                  }`}
                 >
-                  <User className="h-4 w-4 text-primary" />
+                  <User className="h-4 w-4" aria-hidden="true" />
                   <span>{libelleUtilisateur}</span>
                 </Link>
 
                 <Bouton
                   variante="fantome"
                   taille="icone"
+                  className="lg:size-11"
                   onClick={deconnecter}
                   title="Déconnexion"
                   aria-label="Déconnexion"
@@ -177,7 +183,7 @@ export const Navbar = () => {
 
           {user ? (
             <div className="border-t border-border pt-1">
-              <Bouton variante="discret" taille="nu" onClick={deconnecter} className="w-full py-2">
+              <Bouton variante="discret" taille="nu" onClick={deconnecter} className="min-h-11 w-full">
                 <span className="w-full text-left">Déconnexion</span>
               </Bouton>
             </div>

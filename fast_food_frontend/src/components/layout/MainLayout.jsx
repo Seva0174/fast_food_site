@@ -1,5 +1,5 @@
-import { useContext } from 'react';
-import { Outlet, useLocation } from 'react-router-dom';
+import { useContext, useLayoutEffect } from 'react';
+import { Outlet, useLocation, useNavigationType } from 'react-router-dom';
 import { ContextePanier } from '../../context/ContextePanier';
 import { BandeauMessage } from '../ui/bandeau';
 import { Navbar } from './Navbar';
@@ -9,14 +9,23 @@ import { ErreurBoundary } from './ErreurBoundary';
 // Pages deja migrees vers le theme sombre. Les autres restent en theme clair
 // (classe .theme-clair) tant que leur design n'est pas refait.
 // Ajouter ici chaque page au fur et a mesure de sa migration.
-const ROUTES_SOMBRES = ['/', '/login', '/register', '/commander', '/user'];
+const ROUTES_SOMBRES = ['/', '/login', '/register', '/commander', '/user', '/mentions-legales'];
 
 // Pages qui gerent elles-memes leur largeur (banniere pleine largeur).
 const ROUTES_PLEINE_LARGEUR = ['/'];
 
 export const MainLayout = () => {
   const { pathname } = useLocation();
+  const typeNavigation = useNavigationType();
   const { message } = useContext(ContextePanier);
+
+  // Nouvelle page : on repart du haut (sinon la position de defilement de la page precedente
+  // est conservee). "Retour" du navigateur (POP) garde sa position. useLayoutEffect passe
+  // avant les effets des pages, qui peuvent ensuite defiler vers un element precis
+  // (ex : la carte depuis "Panier", la commande suivie sur /user).
+  useLayoutEffect(() => {
+    if (typeNavigation !== 'POP') window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+  }, [pathname, typeNavigation]);
 
   const themeSombre = ROUTES_SOMBRES.includes(pathname);
   const pleineLargeur = ROUTES_PLEINE_LARGEUR.includes(pathname);

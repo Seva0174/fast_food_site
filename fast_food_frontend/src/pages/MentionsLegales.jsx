@@ -1,29 +1,41 @@
-import { EMAIL_CONTACT } from '../lib/site';
+import { EMAIL_CONTACT, NOM_SITE } from '../lib/site';
 
+// Lien dans le texte : souligne pour etre reconnu, l'orange reste dans le soulignement
+const classeLien =
+  'text-foreground underline decoration-primary/60 underline-offset-4 transition-colors hover:decoration-primary';
+
+// Section de page de lecture : plus d'espace au-dessus du titre qu'en dessous
 const SectionLegale = ({ titre, children }) => (
-  <section>
-    <h2 className="text-xl font-semibold text-gray-800 mb-2">{titre}</h2>
-    {children}
+  <section className="border-t border-border pt-6">
+    <h2 className="titre-marque text-3xl text-foreground">{titre}</h2>
+    <div className="mt-3 space-y-3">{children}</div>
   </section>
 );
 
 export const MentionsLegales = () => (
-  <div className="max-w-4xl mx-auto px-4 py-10 text-gray-700">
-    <h1 className="text-3xl font-bold text-gray-900 mb-6">Mentions légales</h1>
+  <article className="mx-auto max-w-prose py-4 sm:py-8">
+    <h1 className="titre-marque text-5xl sm:text-6xl">Mentions légales</h1>
 
-    <div className="space-y-6 text-sm leading-relaxed">
-      <SectionLegale titre="Éditeur du site">
-        <p>Seva Cinque</p>
+    <div className="mt-8 space-y-8 text-pretty text-base leading-relaxed text-muted-foreground">
+      <SectionLegale titre="Projet personnel">
         <p>
-          Email :{' '}
-          <a href={`mailto:${EMAIL_CONTACT}`} className="text-red-600 hover:underline">
+          {NOM_SITE} est un projet réalisé dans un cadre académique. Il ne s’agit pas d’un service
+          réel de restauration.
+        </p>
+      </SectionLegale>
+
+      <SectionLegale titre="Éditeur du site">
+        <p className="text-foreground">Seva Cinque</p>
+        <p>
+          E-mail :{' '}
+          <a href={`mailto:${EMAIL_CONTACT}`} className={classeLien}>
             {EMAIL_CONTACT}
-          </a>
+          </a>{' '}  (e-mail factice)
         </p>
       </SectionLegale>
 
       <SectionLegale titre="Hébergement">
-        <p>aucun</p>
+        <p>Aucun.</p>
       </SectionLegale>
 
       <SectionLegale titre="Données personnelles">
@@ -38,36 +50,26 @@ export const MentionsLegales = () => (
         </p>
       </SectionLegale>
 
-      
       <SectionLegale titre="Propriété intellectuelle">
         <p>
-          Les textes, éléments graphiques et éléments d'interface créés
-          dans le cadre de ce projet sont protégés par les droits
-          applicables à la propriété intellectuelle.
+          Les textes, éléments graphiques et éléments d’interface créés dans le cadre de ce projet
+          sont protégés par les droits applicables à la propriété intellectuelle.
         </p>
         <p>
-          Certaines images utilisées sur ce site proviennent de {' '} 
+          Certaines images utilisées sur ce site proviennent d’
           <a
             href="https://unsplash.com/fr/licence"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-red-600 hover:underline"
+            className={classeLien}
           >
-             Unsplash
+            Unsplash
+            <span className="sr-only"> (s’ouvre dans un nouvel onglet)</span>
           </a>
-          . Elles sont utilisées conformément à la licence Unsplash.
-          Les droits relatifs à ces images restent soumis aux conditions
-          de cette licence et aux éventuels droits de tiers.
-        </p>
-      </SectionLegale>
-
-
-      <SectionLegale titre="Projet personnel">
-        <p>
-          Ce site est un projet réalisé dans un cadre académique. Il ne s’agit pas d’un service
-          réel de restauration.
+          . Elles sont utilisées conformément à la licence Unsplash. Les droits relatifs à ces
+          images restent soumis aux conditions de cette licence et aux éventuels droits de tiers.
         </p>
       </SectionLegale>
     </div>
-  </div>
+  </article>
 );
