@@ -27,13 +27,13 @@ export function VueStockActuel() {
       <BandeauMessage message={message} />
 
       <div className="flex items-center justify-between">
-        <h3 className="flex items-center gap-2 text-base font-bold text-gray-800">
-          <Package className="h-5 w-5 text-red-600" />
+        <h3 className="flex items-center gap-2 text-lg font-semibold text-foreground">
+          <Package className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
           Niveaux de stock actuels
         </h3>
         <div className="flex items-center gap-2">
           <Bouton taille="xs" onClick={() => setFormAjoutOuvert(!formAjoutOuvert)}>
-            <Plus className="h-4 w-4" /> Ajouter Ingrédient
+            <Plus className="h-4 w-4" aria-hidden="true" /> Ajouter un ingrédient
           </Bouton>
           <Bouton variante="neutre" taille="xs" onClick={charger} disabled={chargement}>
             Actualiser

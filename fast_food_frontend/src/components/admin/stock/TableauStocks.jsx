@@ -1,19 +1,20 @@
 import { LigneStock } from './LigneStock';
 
 export const TableauStocks = ({ stocks, chargement, onModifier, onSupprimer }) => (
-  <div className="overflow-x-auto rounded-xl border">
-    <table className="w-full border-collapse text-left text-xs">
+  <div className="overflow-x-auto rounded-xl border border-border bg-card">
+    <table className="w-full border-collapse text-left text-sm">
+      <caption className="sr-only">Niveaux de stock des matières premières</caption>
       <thead>
-        <tr className="border-b bg-gray-100 text-gray-600">
-          <th className="p-3">ID</th>
-          <th className="p-3">Ingrédient / Matière Première</th>
-          <th className="p-3">Quantité en Stock</th>
-          <th className="p-3">Unité</th>
-          <th className="p-3 text-center">État</th>
-          <th className="p-3 text-right">Actions</th>
+        <tr className="border-b border-border text-muted-foreground">
+          <th scope="col" className="p-3 font-medium">ID</th>
+          <th scope="col" className="p-3 font-medium">Ingrédient</th>
+          <th scope="col" className="p-3 font-medium">Quantité</th>
+          <th scope="col" className="p-3 font-medium">Unité</th>
+          <th scope="col" className="p-3 text-center font-medium">État</th>
+          <th scope="col" className="p-3 text-right font-medium"><span className="sr-only">Actions</span></th>
         </tr>
       </thead>
-      <tbody className="divide-y">
+      <tbody className="divide-y divide-border">
         {stocks.map((stock) => (
           <LigneStock
             key={stock.id}

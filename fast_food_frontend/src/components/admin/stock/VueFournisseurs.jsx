@@ -94,8 +94,8 @@ export function VueFournisseurs() {
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           <div className="space-y-4 lg:col-span-2">
             <div className="flex items-center justify-between">
-              <h3 className="flex items-center gap-2 font-bold text-gray-800">
-                <Truck className="h-5 w-5 text-red-600" />
+              <h3 className="flex items-center gap-2 text-lg font-semibold text-foreground">
+                <Truck className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
                 Catalogue des articles du fournisseur
               </h3>
               <ImportCatalogue chargement={chargement} onImporter={importerCatalogue} />

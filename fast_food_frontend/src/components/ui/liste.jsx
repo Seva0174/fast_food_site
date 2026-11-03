@@ -8,7 +8,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
-// Liste déroulante. Les options se décrivent par { value, label }.
+// Liste déroulante. Les options se décrivent par { value, label, description } (description facultative).
 // Pour un classement par rubriques, passer `groupes` ([{ libelle, options }]) à la place de `options`.
 export const ListeDeroulante = ({
   valeur,
@@ -18,16 +18,33 @@ export const ListeDeroulante = ({
   placeholder,
   className = '',
   classeItem = 'text-sm',
+  // id : relie la liste à son <label htmlFor> ; ariaLabel : nom accessible sans label visible
+  id,
+  ariaLabel,
+  // invalide / ariaDescribedby : relie la liste à son message d'erreur
+  invalide = false,
+  ariaDescribedby,
 }) => {
   const rendreOption = (option) => (
-    <SelectItem key={option.value} value={String(option.value)} className={classeItem}>
+    <SelectItem
+      key={option.value}
+      value={String(option.value)}
+      description={option.description}
+      className={classeItem}
+    >
       {option.label}
     </SelectItem>
   );
 
   return (
     <Select value={valeur ? String(valeur) : ''} onValueChange={onChange}>
-      <SelectTrigger className={`h-auto ${className}`}>
+      <SelectTrigger
+        id={id}
+        aria-label={ariaLabel}
+        aria-invalid={invalide || undefined}
+        aria-describedby={ariaDescribedby}
+        className={`h-auto ${className}`}
+      >
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent className="z-[60]">

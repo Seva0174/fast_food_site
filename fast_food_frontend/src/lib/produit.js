@@ -15,7 +15,7 @@ export const produitsDeCategorie = (produits, idCategorie) =>
 export const estPersonnalisable = (produit) => produit.estFormule || aDesOptions(produit)
 
 // Un produit sans photo ni description est un brouillon (ex : produit de test) : il reste hors de la carte.
-const estAffichable = (produit) => Boolean(produit.imageUrl || produit.description?.trim());
+export const estAffichable = (produit) => Boolean(produit.imageUrl || produit.description?.trim());
 
 // Retire les étapes de menu et les groupes d'options sans contenu, qui donneraient un écran vide.
 const sansGroupesVides = (produit) => ({

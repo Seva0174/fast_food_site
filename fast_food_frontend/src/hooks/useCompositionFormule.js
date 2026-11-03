@@ -9,8 +9,8 @@ import {
   supprimerGroupeFormuleApi,
 } from '@/api/formulesApi';
 import { extraireMessageErreur } from '@/lib/erreurs';
-import { construirePayloadProduitFormule, erreurSurcout } from '@/lib/formule';
-import { construirePayloadGroupe, erreurGroupe } from '@/lib/options';
+import { construirePayloadProduitFormule, reordonnerEmplacements } from '@/lib/formule';
+import { construirePayloadGroupe } from '@/lib/options';
 import { useMessage } from './useMessage';
 
 // Emplacements d'un menu et produits proposés : chargement et modifications.
@@ -53,34 +53,39 @@ export const useCompositionFormule = (idFormule, onChange) => {
     [afficher, charger, onChange]
   );
 
-  // Valide un formulaire d'emplacement : renvoie le corps de la requête, ou null.
-  const preparerGroupe = (formulaire) => {
-    const payload = construirePayloadGroupe(formulaire);
-    const messageErreur = erreurGroupe(payload);
-    if (messageErreur) {
-      afficher(messageErreur, 'erreur');
-      return null;
-    }
-    return payload;
-  };
-
-  const creerGroupe = async (formulaire) => {
-    const payload = preparerGroupe(formulaire);
-    if (!payload) return false;
-    return executer(
-      () => creerGroupeFormuleApi(idFormule, payload),
+  // Les formulaires valident leurs champs avant l'appel (erreursGroupe, erreurSurcout)
+  const creerGroupe = (formulaire) =>
+    executer(
+      () => creerGroupeFormuleApi(idFormule, construirePayloadGroupe(formulaire)),
       'Emplacement créé',
       "Erreur lors de la création de l'emplacement."
     );
-  };
 
-  const modifierGroupe = async (idGroupe, formulaire) => {
-    const payload = preparerGroupe(formulaire);
-    if (!payload) return false;
-    return executer(
-      () => modifierGroupeFormuleApi(idGroupe, payload),
+  const modifierGroupe = (idGroupe, formulaire) =>
+    executer(
+      () => modifierGroupeFormuleApi(idGroupe, construirePayloadGroupe(formulaire)),
       'Emplacement modifié',
       "Erreur lors de la modification de l'emplacement."
+    );
+
+  // Monte (sens -1) ou descend (sens 1) un emplacement ; les ordres sont renumérotés 1, 2, 3...
+  const deplacerGroupe = (idGroupe, sens) => {
+    const changements = reordonnerEmplacements(groupes, idGroupe, sens);
+    if (changements.length === 0) return Promise.resolve(false);
+    return executer(
+      () =>
+        Promise.all(
+          changements.map(({ groupe, ordre }) =>
+            modifierGroupeFormuleApi(groupe.id, {
+              nom: groupe.nom,
+              minSelection: groupe.minSelection,
+              maxSelection: groupe.maxSelection,
+              ordre,
+            })
+          )
+        ),
+      'Ordre des emplacements modifié',
+      "Erreur lors du déplacement de l'emplacement."
     );
   };
 
@@ -91,37 +96,19 @@ export const useCompositionFormule = (idFormule, onChange) => {
       "Erreur lors de la suppression de l'emplacement."
     );
 
-  const ajouterProduit = async (idGroupe, formulaire) => {
-    if (!formulaire.idProduit) {
-      afficher('Choisissez un produit.', 'erreur');
-      return false;
-    }
-    const payload = construirePayloadProduitFormule(formulaire);
-    const messageErreur = erreurSurcout(payload.surcout);
-    if (messageErreur) {
-      afficher(messageErreur, 'erreur');
-      return false;
-    }
-    return executer(
-      () => ajouterProduitFormuleApi(idGroupe, payload),
+  const ajouterProduit = (idGroupe, formulaire) =>
+    executer(
+      () => ajouterProduitFormuleApi(idGroupe, construirePayloadProduitFormule(formulaire)),
       'Produit ajouté',
       "Erreur lors de l'ajout du produit."
     );
-  };
 
-  const modifierSurcout = async (idLien, saisie) => {
-    const surcout = parseFloat(saisie || 0);
-    const messageErreur = erreurSurcout(surcout);
-    if (messageErreur) {
-      afficher(messageErreur, 'erreur');
-      return false;
-    }
-    return executer(
-      () => modifierSurcoutFormuleApi(idLien, { surcout }),
+  const modifierSurcout = (idLien, saisie) =>
+    executer(
+      () => modifierSurcoutFormuleApi(idLien, { surcout: parseFloat(saisie || 0) }),
       'Surcoût modifié',
       'Erreur lors de la modification du surcoût.'
     );
-  };
 
   const retirerProduit = (idLien) =>
     executer(
@@ -135,8 +122,10 @@ export const useCompositionFormule = (idFormule, onChange) => {
     chargement,
     erreur,
     message,
+    charger,
     creerGroupe,
     modifierGroupe,
+    deplacerGroupe,
     supprimerGroupe,
     ajouterProduit,
     modifierSurcout,

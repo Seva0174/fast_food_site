@@ -5,9 +5,9 @@ import { Bouton } from '@/components/ui/bouton';
 export const GrilleCatalogue = ({ catalogue, onAjouter }) => {
   if (catalogue.length === 0) {
     return (
-      <div className="rounded-xl border border-dashed border-gray-300 bg-gray-50 py-8 text-center text-sm text-gray-500">
+      <div className="rounded-xl border border-dashed border-border bg-muted/50 py-8 text-center text-sm text-muted-foreground">
         Aucun article au catalogue. Importez un fichier CSV (format :{' '}
-        <code className="rounded bg-gray-200 px-1 py-0.5">nom_matiere;prix_unitaire</code>).
+        <code className="rounded bg-accent px-1 py-0.5">nom_matiere;prix_unitaire</code>).
       </div>
     );
   }
@@ -17,13 +17,13 @@ export const GrilleCatalogue = ({ catalogue, onAjouter }) => {
       {catalogue.map((article) => (
         <div
           key={article.id}
-          className="flex items-center justify-between rounded-lg border bg-gray-50 p-3 transition hover:border-gray-300"
+          className="flex items-center justify-between rounded-lg border bg-muted/50 p-3 transition hover:border-input"
         >
           <div>
-            <p className="text-sm font-semibold text-gray-800">{article.matierePremiereNom}</p>
-            <p className="text-xs text-gray-500">{Number(article.prixUnitaire).toFixed(2)} € / unité</p>
+            <p className="text-sm font-semibold text-foreground">{article.matierePremiereNom}</p>
+            <p className="text-xs text-muted-foreground">{Number(article.prixUnitaire).toFixed(2)} € / unité</p>
           </div>
-          <Bouton variante="danger" taille="xs" onClick={() => onAjouter(article)}>
+          <Bouton variante="secondaire" taille="xs" onClick={() => onAjouter(article)}>
             <Plus className="h-3.5 w-3.5" /> Ajouter
           </Bouton>
         </div>

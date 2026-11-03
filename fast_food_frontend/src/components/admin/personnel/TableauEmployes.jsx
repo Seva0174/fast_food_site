@@ -1,3 +1,6 @@
+import { useState } from 'react';
+import { Bouton } from '@/components/ui/bouton';
+import { BandeauMessage } from '@/components/ui/bandeau';
 import { estSonCompte } from '@/lib/personnel';
 import { LigneEmploye } from './LigneEmploye';
 
@@ -7,43 +10,84 @@ export const TableauEmployes = ({
   erreur,
   idSelectionne,
   emailConnecte,
+  onRecharger,
   onModifier,
   onGererHeures,
   onSupprimer,
-}) => (
-  <div className="space-y-4 rounded-lg border bg-white p-6 shadow-sm">
-    <h2 className="text-xl font-bold text-gray-800">Liste des Salariés</h2>
-    {chargement && <p className="text-sm text-gray-500">Chargement de l'équipe...</p>}
-    {erreur && <p className="text-sm text-red-500">{erreur}</p>}
+}) => {
+  // Une seule ligne en édition à la fois ; les crayons des autres lignes sont inactifs en attendant
+  const [idEnEdition, setIdEnEdition] = useState(null);
 
-    {!chargement && !erreur && (
-      <div className="overflow-x-auto">
-        <table className="w-full border-collapse text-left text-sm">
-          <thead>
-            <tr className="border-b bg-gray-50 text-xs uppercase text-gray-600">
-              <th className="p-3">Nom</th>
-              <th className="p-3">Email</th>
-              <th className="p-3">Rôle Système</th>
-              <th className="p-3">Poste RH</th>
-              <th className="p-3">Taux Horaire</th>
-              <th className="p-3 text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y">
-            {employes.map((employe) => (
-              <LigneEmploye
-                key={employe.id}
-                employe={employe}
-                selectionne={idSelectionne === employe.id}
-                estMonCompte={estSonCompte(employe, emailConnecte)}
-                onModifier={onModifier}
-                onGererHeures={onGererHeures}
-                onSupprimer={onSupprimer}
-              />
-            ))}
-          </tbody>
-        </table>
+  if (chargement) {
+    return (
+      <p role="status" className="text-sm text-muted-foreground">
+        Chargement de l'équipe…
+      </p>
+    );
+  }
+
+  if (erreur) {
+    return (
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <BandeauMessage message={{ texte: erreur, type: 'erreur' }} className="flex-1" />
+        <Bouton variante="secondaire" onClick={onRecharger}>
+          Réessayer
+        </Bouton>
       </div>
-    )}
-  </div>
-);
+    );
+  }
+
+  if (employes.length === 0) {
+    return (
+      <p className="rounded-xl border border-border bg-card p-6 text-sm text-muted-foreground">
+        Aucun employé pour le moment. Ajoutez le premier avec « Embaucher ».
+      </p>
+    );
+  }
+
+  return (
+    // relative : les éléments sr-only (positionnés en absolu) restent dans la zone qui défile
+    <div className="relative overflow-x-auto rounded-xl border border-border bg-card">
+      {/* Largeurs fixes : les colonnes ne bougent pas quand une ligne passe en édition */}
+      <table className="w-full min-w-[64rem] table-fixed border-collapse text-left text-sm">
+        <caption className="sr-only">Membres de l'équipe</caption>
+        <colgroup>
+          <col className="w-[22%]" />
+          <col className="w-[20%]" />
+          <col className="w-[13%]" />
+          <col className="w-[11%]" />
+          <col className="w-[11%]" />
+          <col className="w-[23%]" />
+        </colgroup>
+        <thead>
+          <tr className="border-b border-border text-muted-foreground">
+            <th scope="col" className="p-3 font-medium">Nom</th>
+            <th scope="col" className="p-3 font-medium">Email</th>
+            <th scope="col" className="p-3 font-medium">Accès au site</th>
+            <th scope="col" className="p-3 font-medium">Poste</th>
+            <th scope="col" className="whitespace-nowrap p-3 text-right font-medium">Taux horaire</th>
+            <th scope="col" className="p-3 text-right font-medium">
+              <span className="sr-only">Actions</span>
+            </th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-border">
+          {employes.map((employe) => (
+            <LigneEmploye
+              key={employe.id}
+              employe={employe}
+              selectionne={idSelectionne === employe.id}
+              estMonCompte={estSonCompte(employe, emailConnecte)}
+              enEdition={idEnEdition === employe.id}
+              editionAilleurs={idEnEdition !== null && idEnEdition !== employe.id}
+              onEditer={setIdEnEdition}
+              onModifier={onModifier}
+              onGererHeures={onGererHeures}
+              onSupprimer={onSupprimer}
+            />
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+};

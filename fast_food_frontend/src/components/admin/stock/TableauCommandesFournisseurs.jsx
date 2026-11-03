@@ -1,58 +1,56 @@
 import { Eye } from 'lucide-react';
 import { Bouton } from '@/components/ui/bouton';
 import { ListeDeroulante } from '@/components/ui/liste';
-import { STATUTS_COMMANDE, optionsStatut } from '@/lib/approvisionnement';
+import { formaterPrix } from '@/lib/prix';
+import { formaterDateCommande, infosStatut, optionsStatut } from '@/lib/approvisionnement';
 
 // Historique des commandes fournisseurs : détails et changement de statut.
 export const TableauCommandesFournisseurs = ({ commandes, onVoirDetails, onChangerStatut }) => (
-  <section className="space-y-4 border-t pt-4">
-    <h3 className="text-sm font-bold text-gray-800">Historique des commandes d'approvisionnement</h3>
+  <section className="space-y-4 border-t border-border pt-6">
+    <h3 className="text-lg font-semibold text-foreground">Historique des commandes d'approvisionnement</h3>
 
     {commandes.length === 0 ? (
-      <p className="text-xs text-gray-500">Aucune commande enregistrée.</p>
+      <p className="text-sm text-muted-foreground">Aucune commande enregistrée.</p>
     ) : (
-      <div className="overflow-x-auto">
-        <table className="w-full border-collapse text-left text-xs">
+      <div className="overflow-x-auto rounded-xl border border-border bg-card">
+        <table className="w-full border-collapse text-left text-sm">
+          <caption className="sr-only">Commandes passées aux fournisseurs</caption>
           <thead>
-            <tr className="border-b bg-gray-100 text-gray-600">
-              <th className="p-2.5">Fournisseur</th>
-              <th className="p-2.5">Date</th>
-              <th className="p-2.5">Montant</th>
-              <th className="p-2.5">Statut</th>
-              <th className="p-2.5">Action</th>
+            <tr className="border-b border-border text-muted-foreground">
+              <th scope="col" className="p-3 font-medium">Fournisseur</th>
+              <th scope="col" className="p-3 font-medium">Date</th>
+              <th scope="col" className="p-3 text-right font-medium">Montant</th>
+              <th scope="col" className="p-3 font-medium">Statut</th>
+              <th scope="col" className="p-3 font-medium"><span className="sr-only">Actions</span></th>
             </tr>
           </thead>
-          <tbody className="divide-y">
+          <tbody className="divide-y divide-border">
             {commandes.map((cmd) => (
-              <tr key={cmd.id} className="hover:bg-gray-50">
-                <td className="p-2.5">{cmd.fournisseurNom}</td>
-                <td className="p-2.5">{cmd.dateCommande}</td>
-                <td className="p-2.5 font-semibold text-red-600">{cmd.montantTotal.toFixed(2)} €</td>
-                <td className="p-2.5">
-                  <span
-                    className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${STATUTS_COMMANDE[cmd.status].classe}`}
-                  >
-                    {cmd.status.toUpperCase()}
-                  </span>
+              <tr key={cmd.id} className="hover:bg-muted/40">
+                <td className="p-3 font-medium">{cmd.fournisseurNom}</td>
+                <td className="whitespace-nowrap p-3 text-muted-foreground">{formaterDateCommande(cmd.dateCommande)}</td>
+                <td className="whitespace-nowrap p-3 text-right font-semibold tabular-nums">{formaterPrix(cmd.montantTotal)}</td>
+                <td className="p-3">
+                  <span className={infosStatut(cmd.status).classe}>{infosStatut(cmd.status).libelle}</span>
                 </td>
-                <td className="p-2.5">
+                <td className="p-3">
                   <div className="flex items-center gap-2">
                     <Bouton
                       variante="neutre"
                       taille="iconeCarree"
                       onClick={() => onVoirDetails(cmd.id)}
                       title="Voir les détails"
-                      aria-label="Voir les détails"
+                      aria-label={`Détails de la commande ${cmd.fournisseurNom} du ${formaterDateCommande(cmd.dateCommande)}`}
                     >
-                      <Eye className="h-3.5 w-3.5" />
+                      <Eye className="h-3.5 w-3.5" aria-hidden="true" />
                     </Bouton>
 
                     <ListeDeroulante
                       valeur={cmd.status}
                       onChange={(statut) => onChangerStatut(cmd.id, statut)}
                       options={optionsStatut(cmd.status)}
-                      className="min-w-[11rem] cursor-pointer rounded border bg-white p-1 text-xs font-medium"
-                      classeItem="text-xs"
+                      ariaLabel={`Statut de la commande ${cmd.fournisseurNom}`}
+                      className="min-w-[11rem] cursor-pointer rounded-lg border border-input px-2 py-1 text-sm font-medium"
                     />
                   </div>
                 </td>

@@ -16,15 +16,15 @@ export const FormulaireAjoutStock = ({ chargement, onAjouter, onFermer }) => {
   };
 
   return (
-    <form onSubmit={soumettre} className="space-y-3 rounded-xl border bg-gray-50 p-4">
-      <h4 className="text-xs font-bold text-gray-700">Nouvelle Matière Première</h4>
+    <form onSubmit={soumettre} className="space-y-3 rounded-xl border bg-muted/50 p-4">
+      <h4 className="text-base font-semibold text-foreground">Nouvelle matière première</h4>
       <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
         <input
           type="text"
           placeholder="Nom (ex: Steak 150g)"
           value={nom}
           onChange={(e) => setNom(e.target.value)}
-          className="rounded-lg border p-2 text-xs"
+          className="rounded-lg border border-input bg-transparent p-2 text-xs placeholder:text-muted-foreground"
           required
         />
         <input
@@ -33,14 +33,14 @@ export const FormulaireAjoutStock = ({ chargement, onAjouter, onFermer }) => {
           placeholder="Quantité initiale"
           value={quantite}
           onChange={(e) => setQuantite(e.target.value)}
-          className="rounded-lg border p-2 text-xs"
+          className="rounded-lg border border-input bg-transparent p-2 text-xs placeholder:text-muted-foreground"
           required
         />
         <ListeDeroulante
           valeur={uniteMesure}
           onChange={setUniteMesure}
           options={UNITES}
-          className="rounded-lg border bg-white p-2 text-xs"
+          className="rounded-lg border border-input p-2 text-xs"
           classeItem="text-xs"
         />
       </div>
@@ -48,7 +48,7 @@ export const FormulaireAjoutStock = ({ chargement, onAjouter, onFermer }) => {
         <Bouton variante="neutre" taille="xs" onClick={onFermer}>
           Annuler
         </Bouton>
-        <Bouton type="submit" variante="succes" taille="xs" disabled={chargement}>
+        <Bouton type="submit" variante="principal" taille="xs" disabled={chargement}>
           Enregistrer
         </Bouton>
       </div>

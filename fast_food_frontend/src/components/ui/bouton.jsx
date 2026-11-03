@@ -1,25 +1,27 @@
 const base =
-  'inline-flex items-center justify-center gap-2 rounded-lg font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50';
+  'inline-flex items-center justify-center gap-2 rounded-lg font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50 aria-disabled:cursor-not-allowed aria-disabled:opacity-60';
+// aria-disabled (plutôt que disabled) : le bouton reste atteignable au clavier et son explication
+// (aria-describedby) est lue ; c'est au onClick d'ignorer le clic.
 
 // Les variantes s'appuient sur les variables du theme (index.css).
-// Les noms sont conserves pour ne rien casser dans l'admin.
 const variantes = {
   principal: 'bg-primary text-primary-foreground hover:bg-primary/90',
   secondaire: 'border border-border bg-secondary text-secondary-foreground hover:bg-accent',
-  danger: 'bg-destructive/10 text-destructive hover:bg-destructive/20',
+  // Contour plutôt que fond rouge adouci : le texte rouge garde au moins 4,5:1
+  danger: 'border border-destructive/50 text-destructive hover:bg-destructive/10',
   fantome: 'text-muted-foreground hover:bg-accent hover:text-foreground',
-  succes: 'bg-green-600 text-white hover:bg-green-500',
+  // Icône d'une action destructive : neutre au repos, rouge au survol et au focus. Plusieurs corbeilles
+  // rouges au repos noieraient les vrais signaux d'alerte de la page.
+  fantomeDanger:
+    'text-muted-foreground hover:bg-destructive/10 hover:text-destructive focus-visible:text-destructive disabled:text-muted-foreground',
   neutre: 'bg-muted text-secondary-foreground hover:bg-accent',
   lien: 'text-primary hover:underline',
   discret: 'text-muted-foreground hover:underline',
   sombre: 'bg-foreground text-background hover:bg-foreground/90',
-  info: 'bg-blue-600 text-white hover:bg-blue-500',
   contour: 'border border-primary/40 bg-transparent text-primary hover:border-primary hover:bg-primary/10',
-  lienInfo: 'text-blue-500 hover:underline',
-  succesDoux: 'bg-green-500/15 text-green-500 hover:bg-green-500/25',
-  dangerDoux: 'bg-destructive/15 text-destructive hover:bg-destructive/25',
-  contourInfo: 'border border-blue-500/40 text-blue-500 hover:border-blue-500',
-  contourAccent: 'border border-purple-500/40 text-purple-500 hover:border-purple-500',
+  dangerDoux: 'border border-destructive/50 text-destructive hover:bg-destructive/10',
+  // Confirmation d'une action irréversible : fond plein pour un contraste suffisant dans les deux thèmes
+  dangerPlein: 'bg-destructive text-background hover:bg-destructive/90',
 };
 
 const tailles = {

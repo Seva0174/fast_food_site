@@ -1,15 +1,47 @@
-import { useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
+import { ChevronDown, ChevronUp, Pencil, Trash2 } from 'lucide-react';
+import { attributsErreur, classeBadge, classeChamp } from '@/components/admin/carte/classes';
+import { ErreurChamp } from '@/components/admin/carte/ErreurChamp';
 import { Bouton } from '@/components/ui/bouton';
-import { estObligatoire } from '@/lib/options';
+import { useEditionExclusive } from '@/hooks/useEditionsEnCours';
+import { useEnvoi } from '@/hooks/useEnvoi';
+import { construirePayloadGroupe, erreursGroupe, libelleRegleGroupe } from '@/lib/options';
 
-const classeChamp = 'rounded border bg-white px-2 py-1 text-xs';
+const classeLabelCompact = 'mb-1 block text-xs font-medium text-muted-foreground';
 
-// En-tête d'un groupe : badge obligatoire ou optionnel, maximum, et modification en place.
-// avecOrdre : affiche et permet de modifier la position d'affichage (emplacements de menu).
+// En-tête d'un groupe : nom, règle de choix, et modification en place.
+// avecOrdre : emplacement de menu, affiché à sa position (1, 2, 3...) avec des flèches pour le déplacer.
+// position, onDeplacer(sens), premier, dernier : utilisés avec avecOrdre (sens -1 : monter, 1 : descendre).
 // onModifier reçoit (idGroupe, formulaire) et renvoie true si le groupe a été modifié.
-export const EnTeteGroupe = ({ groupe, avecOrdre = false, onModifier, onSupprimer }) => {
-  const [enEdition, setEnEdition] = useState(false);
+// Édition : Entrée enregistre, les erreurs s'affichent sous leur champ ; le focus revient ensuite au crayon.
+export const EnTeteGroupe = ({
+  groupe,
+  avecOrdre = false,
+  position,
+  premier = false,
+  dernier = false,
+  onDeplacer,
+  onModifier,
+  onSupprimer,
+}) => {
+  const id = useId();
+  const { ouverte: enEdition, ailleurs, ouvrir, fermer, attente } = useEditionExclusive();
   const [formulaire, setFormulaire] = useState(null);
+  const [erreurs, setErreurs] = useState({});
+  const { enCours, lancer } = useEnvoi();
+  const crayon = useRef(null);
+  const rendreFocus = useRef(false);
+
+  useEffect(() => {
+    if (enEdition || !rendreFocus.current) return;
+    rendreFocus.current = false;
+    crayon.current?.focus();
+  }, [enEdition]);
+
+  const terminerEdition = () => {
+    rendreFocus.current = true;
+    fermer();
+  };
 
   const demarrerEdition = () => {
     setFormulaire({
@@ -18,105 +50,138 @@ export const EnTeteGroupe = ({ groupe, avecOrdre = false, onModifier, onSupprime
       maxSelection: groupe.maxSelection,
       ...(avecOrdre && { ordre: groupe.ordre }),
     });
-    setEnEdition(true);
+    setErreurs({});
+    ouvrir();
   };
 
-  const enregistrer = async () => {
-    if (await onModifier(groupe.id, formulaire)) setEnEdition(false);
+  const enregistrer = async (e) => {
+    e.preventDefault();
+    const nouvelles = erreursGroupe(construirePayloadGroupe(formulaire)) ?? {};
+    setErreurs(nouvelles);
+    const champEnErreur = ['nom', 'minSelection', 'maxSelection'].find((champ) => nouvelles[champ]);
+    if (champEnErreur) return document.getElementById(`${id}-${champEnErreur}`)?.focus();
+
+    if (await lancer(() => onModifier(groupe.id, formulaire))) terminerEdition();
   };
 
-  const modifier = (champ) => (e) => setFormulaire({ ...formulaire, [champ]: e.target.value });
+  const modifier = (champ) => (e) => {
+    setFormulaire({ ...formulaire, [champ]: e.target.value });
+    if (erreurs[champ]) setErreurs({ ...erreurs, [champ]: undefined });
+  };
 
   if (enEdition) {
+    const champNombre = (champ, libelle, min) => (
+      <div className="w-28">
+        <label htmlFor={`${id}-${champ}`} className={classeLabelCompact}>
+          {libelle}
+        </label>
+        <input
+          id={`${id}-${champ}`}
+          type="number"
+          min={min}
+          value={formulaire[champ]}
+          onChange={modifier(champ)}
+          className={`${classeChamp} bg-card tabular-nums`}
+          {...attributsErreur(erreurs, champ, id)}
+        />
+        <ErreurChamp id={`${id}-erreur-${champ}`} message={erreurs[champ]} />
+      </div>
+    );
+
     return (
-      <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
-        <div
-          className={`grid flex-1 grid-cols-1 gap-2 ${avecOrdre ? 'sm:grid-cols-4' : 'sm:grid-cols-3'}`}
-        >
-          <input
-            type="text"
-            required
-            value={formulaire.nom}
-            onChange={modifier('nom')}
-            placeholder="Nom du groupe"
-            className={`${classeChamp} font-bold text-gray-800`}
-          />
-          <div className="flex items-center gap-1 text-xs">
-            <span className="text-[10px] text-gray-500">Min:</span>
+      <form onSubmit={enregistrer} noValidate className="flex flex-col gap-3 lg:flex-row lg:items-start">
+        <div className="flex flex-1 flex-wrap items-start gap-3">
+          <div className="min-w-48 flex-1">
+            <label htmlFor={`${id}-nom`} className={classeLabelCompact}>
+              Nom
+            </label>
             <input
-              type="number"
-              min="0"
-              required
-              value={formulaire.minSelection}
-              onChange={modifier('minSelection')}
-              className={`${classeChamp} w-16`}
+              id={`${id}-nom`}
+              type="text"
+              autoFocus
+              autoComplete="off"
+              value={formulaire.nom}
+              onChange={modifier('nom')}
+              className={`${classeChamp} bg-card font-semibold`}
+              {...attributsErreur(erreurs, 'nom', id)}
             />
+            <ErreurChamp id={`${id}-erreur-nom`} message={erreurs.nom} />
           </div>
-          <div className="flex items-center gap-1 text-xs">
-            <span className="text-[10px] text-gray-500">Max:</span>
-            <input
-              type="number"
-              min="1"
-              required
-              value={formulaire.maxSelection}
-              onChange={modifier('maxSelection')}
-              className={`${classeChamp} w-16`}
-            />
-          </div>
-          {avecOrdre && (
-            <div className="flex items-center gap-1 text-xs">
-              <span className="text-[10px] text-gray-500">Ordre:</span>
-              <input
-                type="number"
-                min="0"
-                required
-                value={formulaire.ordre}
-                onChange={modifier('ordre')}
-                className={`${classeChamp} w-16`}
-              />
-            </div>
-          )}
+          {champNombre('minSelection', 'Choix min.', 0)}
+          {champNombre('maxSelection', 'Choix max.', 1)}
         </div>
-        <div className="flex items-center justify-end gap-2">
-          <Bouton variante="succes" taille="xs" onClick={enregistrer}>
-            Enregistrer
-          </Bouton>
-          <Bouton variante="secondaire" taille="xs" onClick={() => setEnEdition(false)}>
+        <div className="flex items-center justify-end gap-2 lg:mt-5">
+          <Bouton variante="secondaire" taille="sm" className="min-h-10" onClick={terminerEdition}>
             Annuler
           </Bouton>
+          <Bouton type="submit" taille="sm" className="min-h-10" disabled={enCours}>
+            {enCours ? 'Enregistrement…' : 'Enregistrer'}
+          </Bouton>
         </div>
-      </div>
+      </form>
     );
   }
 
-  const obligatoire = estObligatoire(groupe);
-
   return (
-    <div className="flex items-center justify-between">
-      <div className="flex flex-wrap items-center gap-3">
-        <span className="text-sm font-bold text-gray-800">{groupe.nom}</span>
-        <span
-          className={`rounded-full border px-2 py-0.5 text-[10px] font-bold ${
-            obligatoire
-              ? 'border-amber-200 bg-amber-100 text-amber-800'
-              : 'border-blue-200 bg-blue-100 text-blue-800'
-          }`}
-        >
-          {obligatoire ? `Obligatoire (${groupe.minSelection} min)` : 'Optionnel'}
-        </span>
-        <span className="text-xs text-gray-500">
-          Max : <strong className="text-gray-700">{groupe.maxSelection}</strong>
-        </span>
-        {avecOrdre && <span className="text-xs text-gray-400">Ordre : {groupe.ordre}</span>}
+    <div className="flex items-center justify-between gap-3">
+      <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
+        <h3 className="text-base font-semibold text-foreground">
+          {avecOrdre && <span className="mr-2 tabular-nums text-muted-foreground">{position}.</span>}
+          {groupe.nom}
+        </h3>
+        <span className={classeBadge}>{libelleRegleGroupe(groupe)}</span>
       </div>
 
-      <div className="flex items-center gap-2">
-        <Bouton variante="lienInfo" taille="nu" className="text-xs" onClick={demarrerEdition}>
-          Modifier
+      <div className="flex shrink-0 items-center gap-1">
+        {/* aria-disabled plutôt que disabled : le focus reste sur la flèche arrivée en bout de liste */}
+        {avecOrdre && (
+          <>
+            <Bouton
+              variante="fantome"
+              taille="nu"
+              className="size-9 aria-disabled:cursor-not-allowed aria-disabled:opacity-40"
+              aria-disabled={premier}
+              onClick={() => !premier && onDeplacer(-1)}
+              aria-label={`Monter ${groupe.nom}`}
+              title="Monter"
+            >
+              <ChevronUp className="h-4 w-4" aria-hidden="true" />
+            </Bouton>
+            <Bouton
+              variante="fantome"
+              taille="nu"
+              className="size-9 aria-disabled:cursor-not-allowed aria-disabled:opacity-40"
+              aria-disabled={dernier}
+              onClick={() => !dernier && onDeplacer(1)}
+              aria-label={`Descendre ${groupe.nom}`}
+              title="Descendre"
+            >
+              <ChevronDown className="h-4 w-4" aria-hidden="true" />
+            </Bouton>
+          </>
+        )}
+        <Bouton
+          ref={crayon}
+          variante="fantome"
+          taille="nu"
+          className="size-9"
+          onClick={() => !ailleurs && demarrerEdition()}
+          aria-label={`Modifier ${groupe.nom}`}
+          title="Modifier"
+          {...attente(ailleurs)}
+        >
+          <Pencil className="h-4 w-4" aria-hidden="true" />
         </Bouton>
-        <span className="text-gray-300">|</span>
-        <Bouton variante="lien" taille="nu" className="text-xs" onClick={() => onSupprimer(groupe)}>
-          Supprimer
+        <Bouton
+          variante="fantomeDanger"
+          taille="nu"
+          className="size-9"
+          onClick={() => !ailleurs && onSupprimer(groupe)}
+          aria-label={`Supprimer ${groupe.nom}`}
+          title="Supprimer"
+          {...attente(ailleurs)}
+        >
+          <Trash2 className="h-4 w-4" aria-hidden="true" />
         </Bouton>
       </div>
     </div>

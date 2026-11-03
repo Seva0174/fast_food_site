@@ -7,16 +7,22 @@ export const useMessage = (duree = 5000) => {
   const minuterie = useRef(null);
 
   const afficher = useCallback(
-    (texte, type = 'succes', dureeMessage = duree) => {
+    // action : { libelle, onClick } affiche un bouton dans le message (ex : « Annuler »), qui reste plus longtemps
+    (texte, type = 'succes', dureeMessage, action = null) => {
       clearTimeout(minuterie.current);
-      setMessage({ texte, type });
-      minuterie.current = setTimeout(() => setMessage(null), dureeMessage);
+      setMessage({ texte, type, action });
+      minuterie.current = setTimeout(() => setMessage(null), dureeMessage ?? (action ? 8000 : duree));
     },
     [duree]
   );
 
+  const effacer = useCallback(() => {
+    clearTimeout(minuterie.current);
+    setMessage(null);
+  }, []);
+
   // Évite une mise à jour d'état après le démontage du composant
   useEffect(() => () => clearTimeout(minuterie.current), []);
 
-  return { message, afficher };
+  return { message, afficher, effacer };
 };

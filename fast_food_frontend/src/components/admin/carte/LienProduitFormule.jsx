@@ -1,76 +1,119 @@
-import { useState } from 'react';
-import { X } from 'lucide-react';
+import { useId, useRef, useState } from 'react';
+import { Pencil, X } from 'lucide-react';
 import { Bouton } from '@/components/ui/bouton';
+import { useEditionExclusive } from '@/hooks/useEditionsEnCours';
+import { useEnvoi } from '@/hooks/useEnvoi';
+import { erreurSurcout } from '@/lib/formule';
+import { formaterPrix, formaterSupplement } from '@/lib/prix';
+import { classeBadge, classeChamp } from './classes';
+import { ErreurChamp } from './ErreurChamp';
 
-// Un produit proposé dans un emplacement : prix seul, surcout dans le menu (modifiable) et retrait.
-export const LienProduitFormule = ({ lien, onModifierSurcout, onRetirer }) => {
-  const [enEdition, setEnEdition] = useState(false);
+// Un produit proposé dans un emplacement : prix seul, surcoût dans le menu (modifiable) et retrait.
+// Édition du surcoût : Entrée enregistre ; le focus revient ensuite au crayon.
+export const LienProduitFormule = ({ lien, nomEmplacement, onModifierSurcout, onRetirer }) => {
+  const id = useId();
+  const { ouverte: enEdition, ailleurs, ouvrir, fermer, attente } = useEditionExclusive();
   const [surcout, setSurcout] = useState('0');
+  const [erreur, setErreur] = useState(null);
+  const { enCours, lancer } = useEnvoi();
+  const crayon = useRef(null);
 
   const demarrerEdition = () => {
     setSurcout(String(lien.surcout ?? 0));
-    setEnEdition(true);
+    setErreur(null);
+    ouvrir();
   };
 
-  const enregistrer = async () => {
-    if (await onModifierSurcout(lien.id, surcout)) setEnEdition(false);
+  const terminerEdition = () => {
+    fermer();
+    // Le crayon réapparaît au rendu suivant
+    requestAnimationFrame(() => crayon.current?.focus());
   };
+
+  const enregistrer = async (e) => {
+    e.preventDefault();
+    const messageErreur = erreurSurcout(parseFloat(surcout || 0));
+    setErreur(messageErreur);
+    if (messageErreur) return;
+    if (await lancer(() => onModifierSurcout(lien.id, surcout))) terminerEdition();
+  };
+
+  const aUnSurcout = Number(lien.surcout) > 0;
 
   return (
-    <div className="space-y-1 rounded border bg-gray-50/60 px-3 py-2 text-xs">
+    <li className="space-y-1 rounded-lg border border-border py-1.5 pl-3 pr-1 text-sm">
       <div className="flex items-start justify-between gap-2">
-        <div>
-          <span className="font-semibold text-gray-800">{lien.nomProduit}</span>
-          {!lien.estDispo && (
-            <span className="ml-2 rounded-full bg-red-100 px-1.5 py-0.5 text-[10px] font-bold text-red-700">
-              Rupture
-            </span>
-          )}
-          <div className="text-[11px] text-gray-500">Prix seul : {Number(lien.prixProduit).toFixed(2)} €</div>
+        <div className="min-w-0 pt-1">
+          <span className="font-medium">{lien.nomProduit}</span>
+          {!lien.estDispo && <span className={`${classeBadge} ml-2`}>Hors vente</span>}
+          <p className="tabular-nums text-muted-foreground">Prix seul : {formaterPrix(lien.prixProduit)}</p>
         </div>
         <Bouton
-          variante="lien"
+          variante="fantomeDanger"
           taille="nu"
-          className="px-1"
-          onClick={() => onRetirer(lien.id)}
-          title="Retirer ce produit de l'emplacement"
-          aria-label="Retirer ce produit de l'emplacement"
+          className="size-9 shrink-0"
+          onClick={() => !ailleurs && !enEdition && onRetirer()}
+          title="Retirer de l'emplacement"
+          aria-label={`Retirer ${lien.nomProduit} de « ${nomEmplacement} »`}
+          {...attente(ailleurs || enEdition)}
         >
-          <X className="h-4 w-4" />
+          <X className="h-4 w-4" aria-hidden="true" />
         </Bouton>
       </div>
 
       {enEdition ? (
-        <div className="flex items-center gap-2">
-          <input
-            type="number"
-            step="0.01"
-            min="0"
-            value={surcout}
-            onChange={(e) => setSurcout(e.target.value)}
-            className="w-20 rounded border bg-white px-2 py-1 text-xs outline-none focus:ring-1 focus:ring-red-500"
-          />
-          <span className="text-gray-500">€</span>
-          <Bouton taille="xs" onClick={enregistrer}>
-            OK
-          </Bouton>
-          <Bouton variante="secondaire" taille="xs" onClick={() => setEnEdition(false)}>
-            Annuler
-          </Bouton>
-        </div>
+        <form onSubmit={enregistrer} noValidate className="pb-1 pr-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <label htmlFor={`${id}-surcout`} className="text-muted-foreground">
+              Surcoût (€)
+            </label>
+            <input
+              id={`${id}-surcout`}
+              type="number"
+              inputMode="decimal"
+              step="0.01"
+              min="0"
+              autoFocus
+              value={surcout}
+              onChange={(e) => {
+                setSurcout(e.target.value);
+                setErreur(null);
+              }}
+              aria-invalid={Boolean(erreur)}
+              aria-describedby={erreur ? `${id}-erreur` : undefined}
+              className={`${classeChamp} w-24 bg-card tabular-nums`}
+            />
+            <Bouton type="submit" taille="sm" className="min-h-10" disabled={enCours}>
+              {enCours ? 'Enregistrement…' : 'Enregistrer'}
+            </Bouton>
+            <Bouton variante="secondaire" taille="sm" className="min-h-10" onClick={terminerEdition}>
+              Annuler
+            </Bouton>
+          </div>
+          <ErreurChamp id={`${id}-erreur`} message={erreur} />
+        </form>
       ) : (
-        <div className="flex items-center gap-2">
-          <span className="text-gray-600">
-            Surcoût dans le menu :{' '}
-            <strong className={Number(lien.surcout) > 0 ? 'text-green-700' : 'text-gray-700'}>
-              {Number(lien.surcout) > 0 ? `+${Number(lien.surcout).toFixed(2)} €` : 'aucun'}
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-muted-foreground">
+            Dans le menu :{' '}
+            <strong className="font-semibold tabular-nums text-foreground">
+              {aUnSurcout ? formaterSupplement(lien.surcout) : 'sans surcoût'}
             </strong>
           </span>
-          <Bouton variante="lienInfo" taille="nu" onClick={demarrerEdition}>
-            Modifier
+          <Bouton
+            ref={crayon}
+            variante="fantome"
+            taille="nu"
+            className="size-9 shrink-0"
+            onClick={() => !ailleurs && demarrerEdition()}
+            aria-label={`Modifier le surcoût de ${lien.nomProduit} dans « ${nomEmplacement} »`}
+            title="Modifier le surcoût"
+            {...attente(ailleurs)}
+          >
+            <Pencil className="h-4 w-4" aria-hidden="true" />
           </Bouton>
         </div>
       )}
-    </div>
+    </li>
   );
 };

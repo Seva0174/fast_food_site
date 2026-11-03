@@ -25,8 +25,12 @@ export const HeroBanner = ({ onCommander }) => (
 
     <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
       <div className="max-w-2xl">
-        <h1 className="titre-marque text-balance text-6xl sm:text-7xl lg:text-8xl">
-          Le goût de la rue, livré chez vous
+        {/* Deux temps : « Fast-Food » ne se coupe jamais au tiret, « pour le peuple » reprend sur sa ligne */}
+        <h1 className="titre-marque text-balance text-5xl max-[340px]:text-4xl min-[440px]:text-6xl sm:text-7xl lg:text-8xl">
+          <span className="block">
+            Le <span className="whitespace-nowrap">Fast-Food</span> du peuple,
+          </span>{' '}
+          <span className="block">pour le peuple</span>
         </h1>
         <p className="mt-4 max-w-md text-base text-muted-foreground sm:text-lg">
           Burgers, tacos et menus préparés à la commande. Livraison ou click &amp; collect.

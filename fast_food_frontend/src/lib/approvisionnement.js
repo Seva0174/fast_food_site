@@ -7,24 +7,47 @@ export const STATUT_COMMANDE = {
   ANNULEE: 'annulee',
 };
 
-// Libellé du badge, libellé dans la liste de choix et classes du badge.
+const BADGE = 'inline-flex items-center whitespace-nowrap rounded-full border px-2.5 py-0.5 text-xs font-semibold';
+
+// Libellé du badge, libellé dans la liste de choix et classes du badge (tokens du thème :
+// un seul signal fort, le rouge de l'annulation ; les statuts finaux s'effacent).
 export const STATUTS_COMMANDE = {
   [STATUT_COMMANDE.EN_ATTENTE]: {
+    libelle: 'En attente',
     libelleChoix: 'En attente',
-    classe: 'bg-amber-100 text-amber-800',
+    classe: `${BADGE} border-border bg-secondary text-secondary-foreground`,
   },
   [STATUT_COMMANDE.EXPEDIEE]: {
+    libelle: 'Expédiée',
     libelleChoix: 'Expédiée',
-    classe: 'bg-blue-100 text-blue-800',
+    classe: `${BADGE} border-foreground/40 text-foreground`,
   },
   [STATUT_COMMANDE.RECUE]: {
-    libelleChoix: 'Reçue (Crédite le stock)',
-    classe: 'bg-green-100 text-green-800',
+    libelle: 'Reçue',
+    libelleChoix: 'Reçue (crédite le stock)',
+    classe: `${BADGE} border-border text-muted-foreground`,
   },
   [STATUT_COMMANDE.ANNULEE]: {
+    libelle: 'Annulée',
     libelleChoix: 'Annulée',
-    classe: 'bg-red-100 text-red-800',
+    classe: `${BADGE} border-destructive/40 bg-destructive/10 text-destructive`,
   },
+};
+
+// Statut inconnu (nouvelle valeur côté serveur) : affiché tel quel, sans faire planter le tableau.
+export const infosStatut = (statut) => {
+  if (STATUTS_COMMANDE[statut]) return STATUTS_COMMANDE[statut];
+  // « livree » -> « Livree » : première lettre en capitale, tirets bas en espaces
+  const libelle = statut ? statut.charAt(0).toUpperCase() + statut.slice(1).replace(/_/g, ' ') : 'Inconnu';
+  return { libelle, libelleChoix: libelle, classe: `${BADGE} border-border text-muted-foreground` };
+};
+
+// Date d'une commande fournisseur : « 28 oct. 2026 » (la valeur brute si elle n'est pas lisible).
+export const formaterDateCommande = (valeur) => {
+  const date = new Date(valeur);
+  return Number.isNaN(date.getTime())
+    ? valeur ?? ''
+    : date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
 };
 
 // Même table que ApprovisionnementService (côté serveur). 'recue' et 'annulee' sont finaux.
@@ -41,7 +64,7 @@ export const transitionsPossibles = (statut) => TRANSITIONS[statut] ?? [];
 export const optionsStatut = (statut) =>
   [statut, ...transitionsPossibles(statut)].map((s) => ({
     value: s,
-    label: STATUTS_COMMANDE[s].libelleChoix,
+    label: infosStatut(s).libelleChoix,
   }));
 
 // --- Bon de commande : une ligne est { idStock, nom, quantite, prixUnitaire } ---

@@ -1,6 +1,3 @@
-export const erreurPeriode = (debut, fin) =>
-  debut && fin && fin < debut ? 'La date de fin doit être postérieure à la date de début.' : null;
-
 // --- Dates "AAAA-MM-JJ" (format de l'API), en heure locale ---
 
 export const versIso = (date) =>
@@ -92,6 +89,16 @@ export const libellePeriode = ({ debut, fin }) => {
 // "lundi 3 octobre 2026" (nom accessible d'un jour du calendrier).
 export const libelleJourComplet = (iso) => formateurJourComplet.format(depuisIso(iso));
 
+const formateurJourCourt = new Intl.DateTimeFormat('fr-FR', {
+  weekday: 'short',
+  day: 'numeric',
+  month: 'short',
+  year: 'numeric',
+});
+
+// "mer. 28 oct. 2026"
+export const libelleJourCourt = (iso) => formateurJourCourt.format(depuisIso(iso));
+
 // "octobre 2026"
 export const libelleMois = ({ annee, mois }) => formateurMois.format(new Date(annee, mois, 1));
 
@@ -111,6 +118,17 @@ export const decalerMois = ({ annee, mois }, nombre) => {
 export const rangMois = ({ annee, mois }) => annee * 12 + mois;
 
 export const premierJourDuMois = ({ annee, mois }) => versIso(new Date(annee, mois, 1));
+
+// { debut, fin } couvrant un mois entier.
+export const periodeDuMois = ({ annee, mois }) => ({
+  debut: premierJourDuMois({ annee, mois }),
+  fin: versIso(new Date(annee, mois + 1, 0)),
+});
+
+// Période { debut, fin } d'une sélection { mois } (mois entier) ou { plage }.
+export const periodeDeSelection = (selection) => selection.plage ?? periodeDuMois(selection.mois);
+
+export const dansPeriode = (iso, { debut, fin }) => iso >= debut && iso <= fin;
 
 // Cases d'un mois, semaines commençant le lundi : null pour les cases vides avant le 1er.
 export const casesDuMois = ({ annee, mois }) => {

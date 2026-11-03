@@ -6,11 +6,6 @@ import { Navbar } from './Navbar';
 import { Footer } from './Footer';
 import { ErreurBoundary } from './ErreurBoundary';
 
-// Pages deja migrees vers le theme sombre. Les autres restent en theme clair
-// (classe .theme-clair) tant que leur design n'est pas refait.
-// Ajouter ici chaque page au fur et a mesure de sa migration.
-const ROUTES_SOMBRES = ['/', '/login', '/register', '/commander', '/user', '/mentions-legales', '/commandes'];
-
 // Pages qui gerent elles-memes leur largeur (banniere pleine largeur).
 const ROUTES_PLEINE_LARGEUR = ['/'];
 
@@ -27,16 +22,13 @@ export const MainLayout = () => {
     if (typeNavigation !== 'POP') window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
   }, [pathname, typeNavigation]);
 
-  const themeSombre = ROUTES_SOMBRES.includes(pathname);
   const pleineLargeur = ROUTES_PLEINE_LARGEUR.includes(pathname);
 
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
       <Navbar />
 
-      <div
-        className={`flex-grow ${themeSombre ? '' : 'theme-clair bg-background text-foreground'}`}
-      >
+      <div className="flex-grow">
         <main
           className={pleineLargeur ? 'w-full' : 'mx-auto w-full max-w-7xl p-4 sm:p-6 lg:p-8'}
         >

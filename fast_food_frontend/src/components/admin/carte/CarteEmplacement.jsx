@@ -1,22 +1,20 @@
-import { useState } from 'react';
+import { AlertCircle, Plus } from 'lucide-react';
 import { EnTeteGroupe } from '@/components/admin/groupes/EnTeteGroupe';
 import { Bouton } from '@/components/ui/bouton';
-import {
-  avertissementsEmplacement,
-  grouperParCategorie,
-  produitsAjoutables,
-} from '@/lib/formule';
+import { useEditionExclusive } from '@/hooks/useEditionsEnCours';
+import { grouperParCategorie, manqueEmplacement, produitsAjoutables } from '@/lib/formule';
 import { FormulaireProduitFormule } from './FormulaireProduitFormule';
 import { LienProduitFormule } from './LienProduitFormule';
 
-const CLASSES_AVERTISSEMENT = {
-  attention: 'border-amber-200 bg-amber-50 text-amber-700',
-  erreur: 'border-red-200 bg-red-50 text-red-700',
-};
-
 // Un emplacement de menu : en-tête, avertissements, produits proposés et ajout d'un produit.
+// onRetirerProduit reçoit le lien (la confirmation est demandée par la modale).
 export const CarteEmplacement = ({
+  id,
   groupe,
+  position,
+  premier,
+  dernier,
+  onDeplacer,
   produits,
   onModifierGroupe,
   onSupprimerGroupe,
@@ -24,57 +22,72 @@ export const CarteEmplacement = ({
   onModifierSurcout,
   onRetirerProduit,
 }) => {
-  const [ajoutOuvert, setAjoutOuvert] = useState(false);
+  const { ouverte: ajoutOuvert, ailleurs, ouvrir, fermer, attente } = useEditionExclusive();
+  const ajoutables = produitsAjoutables(produits, groupe);
 
   return (
-    <div className="overflow-hidden rounded-lg border">
-      <div className="border-b bg-gray-50 px-4 py-3">
+    // tabIndex -1 : le résumé des emplacements incomplets peut y amener le focus
+    <section id={id} tabIndex={-1} className="scroll-mt-4 overflow-hidden rounded-xl border border-border bg-card outline-none focus-visible:ring-2 focus-visible:ring-ring">
+      <div className="border-b border-border bg-muted/50 px-4 py-3">
         <EnTeteGroupe
           groupe={groupe}
           avecOrdre
+          position={position}
+          premier={premier}
+          dernier={dernier}
+          onDeplacer={onDeplacer}
           onModifier={onModifierGroupe}
           onSupprimer={onSupprimerGroupe}
         />
       </div>
 
       <div className="space-y-3 p-4">
-        {avertissementsEmplacement(groupe).map((avertissement) => (
-          <p
-            key={avertissement.texte}
-            className={`rounded border px-3 py-2 text-xs ${CLASSES_AVERTISSEMENT[avertissement.gravite]}`}
-          >
-            {avertissement.texte}
+        {/* Une ligne : le détail et la liste des emplacements à corriger sont dans le résumé en haut */}
+        {manqueEmplacement(groupe) && (
+          <p className="flex items-center gap-2 text-sm font-medium text-destructive">
+            <AlertCircle className="h-4 w-4 shrink-0" aria-hidden="true" />
+            {manqueEmplacement(groupe)} : le menu ne peut pas être commandé.
           </p>
-        ))}
+        )}
 
         {groupe.produits.length === 0 ? (
-          <p className="text-xs italic text-gray-400">Aucun produit dans cet emplacement. Ajoutez-en un ci-dessous.</p>
+          <p className="text-sm text-muted-foreground">Aucun produit dans cet emplacement pour le moment.</p>
         ) : (
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             {groupe.produits.map((lien) => (
               <LienProduitFormule
                 key={lien.id}
                 lien={lien}
                 onModifierSurcout={onModifierSurcout}
-                onRetirer={onRetirerProduit}
+                nomEmplacement={groupe.nom}
+                onRetirer={() => onRetirerProduit(lien)}
               />
             ))}
-          </div>
+          </ul>
         )}
 
         {ajoutOuvert ? (
           <FormulaireProduitFormule
-            categories={grouperParCategorie(produitsAjoutables(produits, groupe))}
-            titre={`Ajouter un produit à "${groupe.nom}"`}
+            categories={grouperParCategorie(ajoutables)}
+            titre={`Proposer un produit dans « ${groupe.nom} »`}
             onSoumettre={(formulaire) => onAjouterProduit(groupe.id, formulaire)}
-            onAnnuler={() => setAjoutOuvert(false)}
+            onAnnuler={fermer}
           />
-        ) : (
-          <Bouton variante="contour" taille="xs" onClick={() => setAjoutOuvert(true)}>
-            + Ajouter un produit
+        ) : ajoutables.length > 0 ? (
+          <Bouton
+            variante="fantome"
+            taille="sm"
+            className="-ml-2"
+            {...attente(ailleurs)}
+            onClick={() => !ailleurs && ouvrir()}
+          >
+            <Plus className="h-4 w-4" aria-hidden="true" />
+            Proposer un produit
           </Bouton>
+        ) : (
+          <p className="text-sm text-muted-foreground">Tous les produits de la carte sont déjà proposés ici.</p>
         )}
       </div>
-    </div>
+    </section>
   );
 };

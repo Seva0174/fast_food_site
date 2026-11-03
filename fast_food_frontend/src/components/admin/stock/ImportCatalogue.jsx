@@ -21,7 +21,8 @@ export const ImportCatalogue = ({ chargement, onImporter }) => {
         type="file"
         accept=".csv"
         onChange={(e) => setFichier(e.target.files[0] ?? null)}
-        className="text-xs text-gray-500 file:mr-2 file:rounded-md file:border-0 file:bg-gray-100 file:px-3 file:py-1 file:text-xs file:font-semibold file:text-gray-700 hover:file:bg-gray-200"
+        aria-label="Fichier CSV du catalogue"
+        className="text-xs text-muted-foreground file:mr-2 file:rounded-md file:border file:border-input file:bg-secondary file:px-3 file:py-1 file:text-xs file:font-semibold file:text-secondary-foreground hover:file:bg-accent"
       />
       <Bouton type="submit" variante="sombre" taille="xs" disabled={!fichier || chargement}>
         <Upload className="h-3.5 w-3.5" /> Import CSV

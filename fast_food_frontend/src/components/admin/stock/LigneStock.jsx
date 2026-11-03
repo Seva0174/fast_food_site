@@ -23,9 +23,9 @@ export const LigneStock = ({ stock, desactive, onModifier, onSupprimer }) => {
   };
 
   return (
-    <tr className={`transition hover:bg-gray-50 ${enAlerte ? 'bg-amber-50/50' : ''}`}>
-      <td className="p-3 font-bold text-gray-500">#{stock.id}</td>
-      <td className="p-3 font-semibold text-gray-800">{stock.nom}</td>
+    <tr className={`transition hover:bg-muted/40 ${enAlerte ? 'bg-destructive/5' : ''}`}>
+      <td className="p-3 font-bold text-muted-foreground">#{stock.id}</td>
+      <td className="p-3 font-semibold text-foreground">{stock.nom}</td>
 
       <td className="p-3">
         {enEdition ? (
@@ -34,10 +34,10 @@ export const LigneStock = ({ stock, desactive, onModifier, onSupprimer }) => {
             step="0.01"
             value={quantite}
             onChange={(e) => setQuantite(e.target.value)}
-            className="w-24 rounded border p-1 text-xs font-semibold focus:ring-1 focus:ring-red-500"
+            className="w-24 rounded-lg border border-input bg-transparent p-1 text-xs font-semibold tabular-nums"
           />
         ) : (
-          <span className="text-sm font-bold text-gray-800">{formaterQuantite(stock.quantite)}</span>
+          <span className="text-sm font-bold text-foreground">{formaterQuantite(stock.quantite)}</span>
         )}
       </td>
 
@@ -47,21 +47,21 @@ export const LigneStock = ({ stock, desactive, onModifier, onSupprimer }) => {
             valeur={unite}
             onChange={setUnite}
             options={UNITES}
-            className="min-w-[7rem] rounded border bg-white p-1 text-xs font-medium"
+            className="min-w-[7rem] rounded-lg border border-input p-1 text-xs font-medium"
             classeItem="text-xs"
           />
         ) : (
-          <span className="font-medium text-gray-500">{stock.uniteMesure}</span>
+          <span className="font-medium text-muted-foreground">{stock.uniteMesure}</span>
         )}
       </td>
 
       <td className="p-3 text-center">
         {enAlerte ? (
-          <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-800">
-            <AlertTriangle className="h-3 w-3" /> Bas
+          <span className="inline-flex items-center gap-1 rounded-full border border-destructive/40 bg-destructive/10 px-2 py-0.5 text-xs font-semibold text-destructive">
+            <AlertTriangle className="h-3 w-3" aria-hidden="true" /> Bas
           </span>
         ) : (
-          <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 text-[10px] font-bold text-green-800">
+          <span className="inline-flex items-center gap-1 rounded-full border border-border bg-secondary px-2 py-0.5 text-xs font-semibold text-muted-foreground">
             OK
           </span>
         )}
@@ -72,7 +72,7 @@ export const LigneStock = ({ stock, desactive, onModifier, onSupprimer }) => {
           {enEdition ? (
             <>
               <Bouton
-                variante="succes"
+                variante="principal"
                 taille="iconeCarree"
                 onClick={sauvegarder}
                 disabled={desactive}
@@ -103,7 +103,7 @@ export const LigneStock = ({ stock, desactive, onModifier, onSupprimer }) => {
                 <Edit2 className="h-3.5 w-3.5" />
               </Bouton>
               <Bouton
-                variante="danger"
+                variante="fantomeDanger"
                 taille="iconeCarree"
                 onClick={() => onSupprimer(stock)}
                 title="Supprimer"

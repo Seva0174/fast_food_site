@@ -1,7 +1,7 @@
-import { useRef, useState } from 'react';
-import { Popover } from 'radix-ui';
+import { useState } from 'react';
 import { CalendarDays } from 'lucide-react';
-import { CalendrierPeriode } from './CalendrierPeriode';
+import { Calendrier } from '@/components/ui/calendrier';
+import { FenetreCalendrier } from '@/components/ui/fenetre-calendrier';
 import {
   PERIODE_GLOBALE,
   PERIODE_PERSONNALISEE,
@@ -25,7 +25,6 @@ export const BarrePeriode = ({ onChanger, resume }) => {
   const [choix, setChoix] = useState(PERIODE_GLOBALE);
   const [periodePerso, setPeriodePerso] = useState(null);
   const [calendrierOuvert, setCalendrierOuvert] = useState(false);
-  const contenuCalendrier = useRef(null);
 
   const choisirRapide = (id) => {
     setChoix(id);
@@ -56,34 +55,23 @@ export const BarrePeriode = ({ onChanger, resume }) => {
           </button>
         ))}
 
-        <Popover.Root open={calendrierOuvert} onOpenChange={setCalendrierOuvert}>
-          <Popover.Trigger asChild>
+        <FenetreCalendrier
+          ouvert={calendrierOuvert}
+          onOuvertChange={setCalendrierOuvert}
+          libelle="Choisir une période"
+          declencheur={
             <button type="button" aria-pressed={persoActive} className={classeChoix(persoActive)}>
               <CalendarDays className="h-4 w-4" aria-hidden="true" />
               {persoActive && periodePerso ? libellePeriode(periodePerso) : 'Personnalisée'}
             </button>
-          </Popover.Trigger>
-          {/* Sans portail : le calendrier hérite du thème de la page (clair dans l'admin) */}
-          <Popover.Content
-            ref={contenuCalendrier}
-            align="start"
-            sideOffset={8}
-            collisionPadding={16}
-            aria-label="Choisir une période"
-            // Le focus va directement sur le jour actif du calendrier
-            onOpenAutoFocus={(e) => {
-              e.preventDefault();
-              contenuCalendrier.current?.querySelector('[data-date][tabindex="0"]')?.focus();
-            }}
-            className="z-50 rounded-xl border border-border bg-popover p-4 text-popover-foreground shadow-md animate-in fade-in zoom-in-95 duration-150"
-          >
-            <CalendrierPeriode
-              valeur={periodePerso}
-              onAppliquer={appliquer}
-              onAnnuler={() => setCalendrierOuvert(false)}
-            />
-          </Popover.Content>
-        </Popover.Root>
+          }
+        >
+          <Calendrier
+            valeur={periodePerso}
+            onAppliquer={appliquer}
+            onAnnuler={() => setCalendrierOuvert(false)}
+          />
+        </FenetreCalendrier>
       </div>
 
       {resume && <p className="text-sm text-muted-foreground tabular-nums">{resume}</p>}

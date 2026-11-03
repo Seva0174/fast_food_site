@@ -47,5 +47,5 @@ export const usePersonnel = () => {
   const supprimer = (id) =>
     executer(() => supprimerEmployeApi(id), 'Employé supprimé', 'Erreur lors de la suppression.');
 
-  return { employes, chargement, erreur, message, afficher, creer, modifier, supprimer };
+  return { employes, chargement, erreur, message, afficher, charger, creer, modifier, supprimer };
 };

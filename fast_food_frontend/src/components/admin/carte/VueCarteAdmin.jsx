@@ -1,14 +1,22 @@
-import { useState } from 'react';
-import { BandeauMessage } from '@/components/ui/bandeau';
-import { PanneauAdmin } from '@/components/admin/PanneauAdmin';
+import { useMemo, useRef, useState } from 'react';
+import { Plus } from 'lucide-react';
 import { ModalConfirmation } from '@/components/modales/ModalConfirmation';
 import { Bouton } from '@/components/ui/bouton';
+import { MessageFlottant } from '@/components/ui/message-flottant';
 import { useCarteAdmin } from '@/hooks/useCarteAdmin';
 import { useConfirmation } from '@/hooks/useConfirmation';
-import { produitsParCategorie } from '@/lib/carte';
-import { GestionFormuleModal } from './GestionFormuleModal';
-import { GestionOptionsModal } from './GestionOptionsModal';
-import { ModalProduit } from './ModalProduit';
+import {
+  FILTRES_CARTE_VIDES,
+  aDesFiltres,
+  compterEtats,
+  decrireFiltres,
+  filtrerProduits,
+  produitsParCategorie,
+  trierProduits,
+  triSuivant,
+} from '@/lib/carte';
+import { FicheProduit } from './FicheProduit';
+import { FiltresCarte } from './FiltresCarte';
 import { TableauCarte } from './TableauCarte';
 
 export function VueCarteAdmin() {
@@ -19,86 +27,124 @@ export function VueCarteAdmin() {
     chargement,
     erreur,
     message,
-    afficher,
+    effacer,
     charger,
     enregistrer,
     changerDisponibilite,
     supprimer,
   } = useCarteAdmin();
   const { confirmer, modaleProps } = useConfirmation();
+  const titreCarte = useRef(null);
 
-  // { produit } quand la modale de produit est ouverte (produit nul en création), sinon null
-  const [modaleProduit, setModaleProduit] = useState(null);
-  const [produitPourOptions, setProduitPourOptions] = useState(null);
-  const [produitPourFormule, setProduitPourFormule] = useState(null);
+  // Fiche ouverte : { idProduit (nul : nouveau produit), onglet }, ou null
+  const [fiche, setFiche] = useState(null);
+  const [filtres, setFiltres] = useState(FILTRES_CARTE_VIDES);
+  // Tri à l'intérieur de chaque catégorie (null : ordre de la base)
+  const [tri, setTri] = useState(null);
+  // Images qui n'ont pas pu être chargées : { [idProduit]: adresse }. Elles comptent dans « À corriger ».
+  const [echecsImages, setEchecsImages] = useState({});
+
+  const groupes = useMemo(
+    () => produitsParCategorie(categories, trierProduits(filtrerProduits(produits, filtres, echecsImages), tri)),
+    [categories, produits, filtres, tri, echecsImages]
+  );
+  const nombres = compterEtats(produits, echecsImages);
+
+  // Ouvrir la fiche efface le message précédent : il resterait affiché par-dessus
+  const ouvrirFiche = (idProduit, onglet = 'details') => {
+    effacer();
+    setFiche({ idProduit, onglet });
+  };
+
+  const signalerImageCassee = (produit) =>
+    setEchecsImages((precedents) =>
+      precedents[produit.id] === produit.imageUrl ? precedents : { ...precedents, [produit.id]: produit.imageUrl }
+    );
 
   const demanderSuppression = async (produit) => {
     const confirme = await confirmer({
-      titre: 'Supprimer le produit',
-      message: `Voulez-vous vraiment supprimer le produit "${produit.nom}" ?`,
-      libelleConfirmer: 'Supprimer',
+      titre: produit.estFormule ? 'Supprimer le menu ?' : 'Supprimer le produit ?',
+      message: produit.estFormule
+        ? `Le menu « ${produit.nom} » et ses emplacements seront retirés de la carte. Cette action est irréversible. Un menu déjà commandé ne peut pas être supprimé : passez-le plutôt hors vente.`
+        : `« ${produit.nom} » sera retiré de la carte avec sa recette et ses options. Cette action est irréversible. Un produit déjà commandé ou proposé dans un menu ne peut pas être supprimé : passez-le plutôt hors vente.`,
+      libelleConfirmer: produit.estFormule ? 'Supprimer le menu' : 'Supprimer le produit',
+      libelleRefuser: 'Garder',
+      destructif: true,
     });
-    if (confirme) await supprimer(produit);
+    if (!confirme) return;
+    // La ligne a disparu : le focus revient au titre de la carte
+    if (await supprimer(produit)) titreCarte.current?.focus();
   };
 
   return (
-    <PanneauAdmin
-      titre="Gestion de la Carte"
-      sousTitre="Ajoutez, modifiez, désactivez les produits, configurez leurs options (viandes, sauces, etc.) ou la composition des menus."
-      actions={
-        <Bouton taille="sm" onClick={() => setModaleProduit({ produit: null })}>
-          + Ajouter un produit
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 ref={titreCarte} tabIndex={-1} className="titre-marque text-3xl outline-none">
+            Carte
+            {!chargement && !erreur && (
+              <span className="ml-3 align-middle font-sans text-base font-medium normal-case tabular-nums text-muted-foreground">
+                {produits.length} produit{produits.length > 1 ? 's' : ''}
+              </span>
+            )}
+          </h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Produits, mise en vente, options et composition des menus.
+          </p>
+        </div>
+        <Bouton className="whitespace-nowrap" onClick={() => ouvrirFiche(null)}>
+          <Plus className="h-4 w-4" aria-hidden="true" />
+          Ajouter un produit
         </Bouton>
-      }
-    >
-      <BandeauMessage message={message} />
+      </div>
 
-      {chargement && <p className="text-gray-500">Chargement de la carte...</p>}
-      {erreur && <p className="font-medium text-red-500">{erreur}</p>}
-
-      {!chargement && !erreur && (
-        <TableauCarte
-          groupes={produitsParCategorie(categories, produits)}
-          onChangerDisponibilite={changerDisponibilite}
-          onGererComposition={setProduitPourFormule}
-          onGererOptions={setProduitPourOptions}
-          onModifier={(produit) => setModaleProduit({ produit })}
-          onSupprimer={demanderSuppression}
-        />
-      )}
-
-      {produitPourOptions && (
-        <GestionOptionsModal
-          produit={produitPourOptions}
-          matieresPremieres={matieresPremieres}
-          onClose={() => setProduitPourOptions(null)}
-          onRefresh={charger}
-        />
-      )}
-
-      {produitPourFormule && (
-        <GestionFormuleModal
-          formule={produitPourFormule}
+      {!chargement && !erreur && produits.length > 0 && (
+        <FiltresCarte
+          filtres={filtres}
+          categories={categories}
           produits={produits}
-          onClose={() => setProduitPourFormule(null)}
-          onRefresh={charger}
+          nombres={nombres}
+          onChange={setFiltres}
         />
       )}
 
-      {modaleProduit && (
-        <ModalProduit
-          key={modaleProduit.produit?.id ?? 'nouveau'}
-          produit={modaleProduit.produit}
+      <TableauCarte
+        groupes={groupes}
+        chargement={chargement}
+        erreur={erreur}
+        carteVide={produits.length === 0}
+        filtresActifs={aDesFiltres(filtres)}
+        descriptionFiltres={decrireFiltres(filtres, categories)}
+        onEffacerFiltres={() => setFiltres(FILTRES_CARTE_VIDES)}
+        onRecharger={charger}
+        tri={tri}
+        onTrier={(colonne) => setTri(triSuivant(tri, colonne))}
+        echecsImages={echecsImages}
+        onImageCassee={signalerImageCassee}
+        onChangerDisponibilite={changerDisponibilite}
+        onGererComposition={(produit) => ouvrirFiche(produit.id, 'composition')}
+        onGererOptions={(produit) => ouvrirFiche(produit.id, 'options')}
+        onModifier={(produit) => ouvrirFiche(produit.id)}
+        onSupprimer={demanderSuppression}
+      />
+
+      {fiche && (
+        <FicheProduit
+          key={fiche.idProduit ?? 'nouveau'}
+          idProduit={fiche.idProduit}
+          ongletInitial={fiche.onglet}
+          produits={produits}
           categories={categories}
           matieresPremieres={matieresPremieres}
-          message={message}
-          afficher={afficher}
           onEnregistrer={enregistrer}
-          onClose={() => setModaleProduit(null)}
+          onRefresh={charger}
+          onClose={() => setFiche(null)}
         />
       )}
 
       <ModalConfirmation {...modaleProps} />
-    </PanneauAdmin>
+
+      <MessageFlottant message={message} />
+    </div>
   );
 }

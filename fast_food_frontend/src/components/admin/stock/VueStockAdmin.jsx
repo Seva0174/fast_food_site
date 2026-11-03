@@ -1,7 +1,6 @@
 import { useState } from 'react';
-import { PanneauAdmin } from '@/components/admin/PanneauAdmin';
 import { VueFournisseurs } from '@/components/admin/stock/VueFournisseurs';
-import { Onglets } from '@/components/ui/onglets';
+import { ListeOnglets, Onglets, PanneauOnglet } from '@/components/ui/onglets';
 import { VueStockActuel } from './VueStockActuel';
 
 const SOUS_ONGLETS = [
@@ -13,18 +12,29 @@ export function VueStockAdmin() {
   const [sousOnglet, setSousOnglet] = useState(SOUS_ONGLETS[0].id);
 
   return (
-    <PanneauAdmin
-      titre="Gestion des Stocks & Approvisionnement"
-      sousTitre="Gérez les réapprovisionnements en matières premières"
-      actions={<Onglets variante="segments" onglets={SOUS_ONGLETS} actif={sousOnglet} onChange={setSousOnglet} />}
-    >
-      {/* Masqué plutôt que démonté : le bon de commande en cours survit au passage sur les stocks */}
-      <div className={sousOnglet === 'fournisseurs' ? undefined : 'hidden'}>
-        <VueFournisseurs />
-      </div>
+    <Onglets actif={sousOnglet} onChange={setSousOnglet}>
+      <div className="space-y-6">
+        {/* Même en-tête que la carte et le personnel : titre d'enseigne, puis la navigation à droite */}
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 className="titre-marque text-3xl">Stock</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Matières premières, fournisseurs et commandes d'approvisionnement.
+            </p>
+          </div>
+          <ListeOnglets variante="segments" onglets={SOUS_ONGLETS} label="Stock" />
+        </div>
 
-      {/* Démonté à chaque changement d'onglet : les stocks sont rechargés (par exemple après une réception) */}
-      {sousOnglet === 'stocks_actuels' && <VueStockActuel />}
-    </PanneauAdmin>
+        {/* Masqué plutôt que démonté : le bon de commande en cours survit au passage sur les stocks */}
+        <PanneauOnglet id="fournisseurs" garderMonte>
+          <VueFournisseurs />
+        </PanneauOnglet>
+
+        {/* Démonté à chaque changement d'onglet : les stocks sont rechargés (par exemple après une réception) */}
+        <PanneauOnglet id="stocks_actuels">
+          <VueStockActuel />
+        </PanneauOnglet>
+      </div>
+    </Onglets>
   );
 }

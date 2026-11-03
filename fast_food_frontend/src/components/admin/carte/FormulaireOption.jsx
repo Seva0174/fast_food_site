@@ -1,101 +1,166 @@
-import { useState } from 'react';
+import { useId, useRef, useState } from 'react';
 import { Bouton } from '@/components/ui/bouton';
 import { ListeDeroulante } from '@/components/ui/liste';
-import { FORMULAIRE_OPTION_VIDE, proposerNomOption } from '@/lib/options';
+import { useSignalerEdition } from '@/hooks/useEditionsEnCours';
+import { useEnvoi } from '@/hooks/useEnvoi';
+import { FORMULAIRE_OPTION_VIDE, construirePayloadOption, erreursOption, proposerNomOption } from '@/lib/options';
+import { attributsErreur, classeChamp, classeLabel, classeListe, classeSousFormulaire, classeTitreSection } from './classes';
+import { ErreurChamp } from './ErreurChamp';
 
-const classeChamp =
-  'w-full rounded border bg-white px-2 py-1 text-xs outline-none focus:ring-1 focus:ring-red-500';
-const classeLabel = 'mb-0.5 block text-[10px] font-medium text-gray-600';
+// Valeur de la liste pour « aucun ingrédient » (une liste Radix n'accepte pas de valeur vide)
+const AUCUN = 'aucun';
 
 // Formulaire d'une option, pour l'ajout comme pour la modification.
-// onSoumettre reçoit le formulaire et renvoie true si l'enregistrement a réussi.
+// continuer : après un ajout, le formulaire se vide et reste ouvert pour la saisie suivante (« Terminer » le ferme).
+// L'ingrédient du stock est facultatif : sans lui, l'option ne retire rien du stock (ex : une sauce non suivie).
+// Les erreurs de saisie s'affichent sous leur champ ; onSoumettre reçoit le formulaire
+// et renvoie true si l'enregistrement a réussi.
 export const FormulaireOption = ({
   matieresPremieres,
   initial = FORMULAIRE_OPTION_VIDE,
   titre,
   libelleBouton,
+  continuer = false,
   onSoumettre,
   onAnnuler,
 }) => {
+  const id = useId();
   const [formulaire, setFormulaire] = useState(initial);
+  const [erreurs, setErreurs] = useState({});
+  const { enCours, lancer } = useEnvoi();
+  const champNom = useRef(null);
+  const champQuantite = useRef(null);
+  const champSurcout = useRef(null);
+  useSignalerEdition(true);
 
-  const modifier = (champ) => (e) => setFormulaire({ ...formulaire, [champ]: e.target.value });
+  const matiereChoisie = matieresPremieres.find((m) => String(m.id) === formulaire.idMatiere);
+
+  // Efface l'erreur d'un champ dès qu'on le modifie
+  const changer = (changement) => {
+    setFormulaire((prev) => ({ ...prev, ...changement }));
+    setErreurs((prev) => {
+      const suivantes = { ...prev };
+      Object.keys(changement).forEach((champ) => delete suivantes[champ]);
+      return suivantes;
+    });
+  };
+  const modifier = (champ) => (e) => changer({ [champ]: e.target.value });
 
   // Le nom suit la matière choisie tant qu'il n'a pas été personnalisé
-  const changerMatiere = (idMatiere) => {
-    const precedente = matieresPremieres.find((m) => String(m.id) === formulaire.idMatiere);
+  const changerMatiere = (valeur) => {
+    const idMatiere = valeur === AUCUN ? '' : valeur;
     const choisie = matieresPremieres.find((m) => String(m.id) === idMatiere);
-    setFormulaire({
-      ...formulaire,
+    changer({
       idMatiere,
-      nom: proposerNomOption(formulaire.nom, precedente?.nom ?? '', choisie?.nom ?? formulaire.nom),
+      nom: proposerNomOption(formulaire.nom, matiereChoisie?.nom ?? '', choisie?.nom ?? formulaire.nom),
     });
   };
 
   const soumettre = async (e) => {
     e.preventDefault();
-    if (await onSoumettre(formulaire)) onAnnuler();
+    const nouvelles = erreursOption(construirePayloadOption(formulaire)) ?? {};
+    setErreurs(nouvelles);
+    if (nouvelles.nom) return champNom.current?.focus();
+    if (nouvelles.quantiteDeduite) return champQuantite.current?.focus();
+    if (nouvelles.surcout) return champSurcout.current?.focus();
+
+    if (!(await lancer(() => onSoumettre(formulaire)))) return;
+    if (!continuer) return onAnnuler();
+    // Saisie suivante : formulaire vide, focus sur le premier champ
+    setFormulaire(FORMULAIRE_OPTION_VIDE);
+    setErreurs({});
+    document.getElementById(`${id}-idMatiere`)?.focus();
   };
 
+  const proprietesErreur = (champ) => attributsErreur(erreurs, champ, id);
+
   return (
-    <form
-      onSubmit={soumettre}
-      className="mt-2 space-y-2 rounded-md border border-red-200 bg-red-50/50 p-3"
-    >
-      <h5 className="text-[11px] font-bold uppercase text-red-800">{titre}</h5>
-      <div className="grid grid-cols-1 gap-2 sm:grid-cols-4">
+    <form onSubmit={soumettre} noValidate aria-labelledby={`${id}-titre`} className={classeSousFormulaire}>
+      <h4 id={`${id}-titre`} className={classeTitreSection}>
+        {titre}
+      </h4>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-4">
         <div className="sm:col-span-2">
-          <label className={classeLabel}>Nom de l'option</label>
+          <label htmlFor={`${id}-idMatiere`} className={classeLabel}>
+            Ingrédient du stock <span className="font-normal">(facultatif)</span>
+          </label>
+          <ListeDeroulante
+            id={`${id}-idMatiere`}
+            valeur={formulaire.idMatiere || AUCUN}
+            onChange={changerMatiere}
+            options={[
+              { value: AUCUN, label: 'Aucun (rien retiré du stock)' },
+              ...matieresPremieres.map((m) => ({ value: m.id, label: m.nom })),
+            ]}
+            className={`${classeListe} bg-card`}
+          />
+        </div>
+        <div className="sm:col-span-2">
+          <label htmlFor={`${id}-nom`} className={classeLabel}>
+            Nom affiché au client
+          </label>
           <input
+            id={`${id}-nom`}
+            ref={champNom}
             type="text"
-            required
+            autoFocus
+            autoComplete="off"
             value={formulaire.nom}
             onChange={modifier('nom')}
-            className={classeChamp}
+            className={`${classeChamp} bg-card`}
+            {...proprietesErreur('nom')}
           />
+          <ErreurChamp id={`${id}-erreur-nom`} message={erreurs.nom} />
+          {!erreurs.nom && (
+            <p className="mt-1 text-xs text-muted-foreground">Repris de l'ingrédient tant que vous ne le changez pas.</p>
+          )}
         </div>
+        {matiereChoisie && (
+          <div className="sm:col-span-2">
+            <label htmlFor={`${id}-quantite`} className={classeLabel}>
+              Retiré du stock à chaque vente{matiereChoisie.uniteMesure ? ` (${matiereChoisie.uniteMesure})` : ''}
+            </label>
+            <input
+              id={`${id}-quantite`}
+              ref={champQuantite}
+              type="number"
+              inputMode="decimal"
+              step="0.01"
+              min="0.01"
+              value={formulaire.quantiteDeduite}
+              onChange={modifier('quantiteDeduite')}
+              className={`${classeChamp} bg-card tabular-nums`}
+              {...proprietesErreur('quantiteDeduite')}
+            />
+            <ErreurChamp id={`${id}-erreur-quantiteDeduite`} message={erreurs.quantiteDeduite} />
+          </div>
+        )}
         <div className="sm:col-span-2">
-          <label className={classeLabel}>Matière première</label>
-          <ListeDeroulante
-            valeur={formulaire.idMatiere}
-            onChange={changerMatiere}
-            options={matieresPremieres.map((m) => ({ value: m.id, label: m.nom }))}
-            placeholder="-- Sélectionner --"
-            className="w-full bg-white px-2 py-1 text-xs"
-            classeItem="text-xs"
-          />
-        </div>
-        <div>
-          <label className={classeLabel}>Qté déduite</label>
+          <label htmlFor={`${id}-surcout`} className={classeLabel}>
+            Surcoût (€, 0 = gratuit)
+          </label>
           <input
+            id={`${id}-surcout`}
+            ref={champSurcout}
             type="number"
-            step="0.01"
-            min="0.01"
-            required
-            value={formulaire.quantiteDeduite}
-            onChange={modifier('quantiteDeduite')}
-            className={classeChamp}
-          />
-        </div>
-        <div>
-          <label className={classeLabel}>Surcoût (€)</label>
-          <input
-            type="number"
+            inputMode="decimal"
             step="0.01"
             min="0"
             value={formulaire.surcout}
             onChange={modifier('surcout')}
-            className={classeChamp}
+            className={`${classeChamp} bg-card tabular-nums`}
+            {...proprietesErreur('surcout')}
           />
+          <ErreurChamp id={`${id}-erreur-surcout`} message={erreurs.surcout} />
         </div>
       </div>
 
-      <div className="flex justify-end gap-2 pt-1">
-        <Bouton variante="secondaire" taille="xs" onClick={onAnnuler}>
-          Annuler
+      <div className="flex justify-end gap-2">
+        <Bouton variante="secondaire" taille="sm" onClick={onAnnuler}>
+          {continuer ? 'Terminer' : 'Annuler'}
         </Bouton>
-        <Bouton type="submit" taille="xs">
-          {libelleBouton}
+        <Bouton type="submit" taille="sm" disabled={enCours}>
+          {enCours ? 'Enregistrement…' : libelleBouton}
         </Bouton>
       </div>
     </form>

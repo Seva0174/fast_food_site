@@ -9,12 +9,7 @@ import {
   supprimerOptionApi,
 } from '@/api/optionsApi';
 import { useExecuter } from './useExecuter';
-import {
-  construirePayloadGroupe,
-  construirePayloadOption,
-  erreurGroupe,
-  erreurOption,
-} from '@/lib/options';
+import { construirePayloadGroupe, construirePayloadOption } from '@/lib/options';
 import { useMessage } from './useMessage';
 
 // Groupes d'options d'un produit et leurs options : chargement et modifications.
@@ -47,46 +42,20 @@ export const useOptionsProduit = (idProduit, onChange) => {
 
   const executer = useExecuter(afficher, apresSucces);
 
-  // Valide le contenu d'un formulaire avant l'appel : renvoie le corps de la requête, ou null.
-  const preparerGroupe = (formulaire) => {
-    const payload = construirePayloadGroupe(formulaire);
-    const messageErreur = erreurGroupe(payload);
-    if (messageErreur) {
-      afficher(messageErreur, 'erreur');
-      return null;
-    }
-    return payload;
-  };
-
-  const preparerOption = (formulaire) => {
-    const payload = construirePayloadOption(formulaire);
-    const messageErreur = erreurOption(payload);
-    if (messageErreur) {
-      afficher(messageErreur, 'erreur');
-      return null;
-    }
-    return payload;
-  };
-
-  const creerGroupe = async (formulaire) => {
-    const payload = preparerGroupe(formulaire);
-    if (!payload) return false;
-    return executer(
-      () => creerGroupeOptionApi(idProduit, payload),
+  // Les formulaires valident leurs champs avant l'appel (erreursGroupe, erreursOption)
+  const creerGroupe = (formulaire) =>
+    executer(
+      () => creerGroupeOptionApi(idProduit, construirePayloadGroupe(formulaire)),
       'Groupe créé',
       'Erreur lors de la création du groupe.'
     );
-  };
 
-  const modifierGroupe = async (idGroupe, formulaire) => {
-    const payload = preparerGroupe(formulaire);
-    if (!payload) return false;
-    return executer(
-      () => modifierGroupeOptionApi(idGroupe, payload),
+  const modifierGroupe = (idGroupe, formulaire) =>
+    executer(
+      () => modifierGroupeOptionApi(idGroupe, construirePayloadGroupe(formulaire)),
       'Groupe modifié',
       'Erreur lors de la modification du groupe.'
     );
-  };
 
   const supprimerGroupe = (idGroupe) =>
     executer(
@@ -95,25 +64,19 @@ export const useOptionsProduit = (idProduit, onChange) => {
       'Erreur lors de la suppression du groupe.'
     );
 
-  const creerOption = async (idGroupe, formulaire) => {
-    const payload = preparerOption(formulaire);
-    if (!payload) return false;
-    return executer(
-      () => creerOptionApi(idGroupe, payload),
+  const creerOption = (idGroupe, formulaire) =>
+    executer(
+      () => creerOptionApi(idGroupe, construirePayloadOption(formulaire)),
       'Option ajoutée',
       "Erreur lors de l'ajout de l'option."
     );
-  };
 
-  const modifierOption = async (idOption, formulaire) => {
-    const payload = preparerOption(formulaire);
-    if (!payload) return false;
-    return executer(
-      () => modifierOptionApi(idOption, payload),
+  const modifierOption = (idOption, formulaire) =>
+    executer(
+      () => modifierOptionApi(idOption, construirePayloadOption(formulaire)),
       'Option modifiée',
       "Erreur lors de la modification de l'option."
     );
-  };
 
   const supprimerOption = (idOption) =>
     executer(
@@ -127,6 +90,7 @@ export const useOptionsProduit = (idProduit, onChange) => {
     chargement,
     erreur,
     message,
+    charger,
     creerGroupe,
     modifierGroupe,
     supprimerGroupe,

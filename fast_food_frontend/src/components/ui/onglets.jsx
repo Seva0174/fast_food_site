@@ -1,38 +1,65 @@
-// Styles de chaque variante d'onglets.
+import { AlertTriangle } from 'lucide-react';
+import { Tabs } from 'radix-ui';
+
+// Styles de chaque variante d'onglets. Onglet actif souligné en couleur du texte, comme la navbar
+// et le compte client : l'orange reste réservé à l'action principale.
 const STYLES = {
   soulignes: {
-    conteneur: 'flex gap-2 overflow-x-auto rounded-t-lg border-b border-gray-200 bg-white px-4 pt-3',
-    onglet: 'shrink-0 whitespace-nowrap border-b-2 px-4 py-2 text-sm font-medium transition-colors',
-    actif: 'border-red-500 text-red-600',
-    inactif: 'border-transparent text-gray-500 hover:text-gray-700',
+    liste: 'flex gap-2 overflow-x-auto overflow-y-hidden rounded-t-lg border-b border-border bg-card px-4 pt-3',
+    onglet:
+      '-mb-px shrink-0 whitespace-nowrap border-b-2 border-transparent px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground data-[state=active]:border-foreground data-[state=active]:text-foreground',
+  },
+  // Onglets d'une fiche dans l'en-tête d'une modale : le trait de l'onglet actif rejoint la bordure de l'en-tête
+  fiche: {
+    liste: '-mb-4 mt-3 flex gap-1 overflow-x-auto overflow-y-hidden',
+    onglet:
+      '-mb-px inline-flex min-h-11 shrink-0 items-center gap-1.5 whitespace-nowrap border-b-2 border-transparent px-3 text-sm font-semibold text-muted-foreground transition-colors hover:text-foreground data-[state=active]:border-foreground data-[state=active]:text-foreground',
   },
   segments: {
-    conteneur: 'flex overflow-x-auto rounded-lg bg-gray-100 p-1',
-    onglet: 'shrink-0 whitespace-nowrap rounded-md px-4 py-1.5 text-xs font-semibold transition',
-    actif: 'bg-white text-gray-900 shadow-sm',
-    inactif: 'text-gray-500 hover:text-gray-700',
+    liste: 'flex overflow-x-auto rounded-lg bg-muted p-1',
+    onglet:
+      'shrink-0 whitespace-nowrap rounded-md px-4 py-1.5 text-xs font-semibold text-muted-foreground transition hover:text-foreground data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm',
   },
 };
 
-// Barre d'onglets. Chaque onglet se décrit par { id, libelle }.
-// Variantes : 'soulignes' (par défaut) ou 'segments'.
-export const Onglets = ({ onglets, actif, onChange, variante = 'soulignes' }) => {
-  const styles = STYLES[variante];
+// Onglets accessibles (Radix) : flèches gauche/droite et Début/Fin déplacent le focus, Entrée ou Espace
+// ouvre l'onglet (activation manuelle : parcourir les onglets ne charge pas chaque vue au passage).
+// Onglets enveloppe la liste (ListeOnglets) et les panneaux (PanneauOnglet), où qu'ils soient placés.
+export const Onglets = ({ actif, onChange, children }) => (
+  <Tabs.Root value={actif} onValueChange={onChange} activationMode="manual">
+    {children}
+  </Tabs.Root>
+);
 
+// Barre d'onglets. Chaque onglet se décrit par { id, libelle, alerte } (alerte : quelque chose est à corriger
+// dans cet onglet). Variantes : 'soulignes', 'fiche' ou 'segments'.
+export const ListeOnglets = ({ onglets, variante = 'soulignes', label }) => {
+  const styles = STYLES[variante];
   return (
-    <div role="tablist" className={styles.conteneur}>
+    <Tabs.List aria-label={label} className={styles.liste}>
       {onglets.map((onglet) => (
-        <button
-          key={onglet.id}
-          type="button"
-          role="tab"
-          aria-selected={actif === onglet.id}
-          onClick={() => onChange(onglet.id)}
-          className={`${styles.onglet} ${actif === onglet.id ? styles.actif : styles.inactif}`}
-        >
+        <Tabs.Trigger key={onglet.id} value={onglet.id} className={styles.onglet}>
           {onglet.libelle}
-        </button>
+          {onglet.alerte && (
+            <>
+              <AlertTriangle className="h-3.5 w-3.5 text-destructive" aria-hidden="true" />
+              <span className="sr-only">(à corriger)</span>
+            </>
+          )}
+        </Tabs.Trigger>
       ))}
-    </div>
+    </Tabs.List>
   );
 };
+
+// Contenu d'un onglet. garderMonte : le panneau reste dans la page, masqué, quand on change
+// d'onglet (son état survit : filtres, formulaire en cours...).
+export const PanneauOnglet = ({ id, garderMonte = false, className = '', children }) => (
+  <Tabs.Content
+    value={id}
+    forceMount={garderMonte || undefined}
+    className={`outline-none data-[state=inactive]:hidden ${className}`}
+  >
+    {children}
+  </Tabs.Content>
+);

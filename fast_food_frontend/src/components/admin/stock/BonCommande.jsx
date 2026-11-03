@@ -13,15 +13,15 @@ export const BonCommande = ({
   onModifierQuantite,
   onValider,
 }) => (
-  <div className="flex flex-col justify-between space-y-4 rounded-xl border border-gray-200 bg-gray-50 p-4">
+  <div className="flex flex-col justify-between space-y-4 rounded-xl border border-border bg-card p-4">
     <div className="space-y-3">
-      <h4 className="flex items-center gap-2 border-b pb-2 text-sm font-bold text-gray-800">
-        <ShoppingCart className="h-4 w-4 text-red-600" />
+      <h4 className="flex items-center gap-2 border-b border-border pb-2 text-base font-semibold text-foreground">
+        <ShoppingCart className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
         Bon de commande
       </h4>
 
       {bon.length === 0 ? (
-        <p className="py-6 text-center text-xs text-gray-500">Aucun article sélectionné</p>
+        <p className="py-6 text-center text-xs text-muted-foreground">Aucun article sélectionné</p>
       ) : (
         <div className="max-h-48 space-y-2 overflow-y-auto pr-1">
           {bon.map((ligne) => (
@@ -39,9 +39,9 @@ export const BonCommande = ({
 
     {bon.length > 0 && (
       <div className="space-y-2 border-t pt-3">
-        <div className="flex justify-between text-sm font-bold text-gray-800">
+        <div className="flex justify-between text-sm font-bold text-foreground">
           <span>Total HT :</span>
-          <span className="text-red-600">{total.toFixed(2)} €</span>
+          <span className="tabular-nums">{total.toFixed(2)} €</span>
         </div>
         <Bouton taille="xs" className="w-full py-2" onClick={onValider} disabled={chargement}>
           Valider la commande
@@ -65,8 +65,8 @@ const LigneBon = ({ ligne, onIncrementer, onDecrementer, onModifierQuantite }) =
   };
 
   return (
-    <div className="flex items-center justify-between gap-2 rounded border bg-white p-2 text-xs">
-      <span className="max-w-[110px] truncate font-medium text-gray-800">{ligne.nom}</span>
+    <div className="flex items-center justify-between gap-2 rounded-lg border border-border bg-card p-2 text-xs">
+      <span className="max-w-[110px] truncate font-medium text-foreground">{ligne.nom}</span>
 
       <div className="flex items-center gap-1">
         <Bouton
@@ -89,7 +89,7 @@ const LigneBon = ({ ligne, onIncrementer, onDecrementer, onModifierQuantite }) =
             if (e.key === 'Enter') e.currentTarget.blur();
           }}
           aria-label="Quantité"
-          className="w-10 rounded border py-0.5 text-center font-semibold text-gray-800 focus:outline-none focus:ring-1 focus:ring-red-500"
+          className="w-10 rounded-lg border border-input bg-transparent py-0.5 text-center font-semibold tabular-nums"
         />
 
         <Bouton
@@ -103,7 +103,7 @@ const LigneBon = ({ ligne, onIncrementer, onDecrementer, onModifierQuantite }) =
         </Bouton>
       </div>
 
-      <span className="min-w-[50px] text-right font-bold text-gray-700">
+      <span className="min-w-[50px] text-right font-bold text-foreground">
         {totalLigne(ligne).toFixed(2)} €
       </span>
     </div>

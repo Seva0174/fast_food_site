@@ -61,20 +61,6 @@ export const FORMULAIRE_GROUPE_VIDE = { nom: '', minSelection: 1, maxSelection: 
 
 export const FORMULAIRE_OPTION_VIDE = { nom: '', idMatiere: '', quantiteDeduite: '1', surcout: '0' };
 
-// Un groupe est obligatoire quand il impose au moins un choix.
-export const estObligatoire = (groupe) => groupe.minSelection > 0;
-
-// Renvoie le message d'erreur d'une règle de sélection invalide, ou null si elle est valide.
-export const erreurRegleSelection = (min, max) => {
-  if (Number.isNaN(min) || Number.isNaN(max)) {
-    return 'Les sélections minimale et maximale doivent être des nombres.';
-  }
-  if (min < 0) return 'La sélection minimale ne peut pas être négative.';
-  if (max < 1) return "La sélection maximale doit être d'au moins 1.";
-  if (min > max) return 'La sélection minimale ne peut pas dépasser la sélection maximale.';
-  return null;
-};
-
 // Corps de la requête de création ou de modification d'un groupe.
 export const construirePayloadGroupe = (formulaire) => ({
   nom: formulaire.nom.trim(),
@@ -83,22 +69,17 @@ export const construirePayloadGroupe = (formulaire) => ({
   ...(formulaire.ordre !== undefined && { ordre: parseInt(formulaire.ordre, 10) }),
 });
 
-// Renvoie le message d'erreur d'un groupe invalide, ou null s'il est valide.
-export const erreurGroupe = ({ nom, minSelection, maxSelection, ordre }) => {
-  if (!nom) return 'Le nom du groupe est obligatoire.';
-  if (ordre !== undefined && (Number.isNaN(ordre) || ordre < 0)) {
-    return "L'ordre doit être un nombre positif ou nul.";
-  }
-  return erreurRegleSelection(minSelection, maxSelection);
-};
-
-export const aTropPeuDOptions = (groupe) => groupe.minSelection > groupe.options.length;
+// Un groupe qui demande plus de choix qu'il n'a d'options bloque la commande.
+// Un groupe vide n'est pas concerné : la carte client le masque (voir preparerCarte).
+export const aTropPeuDOptions = (groupe) =>
+  groupe.options.length > 0 && groupe.minSelection > groupe.options.length;
 
 // Valeurs du formulaire d'une option existante.
+// Une option sans ingrédient du stock (ex : une sauce non suivie) n'a ni matière ni quantité.
 export const formulaireDepuisOption = (option) => ({
   nom: option.nom,
-  idMatiere: String(option.idMatiere),
-  quantiteDeduite: String(option.quantiteDeduite),
+  idMatiere: option.idMatiere ? String(option.idMatiere) : '',
+  quantiteDeduite: option.quantiteDeduite ? String(option.quantiteDeduite) : '1',
   surcout: String(option.surcout ?? 0),
 });
 
@@ -107,20 +88,46 @@ export const proposerNomOption = (nomActuel, nomMatierePrecedente, nomMatiereCho
   !nomActuel.trim() || nomActuel === nomMatierePrecedente ? nomMatiereChoisie : nomActuel;
 
 // Corps de la requête de création ou de modification d'une option.
+// Sans ingrédient, rien n'est retiré du stock : ni matière ni quantité.
 export const construirePayloadOption = (formulaire) => ({
   nom: formulaire.nom.trim(),
   surcout: parseFloat(formulaire.surcout || 0),
-  matierePremiereId: Number(formulaire.idMatiere),
-  quantiteDeduite: parseFloat(formulaire.quantiteDeduite),
+  matierePremiereId: formulaire.idMatiere ? Number(formulaire.idMatiere) : null,
+  quantiteDeduite: formulaire.idMatiere ? parseFloat(formulaire.quantiteDeduite) : null,
 });
 
-// Renvoie le message d'erreur d'une option invalide, ou null si elle est valide.
-export const erreurOption = ({ nom, matierePremiereId, surcout, quantiteDeduite }) => {
-  if (!nom) return "Le nom de l'option est obligatoire.";
-  if (!matierePremiereId) return 'Choisissez une matière première.';
-  if (Number.isNaN(quantiteDeduite) || quantiteDeduite <= 0) {
-    return 'La quantité déduite doit être supérieure à 0.';
+// Règle d'un groupe en clair, pour l'administration : « Choix unique, obligatoire », « Facultatif, jusqu'à 3 choix »...
+export const libelleRegleGroupe = ({ minSelection: min, maxSelection: max }) => {
+  if (max === 1) return min > 0 ? 'Choix unique, obligatoire' : 'Choix unique, facultatif';
+  if (min === 0) return `Facultatif, jusqu'à ${max} choix`;
+  if (min === max) return `Obligatoire, ${max} choix`;
+  return `Obligatoire, ${min} à ${max} choix`;
+};
+
+const seulementSiErreurs = (erreurs) => (Object.keys(erreurs).length > 0 ? erreurs : null);
+
+// Erreurs de saisie d'un groupe ou d'un emplacement, champ par champ, ou null.
+// Messages courts : ils s'affichent sous des champs étroits.
+export const erreursGroupe = ({ nom, minSelection, maxSelection, ordre }) => {
+  const erreurs = {};
+  if (!nom) erreurs.nom = 'Donnez un nom.';
+  if (Number.isNaN(minSelection) || minSelection < 0) erreurs.minSelection = 'Positif ou nul.';
+  if (Number.isNaN(maxSelection) || maxSelection < 1) erreurs.maxSelection = 'Au moins 1.';
+  if (!erreurs.minSelection && !erreurs.maxSelection && minSelection > maxSelection) {
+    erreurs.minSelection = 'Pas plus que le max.';
   }
-  if (Number.isNaN(surcout) || surcout < 0) return 'Le surcoût ne peut pas être négatif.';
-  return null;
+  if (ordre !== undefined && (Number.isNaN(ordre) || ordre < 0)) erreurs.ordre = 'Positif ou nul.';
+  return seulementSiErreurs(erreurs);
+};
+
+// Erreurs de saisie d'une option, champ par champ ({ nom, quantiteDeduite, surcout }), ou null.
+// L'ingrédient est facultatif ; la quantité n'est vérifiée que s'il y en a un.
+export const erreursOption = ({ nom, matierePremiereId, surcout, quantiteDeduite }) => {
+  const erreurs = {};
+  if (!nom) erreurs.nom = 'Donnez le nom affiché au client.';
+  if (matierePremiereId && (Number.isNaN(quantiteDeduite) || quantiteDeduite <= 0)) {
+    erreurs.quantiteDeduite = 'Quantité supérieure à 0.';
+  }
+  if (Number.isNaN(surcout) || surcout < 0) erreurs.surcout = 'Surcoût positif ou nul.';
+  return seulementSiErreurs(erreurs);
 };

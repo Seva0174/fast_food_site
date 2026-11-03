@@ -1,4 +1,5 @@
 import { estRadio, estSousMinimum, groupesNonValides } from './options';
+import { formaterPrix } from './prix';
 
 // Options d'un produit, telles que renvoyees par l'API : chaque groupe contient "options".
 const optionsDuProduit = (produit) => produit?.groupesOptions ?? [];
@@ -177,7 +178,7 @@ export const FORMULAIRE_PRODUIT_FORMULE_VIDE = { idProduit: '', surcout: '0' };
 
 // Renvoie le message d'erreur d'un surcoût invalide, ou null s'il est valide.
 export const erreurSurcout = (surcout) =>
-  Number.isNaN(surcout) || surcout < 0 ? 'Le surcoût ne peut pas être négatif.' : null;
+  Number.isNaN(surcout) || surcout < 0 ? 'Surcoût positif ou nul.' : null;
 
 // Produits simples qui ne figurent pas encore dans l'emplacement.
 export const produitsAjoutables = (produits, groupe) =>
@@ -192,34 +193,22 @@ export const grouperParCategorie = (produits) => {
     const libelle = p.categorie?.nom || 'Autres';
     (parCategorie[libelle] ??= []).push({
       value: p.id,
-      label: `${p.nom} (${Number(p.prix).toFixed(2)} €)`,
+      label: `${p.nom} (${formaterPrix(p.prix)})`,
     });
   });
   return Object.entries(parCategorie).map(([libelle, options]) => ({ libelle, options }));
 };
 
-// Avertissements d'un emplacement : { gravite: 'attention' | 'erreur', texte }.
-export const avertissementsEmplacement = (groupe) => {
-  const avertissements = [];
+// Nombre de produits en vente qui manquent à un emplacement pour atteindre son minimum de choix
+// (0 si l'emplacement est complet). Un produit hors vente ne compte pas : le client ne peut pas le choisir.
+export const produitsManquants = (groupe) =>
+  Math.max(0, groupe.minSelection - (groupe.produits ?? []).filter((lien) => lien.estDispo).length);
 
-  if (groupe.produits.length < groupe.minSelection) {
-    avertissements.push({
-      gravite: 'attention',
-      texte:
-        'Cet emplacement propose moins de produits que le minimum de choix demandé : les clients ne pourront pas valider ce menu.',
-    });
-  }
-  if (
-    groupe.minSelection > 0 &&
-    groupe.produits.length > 0 &&
-    !groupe.produits.some((lien) => lien.estDispo)
-  ) {
-    avertissements.push({
-      gravite: 'erreur',
-      texte: 'Tous les produits de cet emplacement sont en rupture : le menu est indisponible.',
-    });
-  }
-  return avertissements;
+// Phrase courte d'un emplacement incomplet (« Il manque 1 produit en vente »), ou null.
+export const manqueEmplacement = (groupe) => {
+  const manque = produitsManquants(groupe);
+  if (manque === 0) return null;
+  return `Il manque ${manque} produit${manque > 1 ? 's' : ''} en vente`;
 };
 
 // Corps de la requête d'ajout d'un produit dans un emplacement.
@@ -240,3 +229,19 @@ export const resumerSelections = (groupes, selections, produits) =>
       return { idProduit: choix.idProduit, nom: lien?.nomProduit ?? '', options: nomsOptions };
     }),
   }));
+
+// Emplacements dans leur ordre d'affichage.
+export const trierEmplacements = (groupes) => [...groupes].sort((a, b) => a.ordre - b.ordre);
+
+// Déplace un emplacement d'un cran (sens : -1 vers le haut, 1 vers le bas).
+// Renvoie les emplacements dont l'ordre change, avec leur nouvel ordre (1, 2, 3...) : [{ groupe, ordre }].
+export const reordonnerEmplacements = (groupes, idGroupe, sens) => {
+  const tries = trierEmplacements(groupes);
+  const index = tries.findIndex((g) => g.id === idGroupe);
+  const cible = index + sens;
+  if (index < 0 || cible < 0 || cible >= tries.length) return [];
+  [tries[index], tries[cible]] = [tries[cible], tries[index]];
+  return tries
+    .map((groupe, i) => ({ groupe, ordre: i + 1 }))
+    .filter(({ groupe, ordre }) => groupe.ordre !== ordre);
+};

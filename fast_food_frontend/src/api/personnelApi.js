@@ -16,8 +16,6 @@ export const supprimerEmployeApi = async (id) => {
 };
 
 // --- Heures ---
-export const getHeuresApi = async (idEmploye) => (await api.get(`${BASE}/${idEmploye}/heures`)).data;
-
 export const getHeuresPeriodeApi = async (idEmploye, debut, fin) =>
   (await api.get(`${BASE}/${idEmploye}/heures/periode`, { params: { debut, fin } })).data;
 
@@ -26,7 +24,3 @@ export const ajouterHeuresApi = async (donnees) => (await api.post(`${BASE}/heur
 export const supprimerHeureApi = async (idHeure) => {
   await api.delete(`${BASE}/heures/${idHeure}`);
 };
-
-// --- Salaire ---
-export const getSalaireMensuelApi = async (idEmploye, annee, mois) =>
-  (await api.get(`${BASE}/${idEmploye}/salaire`, { params: { annee, mois } })).data;
