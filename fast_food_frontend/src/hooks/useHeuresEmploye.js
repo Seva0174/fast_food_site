@@ -37,7 +37,7 @@ export const useHeuresEmploye = (idEmploye, periode, afficher) => {
       await charger();
       return { saisie };
     } catch (err) {
-      return { erreur: extraireMessageErreur(err) || "L'enregistrement a échoué. Réessayez." };
+      return { erreur: extraireMessageErreur(err) || "L'enregistrement a échoué. Réessaie." };
     }
   }, [idEmploye, charger]);
 

@@ -103,6 +103,8 @@
   }
   html {
     @apply font-sans;
+    /* Place de la barre de defilement reservee : la page ne se decale pas entre une vue longue et une courte */
+    scrollbar-gutter: stable;
   }
   ::selection {
     background-color: color-mix(in srgb, var(--primary) 35%, transparent);
@@ -139,6 +141,11 @@
    le focus y est deplace pour le lecteur d'ecran, pas pour etre montre. */
 [tabindex="-1"]:focus-visible {
   outline: none;
+}
+/* Onglets : la barre defile horizontalement, donc coupe ce qui depasse en haut et en bas.
+   L'anneau passe a l'interieur de l'onglet pour rester entier. */
+[role="tab"]:focus-visible {
+  outline-offset: -2px;
 }
 
 .scrollbar-thin {

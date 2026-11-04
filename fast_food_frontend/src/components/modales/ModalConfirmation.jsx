@@ -6,6 +6,7 @@ import { ModalShell } from '@/components/modales/ModalShell';
 // destructif : le bouton de confirmation passe en rouge (action qu'on ne peut pas defaire).
 export const ModalConfirmation = ({ demande, onRepondre }) => {
   const boutonRefuser = useRef(null);
+  const boutonConfirmer = useRef(null);
   const idMessage = useId();
   if (!demande) return null;
 
@@ -21,7 +22,9 @@ export const ModalConfirmation = ({ demande, onRepondre }) => {
     <ModalShell
       titre={titre}
       onClose={() => onRepondre(false)}
-      focusInitial={destructif ? boutonRefuser : null}
+      // Action irréversible : le focus part sur le choix sans risque. Sinon, sur la confirmation
+      // (Entrée valide, Échap refuse), plutôt que sur le bouton de fermeture.
+      focusInitial={destructif ? boutonRefuser : boutonConfirmer}
       idDescription={idMessage}
       actions={
         <>
@@ -35,6 +38,7 @@ export const ModalConfirmation = ({ demande, onRepondre }) => {
             {libelleRefuser}
           </Bouton>
           <Bouton
+            ref={boutonConfirmer}
             variante={destructif ? 'dangerPlein' : 'principal'}
             taille="sm"
             onClick={() => onRepondre(true)}

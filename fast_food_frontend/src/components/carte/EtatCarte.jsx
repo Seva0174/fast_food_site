@@ -29,7 +29,7 @@ export const CarteEnErreur = ({ message, onReessayer }) => (
   <div role="alert" className="mt-6 rounded-2xl border border-border bg-card p-6 text-center sm:p-10">
     <p className="titre-marque text-3xl">{message}</p>
     <p className="mt-2 text-sm text-muted-foreground">
-      Le serveur ne répond pas. Vérifiez votre connexion puis réessayez.
+      Le serveur ne répond pas. Vérifie ta connexion puis réessaie.
     </p>
     <Bouton className="mt-6" onClick={onReessayer}>
       <RotateCcw className="h-4 w-4" aria-hidden="true" />

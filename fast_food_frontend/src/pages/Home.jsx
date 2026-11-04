@@ -12,11 +12,13 @@ import { FiltresCategories } from '../components/carte/FiltresCategories';
 import { SectionCategorie } from '../components/carte/SectionCategorie';
 import { ModalPersonnalisation } from '../components/modales/ModalPersonnalisation';
 import { CarteEnChargement, CarteEnErreur } from '../components/carte/EtatCarte';
+import { useTitrePage } from '@/hooks/useTitrePage';
 
 // Defilement jusqu'a la barre des categories (id "carte", voir FiltresCategories)
 const allerALaCarte = () => defilerVers(document.getElementById('carte'));
 
 export const Home = () => {
+  useTitrePage();
   const {
     ajouterAuPanier,
     modifierItemPanier,

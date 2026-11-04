@@ -100,7 +100,7 @@ export const LigneProduit = ({
               <ImageOff className="h-3 w-3" aria-hidden="true" />
               Image introuvable
             </span>
-            <p className="text-xs text-muted-foreground">Vérifiez l'adresse de l'image.</p>
+            <p className="text-xs text-muted-foreground">Vérifie l'adresse de l'image.</p>
           </div>
         )}
       </td>

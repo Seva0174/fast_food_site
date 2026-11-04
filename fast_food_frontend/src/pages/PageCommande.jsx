@@ -11,6 +11,7 @@ import { TicketCommande } from '../components/commande/TicketCommande';
 import { BarreValidationMobile } from '../components/commande/BarreValidationMobile';
 import { RecapitulatifCommande } from '../components/commande/RecapitulatifCommande';
 import { FormulaireRetrait } from '../components/commande/FormulaireRetrait';
+import { useTitrePage } from '@/hooks/useTitrePage';
 
 const MESSAGE_ERREUR_PAR_DEFAUT = 'Une erreur est survenue lors de la validation de la commande.';
 
@@ -27,9 +28,9 @@ const CommandeEnChargement = () => (
 
 const CommandeVide = () => (
   <div className="mt-6 rounded-2xl border border-border bg-card px-6 py-12 text-center">
-    <p className="titre-marque text-3xl">Votre panier est vide</p>
+    <p className="titre-marque text-3xl">Ton panier est vide</p>
     <p className="mt-2 text-sm text-muted-foreground">
-      Ajoutez des produits depuis la carte pour passer commande.
+      Ajoute des produits depuis la carte pour passer commande.
     </p>
     <Link
       to="/"
@@ -42,6 +43,7 @@ const CommandeVide = () => (
 
 // Page protegee par ProtectedRoute (voir App.jsx) : l'utilisateur est toujours connecte ici.
 export const PageCommande = () => {
+  useTitrePage('Valider la commande');
   const {
     panier,
     chargement: panierEnChargement,
@@ -79,7 +81,7 @@ export const PageCommande = () => {
     setErreur('');
 
     if (panier.length === 0) {
-      setErreur('Votre panier est vide.');
+      setErreur('Ton panier est vide.');
       return;
     }
 

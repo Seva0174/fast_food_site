@@ -83,7 +83,7 @@ export function OngletOptions({ produit, matieresPremieres, onRefresh }) {
         <>
           {groupes.length === 0 && (
             <p className="text-sm text-muted-foreground">
-              Ce produit n'a pas encore d'options : il est vendu tel quel. Créez un groupe pour proposer des choix
+              Ce produit n'a pas encore d'options : il est vendu tel quel. Crée un groupe pour proposer des choix
               au client (viande, sauces…).
             </p>
           )}

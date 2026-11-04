@@ -25,14 +25,14 @@ export const HEURES_MAX_PAR_JOUR = 24;
 export const erreurEmailPro = (email) =>
   email.trim().toLowerCase().endsWith(DOMAINE_EMAIL_PRO)
     ? null
-    : `Utilisez une adresse qui se termine par ${DOMAINE_EMAIL_PRO}.`;
+    : `Utilise une adresse qui se termine par ${DOMAINE_EMAIL_PRO}.`;
 
 // Erreurs de la modification d'un employé, par champ ({ nom, salaireHeure }), ou null si tout est valide.
 export const erreursEmploye = ({ nom, salaireHeure }) => {
   const erreurs = {};
   if (!nom.trim()) erreurs.nom = 'Le nom ne peut pas être vide.';
   const taux = parseFloat(salaireHeure);
-  if (!(taux > 0)) erreurs.salaireHeure = 'Indiquez un taux supérieur à 0.';
+  if (!(taux > 0)) erreurs.salaireHeure = 'Indique un taux supérieur à 0.';
   return Object.keys(erreurs).length ? erreurs : null;
 };
 

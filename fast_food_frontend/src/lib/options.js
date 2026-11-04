@@ -29,10 +29,10 @@ export const libelleTypeGroupe = (groupe) =>
 // Phrase expliquant la regle d'un emplacement de menu.
 export const decrireRegle = (groupe) => {
   const { minSelection: min, maxSelection: max } = groupe;
-  if (min === 1 && max === 1) return 'Choisissez 1 produit';
-  if (min === max) return `Choisissez ${max} produits`;
+  if (min === 1 && max === 1) return 'Choisis 1 produit';
+  if (min === max) return `Choisis ${max} produits`;
   if (min === 0) return `Optionnel (jusqu'à ${max} produit${max > 1 ? 's' : ''})`;
-  return `Choisissez de ${min} à ${max} produits`;
+  return `Choisis de ${min} à ${max} produits`;
 };
 
 // Nombre d'options d'un groupe qui figurent dans la liste d'identifiants choisis.
@@ -110,7 +110,7 @@ const seulementSiErreurs = (erreurs) => (Object.keys(erreurs).length > 0 ? erreu
 // Messages courts : ils s'affichent sous des champs étroits.
 export const erreursGroupe = ({ nom, minSelection, maxSelection, ordre }) => {
   const erreurs = {};
-  if (!nom) erreurs.nom = 'Donnez un nom.';
+  if (!nom) erreurs.nom = 'Donne un nom.';
   if (Number.isNaN(minSelection) || minSelection < 0) erreurs.minSelection = 'Positif ou nul.';
   if (Number.isNaN(maxSelection) || maxSelection < 1) erreurs.maxSelection = 'Au moins 1.';
   if (!erreurs.minSelection && !erreurs.maxSelection && minSelection > maxSelection) {
@@ -124,7 +124,7 @@ export const erreursGroupe = ({ nom, minSelection, maxSelection, ordre }) => {
 // L'ingrédient est facultatif ; la quantité n'est vérifiée que s'il y en a un.
 export const erreursOption = ({ nom, matierePremiereId, surcout, quantiteDeduite }) => {
   const erreurs = {};
-  if (!nom) erreurs.nom = 'Donnez le nom affiché au client.';
+  if (!nom) erreurs.nom = 'Donne le nom affiché au client.';
   if (matierePremiereId && (Number.isNaN(quantiteDeduite) || quantiteDeduite <= 0)) {
     erreurs.quantiteDeduite = 'Quantité supérieure à 0.';
   }

@@ -29,11 +29,11 @@ export const enregistrerAdresse = (idUser, { rue, ville, codePostal }) =>
 // Renvoie un objet { champ: message } ; vide si l'adresse est complete.
 export const verifierAdresse = ({ cpRue, cpVille, cpCodePostal }) => {
   const erreurs = {};
-  if (!cpRue.trim()) erreurs.cpRue = 'Indiquez le numéro et le nom de la rue.';
-  if (!cpCodePostal.trim()) erreurs.cpCodePostal = 'Indiquez le code postal.';
+  if (!cpRue.trim()) erreurs.cpRue = 'Indique le numéro et le nom de la rue.';
+  if (!cpCodePostal.trim()) erreurs.cpCodePostal = 'Indique le code postal.';
   else if (!/^\d{5}$/.test(cpCodePostal.trim()))
     erreurs.cpCodePostal = 'Le code postal compte 5 chiffres.';
-  if (!cpVille.trim()) erreurs.cpVille = 'Indiquez la ville.';
+  if (!cpVille.trim()) erreurs.cpVille = 'Indique la ville.';
   return erreurs;
 };
 

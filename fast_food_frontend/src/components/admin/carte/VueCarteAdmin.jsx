@@ -1,4 +1,5 @@
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { EnTeteVueAdmin } from '@/components/admin/EnTeteVueAdmin';
 import { Plus } from 'lucide-react';
 import { ModalConfirmation } from '@/components/modales/ModalConfirmation';
 import { Bouton } from '@/components/ui/bouton';
@@ -6,6 +7,7 @@ import { MessageFlottant } from '@/components/ui/message-flottant';
 import { useCarteAdmin } from '@/hooks/useCarteAdmin';
 import { useConfirmation } from '@/hooks/useConfirmation';
 import {
+  ETAT_FILTRE,
   FILTRES_CARTE_VIDES,
   aDesFiltres,
   compterEtats,
@@ -19,7 +21,8 @@ import { FicheProduit } from './FicheProduit';
 import { FiltresCarte } from './FiltresCarte';
 import { TableauCarte } from './TableauCarte';
 
-export function VueCarteAdmin() {
+// onAlerte (facultatif) : reçoit le nombre de produits à corriger, pour l'onglet de la page.
+export function VueCarteAdmin({ onAlerte }) {
   const {
     produits,
     categories,
@@ -49,6 +52,12 @@ export function VueCarteAdmin() {
     [categories, produits, filtres, tri, echecsImages]
   );
   const nombres = compterEtats(produits, echecsImages);
+  const aCorriger = nombres[ETAT_FILTRE.A_CORRIGER];
+
+  // Le repère de l'onglet suit « À corriger », images introuvables comprises
+  useEffect(() => {
+    if (!chargement && !erreur) onAlerte?.(aCorriger);
+  }, [chargement, erreur, aCorriger, onAlerte]);
 
   // Ouvrir la fiche efface le message précédent : il resterait affiché par-dessus
   const ouvrirFiche = (idProduit, onglet = 'details') => {
@@ -65,8 +74,8 @@ export function VueCarteAdmin() {
     const confirme = await confirmer({
       titre: produit.estFormule ? 'Supprimer le menu ?' : 'Supprimer le produit ?',
       message: produit.estFormule
-        ? `Le menu « ${produit.nom} » et ses emplacements seront retirés de la carte. Cette action est irréversible. Un menu déjà commandé ne peut pas être supprimé : passez-le plutôt hors vente.`
-        : `« ${produit.nom} » sera retiré de la carte avec sa recette et ses options. Cette action est irréversible. Un produit déjà commandé ou proposé dans un menu ne peut pas être supprimé : passez-le plutôt hors vente.`,
+        ? `Le menu « ${produit.nom} » et ses emplacements seront retirés de la carte. Cette action est irréversible. Un menu déjà commandé ne peut pas être supprimé : passe-le plutôt hors vente.`
+        : `« ${produit.nom} » sera retiré de la carte avec sa recette et ses options. Cette action est irréversible. Un produit déjà commandé ou proposé dans un menu ne peut pas être supprimé : passe-le plutôt hors vente.`,
       libelleConfirmer: produit.estFormule ? 'Supprimer le menu' : 'Supprimer le produit',
       libelleRefuser: 'Garder',
       destructif: true,
@@ -78,25 +87,18 @@ export function VueCarteAdmin() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h2 ref={titreCarte} tabIndex={-1} className="titre-marque text-3xl outline-none">
-            Carte
-            {!chargement && !erreur && (
-              <span className="ml-3 align-middle font-sans text-base font-medium normal-case tabular-nums text-muted-foreground">
-                {produits.length} produit{produits.length > 1 ? 's' : ''}
-              </span>
-            )}
-          </h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Produits, mise en vente, options et composition des menus.
-          </p>
-        </div>
-        <Bouton className="whitespace-nowrap" onClick={() => ouvrirFiche(null)}>
-          <Plus className="h-4 w-4" aria-hidden="true" />
-          Ajouter un produit
-        </Bouton>
-      </div>
+      <EnTeteVueAdmin
+        titre="Carte"
+        refTitre={titreCarte}
+        compteur={!chargement && !erreur && `${produits.length} produit${produits.length > 1 ? 's' : ''}`}
+        description="Produits, mise en vente, options et composition des menus."
+        actions={
+          <Bouton className="whitespace-nowrap" onClick={() => ouvrirFiche(null)}>
+            <Plus className="h-4 w-4" aria-hidden="true" />
+            Ajouter un produit
+          </Bouton>
+        }
+      />
 
       {!chargement && !erreur && produits.length > 0 && (
         <FiltresCarte

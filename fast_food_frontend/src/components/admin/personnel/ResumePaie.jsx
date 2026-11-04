@@ -20,7 +20,7 @@ export const ResumePaie = ({ employe, heures, chargement }) => {
         <p className="flex gap-2 rounded-lg border border-border p-3 text-sm">
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" aria-hidden="true" />
           <span>
-            Taux horaire non défini : le salaire ne peut pas être estimé. Renseignez-le avec le crayon de
+            Taux horaire non défini : le salaire ne peut pas être estimé. Renseigne-le avec le crayon de
             la ligne de {employe.nom}.
           </span>
         </p>

@@ -165,9 +165,9 @@ export const Calendrier = ({
   // Pendant le choix de la fin, la plage suit la souris
   const finApercu = fin ?? (!estJour && debut && survol && survol >= debut ? survol : null);
 
-  let consigne = 'Choisissez la date de début.';
+  let consigne = 'Choisis la date de début.';
   if (debut && fin) consigne = `${libellePeriode({ debut, fin })} · ${libelleNombreJours({ debut, fin })}`;
-  else if (debut) consigne = 'Choisissez la date de fin.';
+  else if (debut) consigne = 'Choisis la date de fin.';
 
   return (
     <div ref={conteneur}>

@@ -48,7 +48,7 @@ export const TicketCommande = ({ commande }) => {
       </section>
 
       <p className="mt-4 text-sm text-muted-foreground">
-        Un e-mail de confirmation vous a été envoyé. Vous recevrez un autre e-mail quand la commande
+        Un e-mail de confirmation t’a été envoyé. Tu recevras un autre e-mail quand la commande
         sera prête.
       </p>
 

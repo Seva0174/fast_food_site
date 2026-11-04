@@ -11,6 +11,7 @@ import { CarteCommandeClient } from '../components/commande/CarteCommandeClient'
 import { AdresseParDefaut } from '../components/compte/AdresseParDefaut';
 import { Bouton } from '../components/ui/bouton';
 import { estEnCours, estTerminee, ordonnerCommandesClient } from '../lib/commande';
+import { useTitrePage } from '@/hooks/useTitrePage';
 
 const ONGLETS = [
   { id: 'encours', libelle: 'En cours', icone: Package, vide: 'Aucune commande en cours.' },
@@ -19,7 +20,7 @@ const ONGLETS = [
 
 const CommandesEnChargement = () => (
   <div role="status" className="space-y-4">
-    <span className="sr-only">Chargement de vos commandes…</span>
+    <span className="sr-only">Chargement de tes commandes…</span>
     {[0, 1].map((i) => (
       <div key={i} className="squelette h-36 rounded-2xl" aria-hidden="true" />
     ))}
@@ -30,7 +31,7 @@ const CommandesEnErreur = ({ message, onReessayer }) => (
   <div role="alert" className="rounded-2xl border border-destructive/40 bg-destructive/10 p-6 text-center">
     <p className="font-semibold">{message}</p>
     <p className="mt-1 text-sm text-muted-foreground">
-      Elles ne sont pas perdues : réessayez dans un instant.
+      Elles ne sont pas perdues : réessaie dans un instant.
     </p>
     <Bouton variante="secondaire" className="mt-4" onClick={onReessayer}>
       <RotateCcw className="h-4 w-4" aria-hidden="true" />
@@ -52,6 +53,7 @@ const CommandesVides = ({ message }) => (
 );
 
 export const PageUser = () => {
+  useTitrePage('Mon compte');
   const { user } = useContext(AuthContext);
   const { commandes, chargement, erreur, charger } = useMesCommandes();
   const { produits } = useCarte();
@@ -231,21 +233,27 @@ export const PageUser = () => {
         commande={commandeOuverte}
         onClose={() => setCommandeOuverte(null)}
         suivi
-        idsIndisponibles={recommandeOuverte?.idsIndisponibles}
+        raisonsIndisponibles={recommandeOuverte?.raisonsIndisponibles}
         // Une commande en cours se suit, elle ne se recommande pas (evite les doublons)
         actions={
-          recommandeOuverte ? (
+          !recommandeOuverte ? undefined : recommandeOuverte.articles.length === 0 ? (
+            // Rien a reprendre : une phrase, pas un bouton desactive habille comme une action.
+            // ! : le pied de ModalShell empeche ses enfants de passer a la ligne et de retrecir (boutons)
+            <p className="min-w-0 whitespace-normal! text-sm text-muted-foreground sm:flex-1!">
+              Aucun article ne peut être recommandé tel quel : recompose ta commande depuis la carte.
+            </p>
+          ) : (
             <Bouton
               taille="lg"
               onClick={() => recommanderCommande(commandeOuverte)}
-              disabled={recommandeEnCours !== null || recommandeOuverte.articles.length === 0}
+              disabled={recommandeEnCours !== null}
             >
               <RefreshCw className="h-4 w-4" aria-hidden="true" />
               {recommandeEnCours === commandeOuverte.id
                 ? 'Ajout au panier…'
                 : libelleRecommande(recommandeOuverte)}
             </Bouton>
-          ) : undefined
+          )
         }
       />
     </div>

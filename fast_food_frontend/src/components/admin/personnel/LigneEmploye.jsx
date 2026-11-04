@@ -132,7 +132,7 @@ export const LigneEmploye = ({
         ) : (
           <span className="block break-words pt-2">
             {employe.nom}
-            {estMonCompte && <span className="ml-2 text-sm font-normal text-muted-foreground">(vous)</span>}
+            {estMonCompte && <span className="ml-2 text-sm font-normal text-muted-foreground">(toi)</span>}
           </span>
         )}
       </th>
@@ -217,9 +217,11 @@ export const LigneEmploye = ({
                 aria-pressed={selectionne}
                 data-heures-employe={employe.id}
                 onClick={() => onGererHeures(employe)}
+                title="Heures et paie"
               >
                 <Clock className="h-4 w-4" aria-hidden="true" />
-                Heures et paie
+                {/* Sous 1280px, l'icône seule : le tableau tient sans défiler sur un écran de 1024px */}
+                <span className="sr-only xl:not-sr-only">Heures et paie</span>
               </Bouton>
               <Bouton
                 ref={crayon}
@@ -229,7 +231,7 @@ export const LigneEmploye = ({
                 onClick={demarrerEdition}
                 disabled={editionAilleurs}
                 aria-label={`Modifier ${employe.nom}`}
-                title={editionAilleurs ? 'Terminez la modification en cours' : 'Modifier'}
+                title={editionAilleurs ? 'Termine la modification en cours' : 'Modifier'}
               >
                 <Pencil className="h-4 w-4" aria-hidden="true" />
               </Bouton>
@@ -241,10 +243,10 @@ export const LigneEmploye = ({
                 onClick={() => onSupprimer(employe)}
                 aria-label={
                   estMonCompte
-                    ? 'Vous ne pouvez pas vous retirer de l’équipe'
+                    ? 'Tu ne peux pas te retirer de l’équipe'
                     : `Retirer ${employe.nom} de l'équipe`
                 }
-                title={estMonCompte ? 'Vous ne pouvez pas vous retirer de l’équipe' : "Retirer de l'équipe"}
+                title={estMonCompte ? 'Tu ne peux pas te retirer de l’équipe' : "Retirer de l'équipe"}
               >
                 <UserMinus className="h-4 w-4" aria-hidden="true" />
               </Bouton>

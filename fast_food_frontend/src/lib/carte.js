@@ -87,7 +87,7 @@ export const SAISIE_INGREDIENT_VIDE = { idMatiere: '', quantite: '1', erreur: ''
 
 // Renvoie le message d'erreur d'un ingrédient invalide, ou null s'il est valide.
 export const erreurIngredient = (matiere, quantite) => {
-  if (!matiere) return 'Choisissez un ingrédient du stock.';
+  if (!matiere) return 'Choisis un ingrédient du stock.';
   if (Number.isNaN(quantite) || quantite <= 0) return 'La quantité requise doit être supérieure à 0.';
   return null;
 };
@@ -115,10 +115,10 @@ export const produitsParCategorie = (categories, produits) =>
 // Erreurs de saisie d'un produit, champ par champ ({ nom, prix, idCategorie }), ou null si tout est valide.
 export const erreursProduit = ({ nom, prix, idCategorie }) => {
   const erreurs = {};
-  if (!nom) erreurs.nom = 'Donnez un nom au produit.';
-  if (Number.isNaN(prix)) erreurs.prix = 'Indiquez un prix (ex. 8,50).';
+  if (!nom) erreurs.nom = 'Donne un nom au produit.';
+  if (Number.isNaN(prix)) erreurs.prix = 'Indique un prix (ex. 8,50).';
   else if (prix < 0) erreurs.prix = 'Le prix ne peut pas être négatif.';
-  if (Number.isNaN(idCategorie)) erreurs.idCategorie = 'Choisissez une catégorie.';
+  if (Number.isNaN(idCategorie)) erreurs.idCategorie = 'Choisis une catégorie.';
   return Object.keys(erreurs).length > 0 ? erreurs : null;
 };
 

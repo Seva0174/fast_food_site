@@ -76,7 +76,7 @@ export const erreurEtape = (etape, selections) => {
     if (estSousMinimum(groupe, choixDuGroupe(selections, groupe).length)) {
       return groupe.maxSelection === 1
         ? `Faites un choix pour « ${groupe.nom} ».`
-        : `Choisissez au moins ${groupe.minSelection} produits pour « ${groupe.nom} ».`;
+        : `Choisis au moins ${groupe.minSelection} produits pour « ${groupe.nom} ».`;
     }
     return null;
   }
@@ -88,8 +88,8 @@ export const erreurEtape = (etape, selections) => {
 // Message d'un groupe d'options incomplet, adapte au choix unique ou multiple.
 export const messageGroupeOptions = (groupe) =>
   estRadio(groupe)
-    ? `Choisissez une option pour « ${groupe.nom} ».`
-    : `Choisissez au moins ${groupe.minSelection} option${groupe.minSelection > 1 ? 's' : ''} pour « ${groupe.nom} ».`;
+    ? `Choisis une option pour « ${groupe.nom} ».`
+    : `Choisis au moins ${groupe.minSelection} option${groupe.minSelection > 1 ? 's' : ''} pour « ${groupe.nom} ».`;
 
 // Tous les groupes d'options incomplets d'un ecran d'options : ils sont signales en une fois.
 export const groupesOptionsEnErreur = (etape, selections) => {

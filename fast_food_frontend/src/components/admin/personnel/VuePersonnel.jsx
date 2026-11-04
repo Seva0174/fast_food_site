@@ -1,4 +1,5 @@
 import { useContext, useEffect, useId, useRef, useState } from 'react';
+import { EnTeteVueAdmin } from '@/components/admin/EnTeteVueAdmin';
 import { UserPlus } from 'lucide-react';
 import { Bouton } from '@/components/ui/bouton';
 import { MessageFlottant } from '@/components/ui/message-flottant';
@@ -71,20 +72,18 @@ export function VuePersonnel() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 ref={titreEquipe} tabIndex={-1} className="titre-marque text-3xl outline-none">
-          Équipe
-          {!chargement && !erreur && (
-            <span className="ml-3 align-middle font-sans text-base font-medium normal-case tabular-nums text-muted-foreground">
-              {employes.length} personne{employes.length > 1 ? 's' : ''}
-            </span>
-          )}
-        </h2>
-        <Bouton onClick={() => setEmbaucheOuverte(true)}>
-          <UserPlus className="h-4 w-4" aria-hidden="true" />
-          Embaucher
-        </Bouton>
-      </div>
+      <EnTeteVueAdmin
+        titre="Équipe"
+        refTitre={titreEquipe}
+        compteur={!chargement && !erreur && `${employes.length} personne${employes.length > 1 ? 's' : ''}`}
+        description="Accès au site, poste, taux horaire, heures travaillées et paie de chaque employé."
+        actions={
+          <Bouton onClick={() => setEmbaucheOuverte(true)}>
+            <UserPlus className="h-4 w-4" aria-hidden="true" />
+            Embaucher
+          </Bouton>
+        }
+      />
 
       <TableauEmployes
         employes={employes}

@@ -25,12 +25,12 @@ export const ProductOptionModal = ({ produit, itemPanier, isOpen, onClose, onCon
   return (
     <ModalShell
       titre={produit.nom}
-      sousTitre="Personnalisez votre commande"
+      sousTitre="Personnalise ta commande"
       onClose={onClose}
       confirmerFermeture={
         aDesModifications
           ? {
-              question: itemPanier ? 'Abandonner vos modifications ?' : 'Abandonner ces choix ?',
+              question: itemPanier ? 'Abandonner tes modifications ?' : 'Abandonner ces choix ?',
               libelleAbandon: 'Abandonner',
             }
           : null

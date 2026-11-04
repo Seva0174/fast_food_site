@@ -40,29 +40,38 @@ const retrouverChoixMenu = (formule, composants, produits) => {
   return incomplet ? null : construireChoixFormule(groupes, selections, produits);
 };
 
+// Pourquoi une ligne n'est pas reprise : le produit n'est plus vendu, ou il l'est encore mais ses options
+// (ou la composition du menu) ont change depuis la commande.
+export const RAISON_REFUS = { RETIRE: 'retire', OPTIONS: 'options' };
+
+export const LIBELLES_REFUS = {
+  [RAISON_REFUS.RETIRE]: 'Plus à la carte',
+  [RAISON_REFUS.OPTIONS]: 'À recomposer',
+};
+
 // Prepare une nouvelle commande identique a une commande passee.
 // Renvoie { articles: [{ produit, quantite, optionIds, choixFormule }], indisponibles: [noms],
-//           idsIndisponibles: [id des lignes de commande non reprises], total: nombre de lignes }.
+//           raisonsIndisponibles: { [id de ligne non reprise]: RAISON_REFUS }, total: nombre de lignes }.
 export const preparerRecommande = (commande, produits) => {
   const articles = [];
   const indisponibles = [];
-  const idsIndisponibles = [];
-  const refuser = (item) => {
+  const raisonsIndisponibles = {};
+  const refuser = (item, raison) => {
     indisponibles.push(item.nomProduit);
-    idsIndisponibles.push(item.id);
+    raisonsIndisponibles[item.id] = raison;
   };
 
   for (const item of commande.items) {
     const produit = trouverProduit(produits, item.produitId);
     if (!produit || !estDisponible(produit)) {
-      refuser(item);
+      refuser(item, RAISON_REFUS.RETIRE);
       continue;
     }
 
     if (produit.estFormule) {
       const choixFormule = retrouverChoixMenu(produit, item.composants, produits);
       if (choixFormule) articles.push({ produit, quantite: item.quantite, optionIds: [], choixFormule });
-      else refuser(item);
+      else refuser(item, RAISON_REFUS.OPTIONS);
       continue;
     }
 
@@ -70,16 +79,16 @@ export const preparerRecommande = (commande, produits) => {
     if (optionIds && groupesNonValides(produit.groupesOptions ?? [], optionIds).length === 0) {
       articles.push({ produit, quantite: item.quantite, optionIds, choixFormule: [] });
     } else {
-      refuser(item);
+      refuser(item, RAISON_REFUS.OPTIONS);
     }
   }
 
-  return { articles, indisponibles, idsIndisponibles, total: commande.items.length };
+  return { articles, indisponibles, raisonsIndisponibles, total: commande.items.length };
 };
 
-// Libelle du bouton : il annonce avant le clic ce qui sera vraiment repris.
+// Libelle du bouton : il annonce avant le clic ce qui sera vraiment repris. Sans article repris,
+// le bouton n'est pas affiche (voir PageUser et CarteCommandeClient).
 export const libelleRecommande = ({ articles, total }) => {
-  if (articles.length === 0) return 'Plus aucun article disponible';
   if (articles.length === total) return 'Recommander les mêmes articles';
   return `Recommander ${articles.length} article${articles.length > 1 ? 's' : ''} sur ${total}`;
 };

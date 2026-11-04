@@ -63,7 +63,7 @@ export const TableauCarte = ({
   if (carteVide) {
     return (
       <p className="rounded-xl border border-border bg-card p-6 text-sm text-muted-foreground">
-        La carte est vide. Créez le premier produit avec « Ajouter un produit ».
+        La carte est vide. Crée le premier produit avec « Ajouter un produit ».
       </p>
     );
   }
@@ -87,7 +87,7 @@ export const TableauCarte = ({
     // relative : les éléments sr-only (positionnés en absolu) restent dans la zone qui défile
     <div className="relative overflow-x-auto rounded-xl border border-border bg-card">
       {/* Colonnes de droite à largeur fixe (actions, interrupteur) ; le nom du produit prend le reste */}
-      <table className="w-full min-w-[60rem] table-fixed border-collapse text-left text-sm">
+      <table className="w-full min-w-[58rem] table-fixed border-collapse text-left text-sm">
         <caption className="sr-only">Produits de la carte, par catégorie</caption>
         <colgroup>
           <col />

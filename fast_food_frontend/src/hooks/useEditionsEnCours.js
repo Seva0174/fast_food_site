@@ -77,7 +77,7 @@ export const CONFIRMER_ABANDON = {
 };
 
 // Infobulle d'un bouton inactif pendant qu'une autre édition est ouverte
-export const ATTENDRE_EDITION = 'Terminez la modification en cours';
+export const ATTENDRE_EDITION = 'Termine la modification en cours';
 
 // Attributs d'un bouton qui attend la fin d'une édition (voir Bouton : aria-disabled)
 export const attributsAttente = (bloque, idNote) =>

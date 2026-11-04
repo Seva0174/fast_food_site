@@ -40,7 +40,7 @@ export const TableauEmployes = ({
   if (employes.length === 0) {
     return (
       <p className="rounded-xl border border-border bg-card p-6 text-sm text-muted-foreground">
-        Aucun employé pour le moment. Ajoutez le premier avec « Embaucher ».
+        Aucun employé pour le moment. Ajoute le premier avec « Embaucher ».
       </p>
     );
   }
@@ -49,15 +49,16 @@ export const TableauEmployes = ({
     // relative : les éléments sr-only (positionnés en absolu) restent dans la zone qui défile
     <div className="relative overflow-x-auto rounded-xl border border-border bg-card">
       {/* Largeurs fixes : les colonnes ne bougent pas quand une ligne passe en édition */}
-      <table className="w-full min-w-[64rem] table-fixed border-collapse text-left text-sm">
+      <table className="w-full min-w-[56rem] table-fixed border-collapse text-left text-sm">
         <caption className="sr-only">Membres de l'équipe</caption>
         <colgroup>
-          <col className="w-[22%]" />
-          <col className="w-[20%]" />
-          <col className="w-[13%]" />
-          <col className="w-[11%]" />
-          <col className="w-[11%]" />
-          <col className="w-[23%]" />
+          {/* Sous 1280px, colonnes resserrees (1024px sans defilement) ; au-dela, l'email tient en entier */}
+          <col className="w-[18%] xl:w-[16%]" />
+          <col className="w-[15%] xl:w-[22%]" />
+          <col className="w-[18%] xl:w-[15%]" />
+          <col className="w-[14%] xl:w-[12%]" />
+          <col className="w-[11%] xl:w-[10%]" />
+          <col className="w-[24%] xl:w-[25%]" />
         </colgroup>
         <thead>
           <tr className="border-b border-border text-muted-foreground">

@@ -1,4 +1,4 @@
-import { useState, useContext } from 'react';
+import { useState, useContext, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Mail, Lock, User } from 'lucide-react';
 import { AuthContext } from '../context/AuthProvider';
@@ -9,6 +9,8 @@ import { Bouton } from '../components/ui/bouton';
 import { BandeauMessage } from '../components/ui/bandeau';
 import { ContextePanier } from '../context/ContextePanier';
 import { formaterPrix } from '../lib/prix';
+import { useTitrePage } from '@/hooks/useTitrePage';
+import { destinationApresConnexion } from '@/lib/roles';
 
 const FORMULAIRE_VIDE = { nom: '', email: '', mdp: '', confirmationMdp: '' };
 const MESSAGE_ERREUR_PAR_DEFAUT = 'Une erreur est survenue lors du traitement.';
@@ -16,16 +18,19 @@ const MESSAGE_ERREUR_PAR_DEFAUT = 'Une erreur est survenue lors du traitement.';
 // sur mobile, il ouvrirait le clavier et masquerait la page.
 const pointeurPrecis = () => window.matchMedia('(pointer: fine)').matches;
 
-const MESSAGE_INSCRIPTION_PAR_DEFAUT = 'Inscription réussie ! Veuillez vérifier votre boîte mail.';
+const MESSAGE_INSCRIPTION_PAR_DEFAUT = 'Inscription réussie ! Vérifie ta boîte mail.';
 
 export const PageAuth = ({ inscription = false }) => {
   const [estConnexion, setEstConnexion] = useState(!inscription);
+  useTitrePage(estConnexion ? 'Connexion' : 'Créer un compte');
   const [formulaire, setFormulaire] = useState(FORMULAIRE_VIDE);
   const [erreur, setErreur] = useState('');
   const [succes, setSucces] = useState('');
   const [chargement, setChargement] = useState(false);
 
-  const { login } = useContext(AuthContext);
+  const { login, effacerDeconnexion } = useContext(AuthContext);
+  // Arrivee ici apres une deconnexion : c'est fait, les prochaines pages protegees redeviennent des destinations
+  useEffect(() => effacerDeconnexion(), [effacerDeconnexion]);
   const { totalPrix, totalArticles } = useContext(ContextePanier);
   const navigate = useNavigate();
   const location = useLocation();
@@ -56,8 +61,8 @@ export const PageAuth = ({ inscription = false }) => {
 
     try {
       if (estConnexion) {
-        await login(formulaire.email, formulaire.mdp);
-        navigate(depuis ?? '/', { replace: true });
+        const utilisateur = await login(formulaire.email, formulaire.mdp);
+        navigate(destinationApresConnexion(utilisateur, depuis), { replace: true });
       } else {
         const message = await registerApi(formulaire.nom, formulaire.email, formulaire.mdp);
         setSucces(message || MESSAGE_INSCRIPTION_PAR_DEFAUT);
@@ -78,12 +83,12 @@ export const PageAuth = ({ inscription = false }) => {
   const sousTitre = () => {
     if (depuisCommande) {
       return estConnexion
-        ? `Connectez-vous pour valider votre panier (${formaterPrix(totalPrix)}). Il est conservé.`
-        : `Créez votre compte pour valider votre panier (${formaterPrix(totalPrix)}). Un e-mail de vérification vous sera envoyé ; votre panier est conservé.`;
+        ? `Connecte-toi pour valider ton panier (${formaterPrix(totalPrix)}). Il est conservé.`
+        : `Crée ton compte pour valider ton panier (${formaterPrix(totalPrix)}). Un e-mail de vérification te sera envoyé ; ton panier est conservé.`;
     }
     return estConnexion
-      ? 'Retrouvez vos commandes et commandez en quelques secondes.'
-      : 'Un e-mail de vérification vous sera envoyé : cliquez sur son lien pour activer votre compte, puis connectez-vous pour commander.';
+      ? 'Retrouve tes commandes et commande en quelques secondes.'
+      : 'Un e-mail de vérification te sera envoyé : clique sur son lien pour activer ton compte, puis connecte-toi pour commander.';
   };
 
   return (
@@ -130,7 +135,7 @@ export const PageAuth = ({ inscription = false }) => {
             autoComplete={estConnexion ? 'current-password' : 'new-password'}
             value={formulaire.mdp}
             onChange={modifierChamp}
-            placeholder="Votre mot de passe"
+            placeholder="Ton mot de passe"
           />
 
           {!estConnexion && (

@@ -80,7 +80,7 @@ export const FormulaireRetrait = ({
           actif={typeRetrait === TYPE_RETRAIT.LIVRAISON}
           icone={Truck}
           libelle="Livraison"
-          detail="À votre adresse"
+          detail="À ton adresse"
           onClick={() => onChangerType(TYPE_RETRAIT.LIVRAISON)}
         />
       </div>
@@ -121,7 +121,7 @@ export const FormulaireRetrait = ({
         </div>
       ) : (
         <p className="rounded-lg border border-border bg-secondary/40 p-4 text-sm text-muted-foreground">
-          Vous récupérez votre commande au comptoir dès qu’elle est prête. Un e-mail vous prévient.
+          Tu récupères ta commande au comptoir dès qu’elle est prête. Un e-mail te prévient.
         </p>
       )}
 

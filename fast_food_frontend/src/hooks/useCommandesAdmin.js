@@ -88,7 +88,7 @@ export const useCommandesAdmin = () => {
         afficher(`Commande #${id} : ${LIBELLES_STATUT[statut] ?? statut}`);
         return modifiee;
       } catch {
-        afficher(`Le statut de la commande #${id} n'a pas changé. Réessayez.`, 'erreur', 8000);
+        afficher(`Le statut de la commande #${id} n'a pas changé. Réessaie.`, 'erreur', 8000);
         return null;
       } finally {
         versionListe.current += 1;

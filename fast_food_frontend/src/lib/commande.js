@@ -191,6 +191,26 @@ export const trierParDate = (commandes, ordre) =>
     return ordre === 'desc' ? -difference : difference;
   });
 
+// Commandes encore en cuisine : a preparer ou en preparation (une commande prete attend le client ou le livreur).
+const STATUTS_CUISINE = [STATUT_COMMANDE.EN_ATTENTE, STATUT_COMMANDE.EN_PREPARATION];
+const estEnCuisine = (commande) => STATUTS_CUISINE.includes(commande.status);
+
+// La commande a traiter en premier : la plus ancienne encore en cuisine. Seule son action est en orange
+// sur la page staff, quel que soit le tri choisi. null s'il n'y en a pas.
+export const prochaineCommande = (commandes) =>
+  trierParDate(commandes.filter(estEnCuisine), 'asc')[0]?.id ?? null;
+
+// Au-dela de ce delai en cuisine, l'anciennete de la commande passe en rouge.
+const DELAI_RETARD_MS = 20 * 60 * 1000;
+export const estEnRetard = (commande, maintenant = Date.now()) =>
+  estEnCuisine(commande) && maintenant - dateDe(commande).getTime() > DELAI_RETARD_MS;
+
+// Premieres lignes d'une commande pour la carte staff : { lignes, reste } (reste : lignes non affichees).
+export const apercuArticles = (commande, maximum = 3) => ({
+  lignes: commande.items.slice(0, maximum),
+  reste: Math.max(0, commande.items.length - maximum),
+});
+
 // Compteurs affiches sur les filtres.
 export const compterCommandes = (commandes) => ({
   enCours: commandes.filter(estEnCours).length,

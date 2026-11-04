@@ -8,6 +8,7 @@ import { PageAuth } from './pages/PageAuth';
 import { PageCommande } from './pages/PageCommande';
 import { PageUser } from './pages/PageUser';
 import { MentionsLegales } from './pages/MentionsLegales';
+import { PageIntrouvable } from './pages/PageIntrouvable';
 import { AdminGestionCommandes } from './pages/AdminGestionCommandes';
 import AdminPage from './pages/AdminPage';
 import { ROLE, ROLES_STAFF } from './lib/roles';
@@ -40,6 +41,9 @@ function App() {
               <Route element={<ProtectedRoute rolesAutorises={[ROLE.ADMIN]} />}>
                 <Route path="/admin" element={<AdminPage />} />
               </Route>
+
+              {/* Toute autre adresse : page introuvable, avec la navbar et le footer */}
+              <Route path="*" element={<PageIntrouvable />} />
             </Route>
           </Routes>
         </Router>

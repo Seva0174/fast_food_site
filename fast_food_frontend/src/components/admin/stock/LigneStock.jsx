@@ -1,115 +1,151 @@
-import { useState } from 'react';
-import { AlertTriangle, Edit2, Save, Trash2, X } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { AlertTriangle, Pencil, Trash2, XCircle } from 'lucide-react';
 import { Bouton } from '@/components/ui/bouton';
 import { ListeDeroulante } from '@/components/ui/liste';
-import { UNITES, estEnAlerte, formaterQuantite } from '@/lib/stock';
+import { ETAT_STOCK, UNITES, etatStock, formaterQuantite } from '@/lib/stock';
 
-// Une ligne du tableau des stocks, avec son propre mode édition.
-export const LigneStock = ({ stock, desactive, onModifier, onSupprimer }) => {
-  const [enEdition, setEnEdition] = useState(false);
+const classeChamp =
+  'min-h-10 w-full rounded-lg border border-input bg-transparent px-3 text-right text-sm tabular-nums focus-visible:border-ring focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50';
+
+const BADGE = 'inline-flex items-center gap-1 whitespace-nowrap rounded-full border px-2.5 py-0.5 text-xs font-semibold';
+
+// Épuisé : seul signal plein (texte Noir Suie sur Rouge Alerte, comme dangerPlein) ; bas : contour rouge ;
+// suffisant : neutre. L'icône double la couleur.
+const BADGES_ETAT = {
+  [ETAT_STOCK.EPUISE]: {
+    libelle: 'Épuisé',
+    icone: XCircle,
+    classe: `${BADGE} border-destructive bg-destructive text-background`,
+  },
+  [ETAT_STOCK.BAS]: {
+    libelle: 'Bas',
+    icone: AlertTriangle,
+    classe: `${BADGE} border-destructive/40 text-destructive`,
+  },
+  [ETAT_STOCK.OK]: {
+    libelle: 'Suffisant',
+    icone: null,
+    classe: `${BADGE} border-border bg-secondary text-muted-foreground`,
+  },
+};
+
+// Une ligne du tableau des stocks. Une seule ligne est en édition à la fois (enEdition, piloté par le
+// tableau). Édition : Entrée enregistre, Échap annule ; le focus revient ensuite au crayon.
+export const LigneStock = ({ stock, enEdition, editionAilleurs, desactive, onEditer, onModifier, onSupprimer }) => {
   const [quantite, setQuantite] = useState('');
   const [unite, setUnite] = useState('');
-  const enAlerte = estEnAlerte(stock);
+  const crayon = useRef(null);
+  // Vrai quand la ligne termine elle-même son édition (et pas quand une autre ligne la remplace)
+  const rendreFocus = useRef(false);
+  const etat = BADGES_ETAT[etatStock(stock)];
+  const IconeEtat = etat.icone;
+
+  useEffect(() => {
+    if (enEdition || !rendreFocus.current) return;
+    rendreFocus.current = false;
+    crayon.current?.focus();
+  }, [enEdition]);
+
+  const terminerEdition = () => {
+    rendreFocus.current = true;
+    onEditer(null);
+  };
 
   const demarrerEdition = () => {
-    setQuantite(stock.quantite);
+    setQuantite(String(stock.quantite));
     setUnite(stock.uniteMesure);
-    setEnEdition(true);
+    onEditer(stock.id);
   };
 
   const sauvegarder = async () => {
     const reussi = await onModifier(stock.id, { quantite: Number(quantite), uniteMesure: unite });
-    if (reussi) setEnEdition(false);
+    if (reussi) terminerEdition();
+  };
+
+  // Échap annule depuis un champ ou un bouton de la ligne (une liste ouverte se ferme d'abord)
+  const surToucheLigne = (e) => {
+    if (enEdition && e.key === 'Escape' && e.currentTarget.contains(e.target) && !e.defaultPrevented) {
+      terminerEdition();
+    }
   };
 
   return (
-    <tr className={`transition hover:bg-muted/40 ${enAlerte ? 'bg-destructive/5' : ''}`}>
-      <td className="p-3 font-bold text-muted-foreground">#{stock.id}</td>
-      <td className="p-3 font-semibold text-foreground">{stock.nom}</td>
-
-      <td className="p-3">
-        {enEdition ? (
-          <input
-            type="number"
-            step="0.01"
-            value={quantite}
-            onChange={(e) => setQuantite(e.target.value)}
-            className="w-24 rounded-lg border border-input bg-transparent p-1 text-xs font-semibold tabular-nums"
-          />
-        ) : (
-          <span className="text-sm font-bold text-foreground">{formaterQuantite(stock.quantite)}</span>
-        )}
-      </td>
-
-      <td className="p-3">
-        {enEdition ? (
-          <ListeDeroulante
-            valeur={unite}
-            onChange={setUnite}
-            options={UNITES}
-            className="min-w-[7rem] rounded-lg border border-input p-1 text-xs font-medium"
-            classeItem="text-xs"
-          />
-        ) : (
-          <span className="font-medium text-muted-foreground">{stock.uniteMesure}</span>
-        )}
-      </td>
-
-      <td className="p-3 text-center">
-        {enAlerte ? (
-          <span className="inline-flex items-center gap-1 rounded-full border border-destructive/40 bg-destructive/10 px-2 py-0.5 text-xs font-semibold text-destructive">
-            <AlertTriangle className="h-3 w-3" aria-hidden="true" /> Bas
-          </span>
-        ) : (
-          <span className="inline-flex items-center gap-1 rounded-full border border-border bg-secondary px-2 py-0.5 text-xs font-semibold text-muted-foreground">
-            OK
-          </span>
-        )}
-      </td>
+    <tr onKeyDown={surToucheLigne} className="transition-colors hover:bg-muted/40">
+      <th scope="row" className="break-words p-3 text-left font-semibold text-foreground">
+        {stock.nom}
+      </th>
 
       <td className="p-3 text-right">
-        <div className="flex justify-end gap-1">
+        {enEdition ? (
+          <div className="flex justify-end gap-2">
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              autoFocus
+              value={quantite}
+              onChange={(e) => setQuantite(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && sauvegarder()}
+              aria-label={`Quantité de ${stock.nom}`}
+              className={`${classeChamp} max-w-28`}
+            />
+            <ListeDeroulante
+              valeur={unite}
+              onChange={setUnite}
+              options={UNITES}
+              ariaLabel={`Unité de ${stock.nom}`}
+              className="min-h-10 min-w-[7.5rem] rounded-lg border border-input px-3 text-sm"
+            />
+          </div>
+        ) : (
+          <span className="font-semibold tabular-nums text-foreground">
+            {formaterQuantite(stock.quantite, stock.uniteMesure)}
+          </span>
+        )}
+      </td>
+
+      <td className="p-3">
+        <span className={etat.classe}>
+          {IconeEtat && <IconeEtat className="h-3.5 w-3.5" aria-hidden="true" />}
+          {etat.libelle}
+        </span>
+      </td>
+
+      <td className="p-3">
+        <div className="flex justify-end gap-2">
           {enEdition ? (
             <>
-              <Bouton
-                variante="principal"
-                taille="iconeCarree"
-                onClick={sauvegarder}
-                disabled={desactive}
-                title="Enregistrer"
-                aria-label="Enregistrer"
-              >
-                <Save className="h-3.5 w-3.5" />
+              <Bouton variante="secondaire" taille="sm" onClick={terminerEdition}>
+                Annuler
               </Bouton>
-              <Bouton
-                variante="neutre"
-                taille="iconeCarree"
-                onClick={() => setEnEdition(false)}
-                title="Annuler"
-                aria-label="Annuler"
-              >
-                <X className="h-3.5 w-3.5" />
+              <Bouton variante="sombre" taille="sm" onClick={sauvegarder} disabled={desactive}>
+                Enregistrer
               </Bouton>
             </>
           ) : (
             <>
               <Bouton
-                variante="neutre"
-                taille="iconeCarree"
+                ref={crayon}
+                variante="secondaire"
+                taille="nu"
+                className="size-9 shrink-0"
                 onClick={demarrerEdition}
-                title="Modifier manuellement"
-                aria-label="Modifier manuellement"
+                disabled={editionAilleurs}
+                aria-label={`Modifier le stock de ${stock.nom}`}
+                title={editionAilleurs ? 'Termine la modification en cours' : 'Modifier le stock'}
               >
-                <Edit2 className="h-3.5 w-3.5" />
+                <Pencil className="h-4 w-4" aria-hidden="true" />
               </Bouton>
               <Bouton
                 variante="fantomeDanger"
-                taille="iconeCarree"
+                taille="nu"
+                className="size-9 shrink-0"
                 onClick={() => onSupprimer(stock)}
+                disabled={editionAilleurs}
+                aria-label={`Supprimer ${stock.nom}`}
                 title="Supprimer"
-                aria-label="Supprimer"
               >
-                <Trash2 className="h-3.5 w-3.5" />
+                <Trash2 className="h-4 w-4" aria-hidden="true" />
               </Bouton>
             </>
           )}

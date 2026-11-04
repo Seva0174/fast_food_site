@@ -9,32 +9,42 @@ import {
 import { extraireMessageErreur } from '@/lib/erreurs';
 
 // Fournisseurs, sélection du fournisseur courant et catalogue associé.
-// `afficher` vient de useMessage, pour partager un seul bandeau avec les commandes.
+// `afficher` vient de useMessage, pour partager un seul message avec les commandes.
+// chargement / erreur : liste des fournisseurs ; enCours : une action attend le serveur.
 export const useFournisseurs = (afficher) => {
   const [fournisseurs, setFournisseurs] = useState([]);
+  const [chargement, setChargement] = useState(true);
+  const [erreur, setErreur] = useState('');
+  const [enCours, setEnCours] = useState(false);
   const [idSelectionne, setIdSelectionne] = useState('');
   // Le catalogue garde l'identifiant de son fournisseur : on n'affiche jamais celui d'un autre
-  const [catalogueCharge, setCatalogueCharge] = useState({ idFournisseur: '', articles: [] });
-  const [chargement, setChargement] = useState(false);
+  const [catalogueCharge, setCatalogueCharge] = useState({ idFournisseur: '', articles: [], erreur: false });
+  // Incrémenté pour relancer le chargement du catalogue après une erreur
+  const [essaiCatalogue, setEssaiCatalogue] = useState(0);
 
+  const lireListe = useCallback(async () => {
+    const donnees = await getFournisseursApi();
+    setFournisseurs(donnees);
+    return donnees;
+  }, []);
+
+  // Charge la liste puis sélectionne le premier fournisseur si aucun ne l'est
   const charger = useCallback(async () => {
     try {
-      const donnees = await getFournisseursApi();
-      setFournisseurs(donnees);
-      return donnees;
-    } catch {
-      afficher('Erreur lors du chargement des fournisseurs', 'erreur');
-      return [];
-    }
-  }, [afficher]);
-
-  // Au montage : charge la liste puis sélectionne le premier fournisseur
-  useEffect(() => {
-    charger().then((donnees) => {
+      const donnees = await lireListe();
+      setErreur('');
       if (donnees.length > 0) {
         setIdSelectionne((courant) => courant || String(donnees[0].id));
       }
-    });
+    } catch {
+      setErreur('Impossible de charger les fournisseurs.');
+    } finally {
+      setChargement(false);
+    }
+  }, [lireListe]);
+
+  useEffect(() => {
+    charger();
   }, [charger]);
 
   // Charge le catalogue à chaque changement de fournisseur (y compris le premier)
@@ -44,77 +54,94 @@ export const useFournisseurs = (afficher) => {
     let annule = false;
     getCatalogueApi(idSelectionne)
       .then((articles) => {
-        if (!annule) setCatalogueCharge({ idFournisseur: idSelectionne, articles });
+        if (!annule) setCatalogueCharge({ idFournisseur: idSelectionne, articles, erreur: false });
       })
       .catch(() => {
-        if (!annule) afficher('Erreur lors du chargement du catalogue', 'erreur');
+        if (!annule) setCatalogueCharge({ idFournisseur: idSelectionne, articles: [], erreur: true });
       });
 
     // Ignore la réponse d'un fournisseur qui n'est plus sélectionné
     return () => {
       annule = true;
     };
-  }, [idSelectionne, afficher]);
+  }, [idSelectionne, essaiCatalogue]);
 
-  const catalogue = catalogueCharge.idFournisseur === idSelectionne ? catalogueCharge.articles : [];
+  const catalogueAJour = catalogueCharge.idFournisseur === idSelectionne;
+  const catalogue = catalogueAJour ? catalogueCharge.articles : [];
+  const chargementCatalogue = Boolean(idSelectionne) && !catalogueAJour;
+  const erreurCatalogue = catalogueAJour && catalogueCharge.erreur;
+
+  const rechargerCatalogue = () => {
+    setCatalogueCharge({ idFournisseur: '', articles: [], erreur: false });
+    setEssaiCatalogue((n) => n + 1);
+  };
 
   // Renvoie true si le fournisseur a été créé (il devient alors le fournisseur sélectionné).
   const creer = async (nom) => {
     if (!nom.trim()) return false;
-    setChargement(true);
+    setEnCours(true);
     try {
       const cree = await creerFournisseurApi({ nom: nom.trim() });
-      afficher('Fournisseur créé avec succès');
-      await charger();
+      afficher(`Fournisseur « ${nom.trim()} » créé`);
+      await lireListe();
       setIdSelectionne(String(cree.id));
       return true;
     } catch (err) {
       afficher(extraireMessageErreur(err) || 'Erreur lors de la création du fournisseur', 'erreur');
       return false;
     } finally {
-      setChargement(false);
+      setEnCours(false);
     }
   };
 
-  // Renvoie true si le fournisseur a été supprimé (plus aucun fournisseur n'est alors sélectionné).
+  // Renvoie true si le fournisseur a été supprimé (le premier fournisseur restant est alors sélectionné).
   const supprimer = async (id) => {
-    setChargement(true);
+    setEnCours(true);
     try {
       await supprimerFournisseurApi(id);
       afficher('Fournisseur supprimé');
-      setIdSelectionne('');
-      await charger();
+      const restants = await lireListe();
+      setIdSelectionne(restants.length > 0 ? String(restants[0].id) : '');
       return true;
     } catch (err) {
       afficher(extraireMessageErreur(err) || 'Erreur lors de la suppression du fournisseur', 'erreur');
       return false;
     } finally {
-      setChargement(false);
+      setEnCours(false);
     }
   };
 
   // Remplace le catalogue du fournisseur sélectionné par le contenu du fichier CSV.
   const importerCatalogue = async (fichier) => {
     if (!fichier || !idSelectionne) return false;
-    setChargement(true);
+    setEnCours(true);
     try {
       const articles = await importerCatalogueCsvApi(idSelectionne, fichier);
-      setCatalogueCharge({ idFournisseur: idSelectionne, articles });
-      afficher('Catalogue mis à jour avec succès via le fichier CSV');
+      setCatalogueCharge({ idFournisseur: idSelectionne, articles, erreur: false });
+      afficher(`Catalogue importé : ${articles.length} article${articles.length > 1 ? 's' : ''}`);
       return true;
-    } catch {
-      afficher("Erreur lors de l'import du fichier CSV", 'erreur');
+    } catch (err) {
+      afficher(
+        extraireMessageErreur(err) || "Import impossible : vérifie que chaque ligne suit le format nom_matiere;prix_unitaire",
+        'erreur'
+      );
       return false;
     } finally {
-      setChargement(false);
+      setEnCours(false);
     }
   };
 
   return {
     fournisseurs,
+    chargement,
+    erreur,
+    enCours,
     idSelectionne,
     catalogue,
-    chargement,
+    chargementCatalogue,
+    erreurCatalogue,
+    charger,
+    rechargerCatalogue,
     selectionner: setIdSelectionne,
     creer,
     supprimer,

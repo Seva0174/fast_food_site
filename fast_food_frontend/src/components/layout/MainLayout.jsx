@@ -26,10 +26,19 @@ export const MainLayout = () => {
 
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
+      {/* Premier element au clavier : passe les liens de la navbar */}
+      <a
+        href="#contenu"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:rounded-lg focus:bg-card focus:px-4 focus:py-3 focus:font-semibold"
+      >
+        Aller au contenu
+      </a>
       <Navbar />
 
       <div className="flex-grow">
         <main
+          id="contenu"
+          tabIndex={-1}
           className={pleineLargeur ? 'w-full' : 'mx-auto w-full max-w-7xl p-4 sm:p-6 lg:p-8'}
         >
           <ErreurBoundary key={pathname}>

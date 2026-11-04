@@ -112,7 +112,7 @@ export const FormulaireOption = ({
           />
           <ErreurChamp id={`${id}-erreur-nom`} message={erreurs.nom} />
           {!erreurs.nom && (
-            <p className="mt-1 text-xs text-muted-foreground">Repris de l'ingrédient tant que vous ne le changez pas.</p>
+            <p className="mt-1 text-xs text-muted-foreground">Repris de l'ingrédient tant que tu ne le changes pas.</p>
           )}
         </div>
         {matiereChoisie && (

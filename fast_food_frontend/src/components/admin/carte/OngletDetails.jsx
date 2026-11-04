@@ -71,7 +71,7 @@ export const OngletDetails = ({
         )}
         {!produit && estFormule && (
           <p className="mt-1 text-sm text-muted-foreground">
-            Les produits de cette catégorie sont des menus : après la création, composez-le dans l'onglet
+            Les produits de cette catégorie sont des menus : après la création, compose-le dans l'onglet
             Composition.
           </p>
         )}

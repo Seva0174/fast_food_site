@@ -20,7 +20,7 @@ export const GroupeOptions = ({ groupe, choisis, erreur, onChoisir, niveauTitre 
         <Titre id={`groupe-options-${groupe.id}`} className="text-sm font-bold">
           {groupe.nom}
         </Titre>
-        <span className="rounded-full bg-accent px-2 py-0.5 text-xs font-semibold text-muted-foreground">
+        <span className="shrink-0 whitespace-nowrap rounded-full bg-accent px-2 py-0.5 text-xs font-semibold text-muted-foreground">
           {libelleTypeGroupe(groupe)}
         </span>
       </div>

@@ -17,8 +17,10 @@ import {
   compterCommandes,
   filtrerCommandes,
   formaterHeure,
+  prochaineCommande,
   trierParDate,
 } from '../lib/commande';
+import { useTitrePage } from '@/hooks/useTitrePage';
 
 const FILTRES_INITIAUX = {
   statut: FILTRE_STATUT.EN_COURS,
@@ -27,6 +29,7 @@ const FILTRES_INITIAUX = {
 };
 
 export const AdminGestionCommandes = () => {
+  useTitrePage('Gestion des commandes');
   const {
     commandes,
     chargement,
@@ -42,7 +45,8 @@ export const AdminGestionCommandes = () => {
 
   const [commandeSelectionnee, setCommandeSelectionnee] = useState(null);
   const [filtres, setFiltres] = useState(FILTRES_INITIAUX);
-  const [ordre, setOrdre] = useState('desc');
+  // Plus anciennes d'abord : la file se lit dans l'ordre ou la cuisine la traite
+  const [ordre, setOrdre] = useState('asc');
 
   const modifierFiltre = useCallback(
     (cle, valeur) => setFiltres((prev) => ({ ...prev, [cle]: valeur })),
@@ -55,6 +59,7 @@ export const AdminGestionCommandes = () => {
   );
 
   const compteurs = useMemo(() => compterCommandes(commandes), [commandes]);
+  const idProchaine = useMemo(() => prochaineCommande(commandesAffichees), [commandesAffichees]);
 
   // Stable grace a useCallback : CommandeCard (memo) ne se redessine pas inutilement.
   const handleChangerStatut = useCallback(
@@ -137,6 +142,7 @@ export const AdminGestionCommandes = () => {
               onChangerStatut={handleChangerStatut}
               onVoirDetail={setCommandeSelectionnee}
               enCours={miseAJourId === commande.id}
+              prioritaire={commande.id === idProchaine}
               nouvelle={
                 commande.status === STATUT_COMMANDE.EN_ATTENTE && nouvellesIds.includes(commande.id)
               }

@@ -179,8 +179,8 @@ export const FicheProduit = ({
     <div className="mx-auto max-w-xl space-y-3 rounded-lg border border-dashed border-border p-6 text-center">
       <p className="text-sm text-muted-foreground">
         {estFormule
-          ? 'Enregistrez d\'abord le menu : vous pourrez ensuite composer ses emplacements ici.'
-          : "Enregistrez d'abord le produit : vous pourrez ensuite régler ses options ici."}
+          ? 'Enregistre d\'abord le menu : tu pourras ensuite composer ses emplacements ici.'
+          : "Enregistre d'abord le produit : tu pourras ensuite régler ses options ici."}
       </p>
       <Bouton taille="sm" disabled={envoiEnCours} onClick={() => soumettre()}>
         {envoiEnCours ? 'Enregistrement…' : 'Créer le produit'}
@@ -205,7 +205,7 @@ export const FicheProduit = ({
               {/* Visible pendant une édition : explique pourquoi les autres boutons attendent */}
               {editionOuverte && (
                 <p id={contexte.idNote} className="mt-3 rounded-lg bg-muted px-3 py-2 text-sm text-muted-foreground">
-                  Une modification est en cours : enregistrez-la ou annulez-la pour en commencer une autre.
+                  Une modification est en cours : enregistre-la ou annule-la pour en commencer une autre.
                 </p>
               )}
               <ListeOnglets variante="fiche" onglets={onglets} label="Fiche du produit" />

@@ -6,8 +6,10 @@ import { BadgeStatutCommande } from './BadgeStatutCommande';
 import { formaterPrix } from '../../lib/prix';
 import {
   ancienneteCommande,
+  apercuArticles,
   estClickAndCollect,
   estEnCours,
+  estEnRetard,
   heureCommande,
   LIBELLES_ACTION_STATUT,
   LIBELLES_STATUT,
@@ -64,13 +66,16 @@ const MenuAutresActions = ({ commande, precedent, onChangerStatut, desactive }) 
 );
 
 // nouvelle : commande arrivee depuis l'ouverture de la page et pas encore prise en charge.
-export const CommandeCardBase = ({ commande, onChangerStatut, onVoirDetail, enCours, nouvelle }) => {
+// prioritaire : la commande a traiter en premier ; seule son action passe en orange.
+export const CommandeCardBase = ({ commande, onChangerStatut, onVoirDetail, enCours, nouvelle, prioritaire }) => {
   const retrait = estClickAndCollect(commande);
   const IconeRetrait = retrait ? Store : Truck;
   const suivant = statutSuivant(commande);
   const precedent = statutPrecedent(commande);
   const articles = nombreArticles(commande);
   const afficherMenu = Boolean(precedent) || estEnCours(commande);
+  const retard = estEnRetard(commande);
+  const apercu = apercuArticles(commande);
 
   return (
     <article
@@ -84,11 +89,19 @@ export const CommandeCardBase = ({ commande, onChangerStatut, onVoirDetail, enCo
           <div className="flex items-baseline gap-2">
             <h2 className="titre-marque text-3xl">#{commande.id}</h2>
             {nouvelle && <span className="text-xs font-bold text-primary">Nouvelle</span>}
+            {prioritaire && !nouvelle && (
+              <span className="text-xs font-semibold text-muted-foreground">À traiter en premier</span>
+            )}
           </div>
           <p className="mt-1.5 text-sm tabular-nums text-muted-foreground">
             {heureCommande(commande)} ·{' '}
-            <span className={estEnCours(commande) ? 'font-medium text-foreground' : ''}>
+            <span
+              className={
+                retard ? 'font-medium text-destructive' : estEnCours(commande) ? 'font-medium text-foreground' : ''
+              }
+            >
               {ancienneteCommande(commande)}
+              {retard && <span className="sr-only"> (en retard)</span>}
             </span>
           </p>
         </div>
@@ -102,16 +115,34 @@ export const CommandeCardBase = ({ commande, onChangerStatut, onVoirDetail, enCo
         <div className="flex items-end justify-between gap-3">
           <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
             <IconeRetrait className="h-4 w-4" aria-hidden="true" />
-            {retrait ? 'Retrait' : 'Livraison'} · {articles} article{articles > 1 ? 's' : ''}
+            {retrait ? 'Click & collect' : 'Livraison'} · {articles} article{articles > 1 ? 's' : ''}
           </p>
           <p className="text-xl font-bold tabular-nums">{formaterPrix(commande.total)}</p>
         </div>
       </div>
 
+      {/* Ce qu'il y a a preparer, sans ouvrir le detail */}
+      <ul className="space-y-1 text-sm" aria-label={`Articles de la commande ${commande.id}`}>
+        {apercu.lignes.map((item) => (
+          <li key={item.id} className="flex gap-2">
+            <span className="w-7 shrink-0 tabular-nums text-muted-foreground">{item.quantite} ×</span>
+            <span className="min-w-0 truncate" title={item.nomProduit}>
+              {item.nomProduit}
+            </span>
+          </li>
+        ))}
+        {apercu.reste > 0 && (
+          <li className="pl-9 text-muted-foreground">
+            + {apercu.reste} autre{apercu.reste > 1 ? 's' : ''} ligne{apercu.reste > 1 ? 's' : ''}
+          </li>
+        )}
+      </ul>
+
       <div className="mt-auto flex items-center gap-2 border-t border-border pt-4">
         {suivant ? (
           <>
             <Bouton
+              variante={prioritaire ? 'principal' : 'secondaire'}
               className="min-w-0 flex-1"
               disabled={enCours}
               onClick={() => onChangerStatut(commande.id, suivant)}

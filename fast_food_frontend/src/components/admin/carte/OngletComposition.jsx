@@ -62,7 +62,7 @@ export function OngletComposition({ formule, produits, onRefresh }) {
   const demanderRetraitProduit = async (groupe, lien) => {
     const confirme = await confirmer({
       titre: 'Retirer ce produit ?',
-      message: `« ${lien.nomProduit} » ne sera plus proposé dans « ${groupe.nom} ». Vous pourrez l'ajouter de nouveau, mais son surcoût sera à ressaisir.`,
+      message: `« ${lien.nomProduit} » ne sera plus proposé dans « ${groupe.nom} ». Tu pourras l'ajouter de nouveau, mais son surcoût sera à ressaisir.`,
       libelleConfirmer: 'Retirer',
       libelleRefuser: 'Garder',
       destructif: true,
@@ -107,7 +107,7 @@ export function OngletComposition({ formule, produits, onRefresh }) {
               annoncer={false}
               message={{
                 type: 'erreur',
-                texte: "Ce menu n'a aucun emplacement : il reste indisponible pour les clients. Créez le premier ci-dessous.",
+                texte: "Ce menu n'a aucun emplacement : il reste indisponible pour les clients. Crée le premier ci-dessous.",
               }}
             />
           )}

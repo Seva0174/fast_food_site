@@ -83,7 +83,7 @@ const EtapeOptions = ({ etape, choisis, erreur, groupesEnErreur, onChoisirOption
   <>
     <div>
       <h3 id={`emplacement-${etape.groupe.id}`} tabIndex={-1} className="font-bold outline-none">
-        Personnalisez : {etape.produit.nom}
+        Personnalise : {etape.produit.nom}
       </h3>
       <p className="text-xs text-muted-foreground">{etape.groupe.nom}</p>
     </div>
@@ -222,8 +222,8 @@ export const FormuleCompositionModal = ({
   };
 
   const sousTitre = enRecap
-    ? 'Vérifiez votre menu ou modifiez un élément'
-    : `Composez votre menu${etape ? ` – étape ${numeroEmplacement} sur ${totalEmplacements}` : ''}${
+    ? 'Vérifie ton menu ou modifie un élément'
+    : `Compose ton menu${etape ? ` – étape ${numeroEmplacement} sur ${totalEmplacements}` : ''}${
         etape?.type === 'options' ? ' (options)' : ''
       }`;
 
@@ -278,7 +278,7 @@ export const FormuleCompositionModal = ({
       confirmerFermeture={
         aDesModifications
           ? {
-              question: itemPanier ? 'Abandonner vos modifications ?' : 'Abandonner ce menu ?',
+              question: itemPanier ? 'Abandonner tes modifications ?' : 'Abandonner ce menu ?',
               libelleAbandon: 'Abandonner',
             }
           : null

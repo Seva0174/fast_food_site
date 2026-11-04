@@ -26,7 +26,7 @@ export const FormulaireProduitFormule = ({ categories, titre, onSoumettre, onAnn
   const soumettre = async (e) => {
     e.preventDefault();
     const nouvelles = {};
-    if (!formulaire.idProduit) nouvelles.idProduit = 'Choisissez un produit.';
+    if (!formulaire.idProduit) nouvelles.idProduit = 'Choisis un produit.';
     const messageSurcout = erreurSurcout(parseFloat(formulaire.surcout || 0));
     if (messageSurcout) nouvelles.surcout = messageSurcout;
     setErreurs(nouvelles);

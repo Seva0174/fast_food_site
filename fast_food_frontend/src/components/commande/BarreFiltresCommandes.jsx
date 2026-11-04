@@ -2,10 +2,11 @@ import { Search, Truck, Store, ArrowUpDown } from 'lucide-react';
 import { Bouton } from '../ui/bouton';
 import { FILTRE_STATUT, FILTRE_TYPE_TOUS, LIBELLES_STATUT, STATUTS_FILTRABLES, TYPE_RETRAIT } from '../../lib/commande';
 
-// Bouton de filtre : actif en orange (accent du theme), inactif en gris
+// Bouton de filtre : actif en creme sur fond sombre, inactif en gris. L'orange reste a l'action
+// de la commande a traiter en premier.
 const Pastille = ({ actif, onClick, children }) => (
   <Bouton
-    variante={actif ? 'principal' : 'neutre'}
+    variante={actif ? 'sombre' : 'neutre'}
     taille="xs"
     className="whitespace-nowrap rounded-full"
     aria-pressed={actif}
@@ -51,7 +52,7 @@ export const BarreFiltresCommandes = ({ filtres, onChange, ordre, onChangerOrdre
             actif={filtres.typeRetrait === TYPE_RETRAIT.CLICK_AND_COLLECT}
             onClick={() => onChange('typeRetrait', TYPE_RETRAIT.CLICK_AND_COLLECT)}
           >
-            <Store className="h-3.5 w-3.5" aria-hidden="true" /> Retrait
+            <Store className="h-3.5 w-3.5" aria-hidden="true" /> Click &amp; collect
           </Pastille>
         </div>
 

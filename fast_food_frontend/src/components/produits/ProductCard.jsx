@@ -6,18 +6,16 @@ import { Badge } from '../ui/badge';
 import { estPersonnalisable, estDisponible, aDesOptions } from '../../lib/produit';
 import { formaterPrix } from '../../lib/prix';
 
-// Libelles courts pour tenir sur une carte a moitie de largeur
-const libelleAction = (produit) => {
-  if (produit.estFormule) return 'Composer';
-  if (aDesOptions(produit)) return 'Personnaliser';
-  return 'Ajouter';
-};
+// Un seul verbe sur toutes les cartes : « Ajouter ». Un produit a options l'annonce a cote du prix
+// (un menu porte deja son badge « Menu ») ; le bouton ouvre alors la modale de choix.
+const indicationChoix = (produit) => (!produit.estFormule && aDesOptions(produit) ? 'Au choix' : null);
 
 export const ProductCard = ({ produit, onOpenModal }) => {
   const { ajouterAuPanier } = useContext(ContextePanier);
 
   const disponible = estDisponible(produit);
-  const libelle = libelleAction(produit);
+  const personnalisable = estPersonnalisable(produit);
+  const choix = indicationChoix(produit);
 
   // 'envoi' pendant la requete (empeche le double ajout), puis 'ajoute' un court instant
   const [etatAjout, setEtatAjout] = useState(null);
@@ -28,7 +26,7 @@ export const ProductCard = ({ produit, onOpenModal }) => {
   }, [etatAjout]);
 
   const handleClick = async () => {
-    if (estPersonnalisable(produit)) {
+    if (personnalisable) {
       onOpenModal?.(produit);
       return;
     }
@@ -69,7 +67,10 @@ export const ProductCard = ({ produit, onOpenModal }) => {
         <p className="mt-1 line-clamp-2 text-pretty text-sm text-muted-foreground">{produit.description}</p>
 
         <div className="mt-auto space-y-3 pt-3">
-          <span className="block text-xl font-bold tabular-nums">{formaterPrix(produit.prix)}</span>
+          <div className="flex items-baseline justify-between gap-2">
+            <span className="text-xl font-bold tabular-nums">{formaterPrix(produit.prix)}</span>
+            {choix && <span className="text-xs text-muted-foreground">{choix}</span>}
+          </div>
 
           <Bouton
             taille="sm"
@@ -77,14 +78,15 @@ export const ProductCard = ({ produit, onOpenModal }) => {
             className="min-h-11 w-full lg:min-h-9"
             onClick={handleClick}
             disabled={!disponible || etatAjout === 'envoi'}
-            aria-label={estAjoute ? `${produit.nom} ajouté au panier` : `${libelle} : ${produit.nom}`}
+            aria-label={estAjoute ? `${produit.nom} ajouté au panier` : `Ajouter : ${produit.nom}`}
+            aria-haspopup={personnalisable ? 'dialog' : undefined}
           >
             {estAjoute ? (
               <Check className="h-4 w-4" aria-hidden="true" />
             ) : (
               <ShoppingBag className="h-4 w-4" aria-hidden="true" />
             )}
-            <span>{estAjoute ? 'Ajouté' : libelle}</span>
+            <span>{estAjoute ? 'Ajouté' : 'Ajouter'}</span>
           </Bouton>
         </div>
       </div>

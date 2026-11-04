@@ -1,6 +1,14 @@
+import { useState } from 'react';
+import { Bouton } from '@/components/ui/bouton';
+
+// Nombre de produits affichés avant « Voir tout le classement »
+const NOMBRE_VISIBLE = 5;
+
 // Classement des produits : rang, nom, barre proportionnelle au premier, quantité.
 export function TopVentesTable({ topProduits, surPeriode }) {
+  const [toutVoir, setToutVoir] = useState(false);
   const maximum = Math.max(1, ...topProduits.map((item) => item.quantiteVendue));
+  const visibles = toutVoir ? topProduits : topProduits.slice(0, NOMBRE_VISIBLE);
 
   return (
     <section className="rounded-xl border border-border bg-card p-4 sm:p-5">
@@ -25,7 +33,7 @@ export function TopVentesTable({ topProduits, surPeriode }) {
             </tr>
           </thead>
           <tbody>
-            {topProduits.map((item, index) => (
+            {visibles.map((item, index) => (
               <tr key={item.produitId} className="border-b border-border last:border-b-0">
                 <td className="w-10 whitespace-nowrap py-3 pr-3 align-top font-semibold tabular-nums text-muted-foreground">
                   {index + 1}
@@ -48,6 +56,12 @@ export function TopVentesTable({ topProduits, surPeriode }) {
             ))}
           </tbody>
         </table>
+      )}
+
+      {topProduits.length > NOMBRE_VISIBLE && (
+        <Bouton variante="secondaire" taille="sm" className="mt-3" aria-expanded={toutVoir} onClick={() => setToutVoir(!toutVoir)}>
+          {toutVoir ? `Afficher les ${NOMBRE_VISIBLE} premiers` : `Voir tout le classement (${topProduits.length} produits)`}
+        </Bouton>
       )}
     </section>
   );

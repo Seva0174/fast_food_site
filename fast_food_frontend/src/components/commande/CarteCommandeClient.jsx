@@ -79,12 +79,13 @@ export const CarteCommandeClient = ({
       </div>
 
       <div className="mt-3 flex items-center justify-between gap-3">
-        {peutRecommander ? (
+        {/* Rien a reprendre : pas de bouton, le detail explique quoi recomposer */}
+        {peutRecommander && recommande.articles.length > 0 ? (
           // z-10 : au-dessus du bouton etire, ce bouton garde son propre clic
           <button
             type="button"
             onClick={onRecommander}
-            disabled={recommande.articles.length === 0 || recommandeEnCours}
+            disabled={recommandeEnCours}
             className="relative z-10 inline-flex min-h-11 items-center gap-2 rounded-lg border border-border bg-secondary px-3 text-sm font-semibold transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-60"
           >
             <RefreshCw className="h-4 w-4" aria-hidden="true" />

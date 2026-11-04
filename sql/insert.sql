@@ -41,27 +41,27 @@ INSERT INTO categorie (nom) VALUES
 INSERT INTO produit_menu (id_categorie, description, prix, image_url, nom, est_dispo) VALUES
 -- Tacos (categorie 2)
 (2, 'Tacos simple viande au choix, sauce fromagère et frites incluses',        7.50, '/img/tacos_simple.jpg',   'Tacos Simple',        TRUE),  -- id 1
-(2, 'Tacos double viande au choix, sauce fromagère, frites et sauces',          9.50, '/img/tacos_double.jpg',   'Tacos Double',        TRUE),  -- id 2
-(2, 'Tacos XXL 3 viandes, cheddar fondu et sauce au choix',                    12.90,'/img/tacos_xxl.jpg',      'Tacos XXL',           TRUE),  -- id 3
+(2, 'Tacos double viande au choix, sauce fromagère, frites et sauces',          9.50, '/img/tacos_simple.jpg',   'Tacos Double',        TRUE),  -- id 2
+(2, 'Tacos XXL 3 viandes, cheddar fondu et sauce au choix',                    12.90,'/img/tacos_simple.jpg',      'Tacos XXL',           TRUE),  -- id 3
 
 -- Burgers (categorie 3)
-(3, 'Steak haché 150g, cheddar, salade, tomate, oignons, sauce burger',        8.90, '/img/classic_burger.jpg', 'Classic Burger',      TRUE),  -- id 4
-(3, 'Double steak haché, double cheddar, bacon grillé, sauce BBQ',            11.90,'/img/bacon_burger.jpg',   'Bacon Cheese Burger', TRUE),  -- id 5
-(3, 'Poulet croustillant pané, salade, sauce épicée',                          9.50, '/img/chicken_burger.jpg', 'Spicy Chicken Burger',TRUE),  -- id 6
+(3, 'Steak haché 150g, cheddar, salade, tomate, oignons, sauce burger',        8.90, '/img/burger.webp'       , 'Classic Burger',      TRUE),  -- id 4
+(3, 'Double steak haché, double cheddar, bacon grillé, sauce BBQ',            11.90,'/img/bacon_burger.webp',   'Bacon Cheese Burger', TRUE),  -- id 5
+(3, 'Poulet croustillant pané, salade, sauce épicée',                          9.50, '/img/chicken_burger.webp', 'Spicy Chicken Burger',TRUE),  -- id 6
 
 -- Wings et Accompagnements (categorie 4)
-(4, '6 ailes de poulet marinées, sauce BBQ maison',                            6.50, '/img/wings_bbq.jpg',      'Wings BBQ (x6)',      TRUE),  -- id 7
-(4, '6 ailes de poulet, sauce buffalo bien relevée',                           6.50, '/img/wings_buffalo.jpg',  'Wings Buffalo (x6)',  TRUE),  -- id 8
-(4, '12 ailes de poulet, sauce au choix, format partage',                     11.90,'/img/wings_12.jpg',       'Wings Party (x12)',   TRUE),  -- id 9
-(4, 'Frites maison croustillantes',                                            3.50, '/img/frites.jpg',         'Frites',              TRUE),  -- id 10
+(4, '6 ailes de poulet marinées, sauce BBQ maison',                            6.50, '/img/wings.jpg',      'Wings BBQ (x6)',      TRUE),  -- id 7
+(4, '6 ailes de poulet, sauce buffalo bien relevée',                           6.50, '/img/wings.jpg',  'Wings Buffalo (x6)',  TRUE),  -- id 8
+(4, '12 ailes de poulet, sauce au choix, format partage',                     11.90,'/img/wings.jpg',       'Wings Party (x12)',   TRUE),  -- id 9
+(4, 'Frites maison croustillantes',                                            3.50, '/img/frites.webp',         'Frites',              TRUE),  -- id 10
 (4, 'Onion rings croustillants, sauce fromagère',                              4.50, '/img/onion_rings.jpg',    'Onion Rings',         TRUE),  -- id 11
 
 -- Boissons (categorie 5)
 (5, 'Canette 33cl',                                                            2.00, '/img/soda.jpg',           'Soda 33cl',           TRUE),  -- id 12
-(5, 'Bouteille eau minérale 50cl',                                             1.50, '/img/eau.jpg',            'Eau minérale 50cl',   TRUE),  -- id 13
+(5, 'Bouteille eau minérale 50cl',                                             1.50, '/img/eau_mineral.jpg',            'Eau minérale 50cl',   TRUE),  -- id 13
 
 -- Desserts (categorie 6)
-(6, 'Moelleux au chocolat fait maison',                                        3.90, '/img/moelleux.jpg',       'Moelleux Chocolat',   TRUE),  -- id 14
+(6, 'Moelleux au chocolat fait maison',                                        3.90, NULL,       'Moelleux Chocolat',   TRUE),  -- id 14
 (6, 'Tiramisu individuel',                                                     3.90, '/img/tiramisu.jpg',       'Tiramisu',            FALSE); -- id 15
 
 -- =====================================================================
@@ -73,25 +73,25 @@ INSERT INTO stock_matiere_premiere (nom, quantite, unite_mesure) VALUES
 ('Steak haché 150g',          180.000, 'unite'),   -- 3
 ('Filet de poulet',           220.000, 'kg'),      -- 4
 ('Ailes de poulet',           400.000, 'kg'),      -- 5
-('Cheddar (tranches)',        500.000, 'tranche'), -- 6
-('Sauce fromagère (L)',       25.000,  'L'),       -- 7
-('Sauce BBQ (L)',             18.000,  'L'),       -- 8
-('Sauce buffalo (L)',         15.000,  'L'),       -- 9
-('Pommes de terre (kg)',      150.000, 'kg'),      -- 10
-('Salade (kg)',               20.000,  'kg'),      -- 11
-('Tomates (kg)',              25.000,  'kg'),      -- 12
-('Oignons (kg)',              20.000,  'kg'),      -- 13
-('Bacon (kg)',                 30.000,  'kg'),      -- 14
+('Cheddar',                   500.000, 'tranche'), -- 6
+('Sauce fromagère',           25.000,  'L'),       -- 7
+('Sauce BBQ',                 18.000,  'L'),       -- 8
+('Sauce buffalo',             15.000,  'L'),       -- 9
+('Pommes de terre',           150.000, 'kg'),      -- 10
+('Salade',                    20.000,  'kg'),      -- 11
+('Tomates',                   25.000,  'kg'),      -- 12
+('Oignons',                   20.000,  'kg'),      -- 13
+('Bacon',                      30.000,  'kg'),      -- 14
 -- Ingrédients ajoutés pour les options/tacos
-('Viande Hachée Tacos (kg)',  50.000,  'kg'),      -- 15
+('Viande hachée tacos',       50.000,  'kg'),      -- 15
 ('Cordon Bleu',               100.000, 'unite'),   -- 16
 ('Merguez',                   120.000, 'unite'),   -- 17
 ('Nuggets Poulet',            200.000, 'unite'),   -- 18
-('Sauce Algérienne (L)',      10.000,  'L'),       -- 19
-('Sauce Samouraï (L)',        10.000,  'L'),       -- 20
-('Mayonnaise (L)',            15.000,  'L'),       -- 21
-('Ketchup (L)',               15.000,  'L'),       -- 22
-('Supplément Raclette (kg)',  10.000,  'kg');      -- 23
+('Sauce algérienne',          10.000,  'L'),       -- 19
+('Sauce samouraï',            10.000,  'L'),       -- 20
+('Mayonnaise',                15.000,  'L'),       -- 21
+('Ketchup',                   15.000,  'L'),       -- 22
+('Raclette',                  10.000,  'kg');      -- 23
 
 -- =====================================================================
 -- FOURNISSEURS
@@ -154,17 +154,17 @@ INSERT INTO recette (id_produit, id_matiere, quantite_requise) VALUES
 -- =====================================================================
 INSERT INTO option_groupe (id_produit, nom, min_selection, max_selection) VALUES
 -- Tacos Simple (produit 1)
-(1, 'Choix de la Viande (1 max)', 1, 1),
-(1, 'Sauces (2 max)',              1, 2),
+(1, 'Viande',            1, 1),
+(1, 'Sauces',            1, 2),
 (1, 'Suppléments',                 0, 3),
 
 -- Tacos Double (produit 2)
-(2, 'Choix des Viandes (2 exactes)', 2, 2),
-(2, 'Sauces (2 max)',                 1, 2),
+(2, 'Viandes (2 au choix)',          2, 2),
+(2, 'Sauces',                         1, 2),
 (2, 'Suppléments',                    0, 3),
 
 -- Classic Burger (produit 4)
-(4, 'Suppléments Ingrédients', 0, 2);
+(4, 'Suppléments',             0, 2);
 
 -- =====================================================================
 -- CHOIX D'OPTIONS (option_item)
@@ -295,9 +295,9 @@ INSERT INTO commandes_fournisseurs_details (id_commande_fournisseur, id_stock, q
 
 INSERT INTO produit_menu (id_categorie, description, prix, image_url, nom, est_dispo, est_formule) VALUES
 (1, 'Un burger au choix, un accompagnement et une boisson', 11.90, '/img/menu_burger.jpg',  'Menu Burger',         TRUE, TRUE),  -- id 16
-(1, 'Un tacos au choix, un accompagnement et une boisson',  10.90, '/img/menu_tacos.jpg',   'Menu Tacos',          TRUE, TRUE),  -- id 17
-(1, 'Menu de test : son seul dessert est en rupture',        3.90, '/img/menu_dessert.jpg', 'Menu Dessert',        TRUE, TRUE),  -- id 18
-(1, 'Menu de test : sans emplacement, a configurer',         9.90, NULL,                    'Menu En Preparation', TRUE, TRUE);  -- id 19
+(1, 'Un tacos au choix, un accompagnement et une boisson',  10.90, '/img/tacos_menu.webp',   'Menu Tacos',          TRUE, TRUE),  -- id 17
+(1, 'Un dessert au choix (rupture de stock, pour la démo)', 3.90, NULL                   , 'Menu Dessert',        TRUE, TRUE),  -- id 18
+(1, 'Bientôt à la carte (menu à configurer, pour la démo)',  9.90, NULL,                    'Menu En Preparation', TRUE, TRUE);  -- id 19
 
 -- =====================================================================
 -- MENUS : EMPLACEMENTS ET PRODUITS PROPOSES

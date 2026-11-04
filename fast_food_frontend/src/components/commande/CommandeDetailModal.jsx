@@ -11,6 +11,7 @@ import {
   libellesOptions,
   supplementEmplacement,
 } from '../../lib/commande';
+import { LIBELLES_REFUS, RAISON_REFUS } from '../../lib/recommande';
 
 // Composition d'un menu : un composant par emplacement.
 // Couleurs du theme uniquement : la modale sert aussi a la page staff (theme clair temporaire).
@@ -33,35 +34,40 @@ const ComposantsMenu = ({ composants }) => (
   </ul>
 );
 
-// indisponible : l'article ne peut plus etre recommande (retire de la carte ou options disparues)
-const LigneArticle = ({ item, indisponible = false }) => (
-  <li className="py-2.5">
-    <div className="flex items-baseline justify-between gap-4 text-sm">
-      <span>
-        <span className="inline-block w-8 tabular-nums text-muted-foreground">{item.quantite} ×</span>
-        <span className={indisponible ? 'text-muted-foreground line-through' : 'font-medium'}>
-          {item.nomProduit}
-        </span>
-        {indisponible && (
-          <span className="ml-2 rounded-full border border-border px-2 py-0.5 text-xs text-muted-foreground">
-            Plus à la carte
+// raisonRefus : l'article ne peut pas etre recommande tel quel (RAISON_REFUS), sinon undefined
+const LigneArticle = ({ item, raisonRefus }) => {
+  const indisponible = Boolean(raisonRefus);
+  // Barre seulement un produit qui n'est plus vendu : un produit a recomposer est toujours a la carte
+  const barre = raisonRefus === RAISON_REFUS.RETIRE;
+  return (
+    <li className="py-2.5">
+      <div className="flex items-baseline justify-between gap-4 text-sm">
+        <span>
+          <span className="inline-block w-8 tabular-nums text-muted-foreground">{item.quantite} ×</span>
+          <span className={barre ? 'text-muted-foreground line-through' : indisponible ? 'text-muted-foreground' : 'font-medium'}>
+            {item.nomProduit}
           </span>
-        )}
-      </span>
-      <span
-        className={`shrink-0 tabular-nums ${indisponible ? 'text-muted-foreground line-through' : 'font-semibold'}`}
-      >
-        {formaterPrix(item.sousTotal)}
-      </span>
-    </div>
+          {indisponible && (
+            <span className="ml-2 rounded-full border border-border px-2 py-0.5 text-xs text-muted-foreground">
+              {LIBELLES_REFUS[raisonRefus]}
+            </span>
+          )}
+        </span>
+        <span
+          className={`shrink-0 tabular-nums ${barre ? 'text-muted-foreground line-through' : indisponible ? 'text-muted-foreground' : 'font-semibold'}`}
+        >
+          {formaterPrix(item.sousTotal)}
+        </span>
+      </div>
 
-    {item.composants.length > 0 && <ComposantsMenu composants={item.composants} />}
+      {item.composants.length > 0 && <ComposantsMenu composants={item.composants} />}
 
-    {item.options.length > 0 && (
-      <p className="mt-1 pl-8 text-xs text-muted-foreground">{libellesOptions(item.options)}</p>
-    )}
-  </li>
-);
+      {item.options.length > 0 && (
+        <p className="mt-1 pl-8 text-xs text-muted-foreground">{libellesOptions(item.options)}</p>
+      )}
+    </li>
+  );
+};
 
 const BadgeMode = ({ clickAndCollect }) => {
   const Icone = clickAndCollect ? Store : Truck;
@@ -75,13 +81,13 @@ const BadgeMode = ({ clickAndCollect }) => {
 
 // actions : boutons du pied (ex : "Recommander" cote compte client ; rien cote staff).
 // suivi : affiche le suivi en etapes pour une commande en cours (compte client).
-// idsIndisponibles : lignes qui ne pourront pas etre recommandees (compte client)
+// raisonsIndisponibles : lignes qui ne pourront pas etre recommandees, et pourquoi (compte client)
 export const CommandeDetailModal = ({
   commande,
   onClose,
   actions,
   suivi = false,
-  idsIndisponibles = [],
+  raisonsIndisponibles = {},
 }) => {
   if (!commande) return null;
 
@@ -138,7 +144,7 @@ export const CommandeDetailModal = ({
         <h3 className="text-sm font-bold">Articles commandés</h3>
         <ul className="mt-1 divide-y divide-border">
           {commande.items.map((item) => (
-            <LigneArticle key={item.id} item={item} indisponible={idsIndisponibles.includes(item.id)} />
+            <LigneArticle key={item.id} item={item} raisonRefus={raisonsIndisponibles[item.id]} />
           ))}
         </ul>
       </section>

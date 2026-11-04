@@ -1,3 +1,4 @@
+import { EnTeteVueAdmin } from '@/components/admin/EnTeteVueAdmin';
 import { BarrePeriode } from '@/components/admin/statistiques/BarrePeriode';
 import { GraphiqueCommandesJour } from '@/components/admin/statistiques/GraphiqueCommandesJour';
 import { StatsGlobalesCards } from '@/components/admin/statistiques/StatsGlobalesCards';
@@ -23,6 +24,11 @@ export function VueStatistiques() {
 
   return (
     <div className="space-y-6">
+      <EnTeteVueAdmin
+        titre="Statistiques"
+        description="Chiffre d'affaires, résultat, commandes par jour et produits les plus vendus."
+      />
+
       <BarrePeriode onChanger={charger} resume={resumePeriode(donnees)} />
 
       {erreur && (

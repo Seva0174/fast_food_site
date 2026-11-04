@@ -142,7 +142,7 @@ export const FournisseurPanier = ({ children }) => {
         await mettreAJourPanier(res);
       } catch (error) {
         console.error("Erreur lors de l'ajout au panier :", error);
-        signalerErreur(error, `${produit.nom} n’a pas pu être ajouté. Réessayez.`);
+        signalerErreur(error, `${produit.nom} n’a pas pu être ajouté. Réessaie.`);
         return false;
       }
       confirmerAjout(produit);
@@ -195,7 +195,7 @@ export const FournisseurPanier = ({ children }) => {
       afficher(`Aucun article de cette commande n’est disponible actuellement.${listeRefuses}`, 'erreur', 9000);
     } else {
       setNombreAjouts((n) => n + 1);
-      const texte = `${ajoutes} article${pluriel} ajouté${pluriel} à votre panier${contexte}.${listeRefuses}`;
+      const texte = `${ajoutes} article${pluriel} ajouté${pluriel} à ton panier${contexte}.${listeRefuses}`;
       // Reussite partielle : avertissement, affiche plus longtemps pour laisser lire la liste
       if (refuses.length > 0) afficher(texte, 'avertissement', 9000);
       else afficher(texte, 'succes');

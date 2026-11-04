@@ -49,8 +49,8 @@ export const useSelectionOptions = (groupes, itemPanier) => {
         invalides.map((groupe) => [
           groupe.id,
           estRadio(groupe)
-            ? 'Choisissez une option.'
-            : `Choisissez au moins ${groupe.minSelection} option${groupe.minSelection > 1 ? 's' : ''}.`,
+            ? 'Choisis une option.'
+            : `Choisis au moins ${groupe.minSelection} option${groupe.minSelection > 1 ? 's' : ''}.`,
         ])
       )
     );

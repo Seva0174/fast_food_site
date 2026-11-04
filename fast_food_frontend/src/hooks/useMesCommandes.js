@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { getMesCommandesApi } from '../api/commandeApi';
 
-const MESSAGE_ERREUR = 'Impossible de charger vos commandes.';
+const MESSAGE_ERREUR = 'Impossible de charger tes commandes.';
 
 // Commandes du client connecte : chargement, erreur et rechargement manuel (voir useCommandesAdmin).
 export const useMesCommandes = () => {

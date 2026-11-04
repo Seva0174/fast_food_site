@@ -1,57 +1,77 @@
-import { useState } from 'react';
-import { Package, Plus } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { Search } from 'lucide-react';
 import { Bouton } from '@/components/ui/bouton';
-import { BandeauMessage } from '@/components/ui/bandeau';
 import { ModalConfirmation } from '@/components/modales/ModalConfirmation';
 import { FormulaireAjoutStock } from '@/components/admin/stock/FormulaireAjoutStock';
 import { TableauStocks } from '@/components/admin/stock/TableauStocks';
 import { useConfirmation } from '@/hooks/useConfirmation';
-import { useStocks } from '@/hooks/useStocks';
+import { DESCRIPTION_SEUILS, filtrerStocks, trierParUrgence } from '@/lib/stock';
 
-export function VueStockActuel() {
-  const { stocks, chargement, message, charger, creer, modifier, supprimer } = useStocks();
+const FILTRES_VIDES = { recherche: '', seulementAlertes: false };
+
+// Sous-onglet « Stocks actuels ». `stocks` est le retour de useStocks (partagé avec l'en-tête), le
+// formulaire d'ajout s'ouvre depuis l'en-tête (formAjoutOuvert) et refTitre reçoit le focus après une suppression.
+export function VueStockActuel({ stocks: donnees, formAjoutOuvert, onFermerForm, refTitre }) {
+  const { stocks, chargement, erreur, enCours, charger, creer, modifier, supprimer } = donnees;
   const { confirmer, modaleProps } = useConfirmation();
-  const [formAjoutOuvert, setFormAjoutOuvert] = useState(false);
+  const [filtres, setFiltres] = useState(FILTRES_VIDES);
+
+  const affiches = useMemo(() => trierParUrgence(filtrerStocks(stocks, filtres)), [stocks, filtres]);
+  const pret = !chargement && !erreur && stocks.length > 0;
 
   const demanderSuppression = async (stock) => {
     const confirme = await confirmer({
-      titre: 'Supprimer la matière première',
-      message: `Voulez-vous vraiment supprimer "${stock.nom}" ?`,
+      titre: 'Supprimer la matière première ?',
+      message: `« ${stock.nom} » sera retirée du stock. Cette action est irréversible.`,
       libelleConfirmer: 'Supprimer',
+      libelleRefuser: 'Garder',
+      destructif: true,
     });
-    if (confirme) await supprimer(stock.id);
+    if (!confirme) return;
+    if (await supprimer(stock)) refTitre.current?.focus();
   };
 
   return (
-    <div className="space-y-6">
-      <BandeauMessage message={message} />
+    <div className="space-y-4">
+      {formAjoutOuvert && <FormulaireAjoutStock enCours={enCours} onAjouter={creer} onFermer={onFermerForm} />}
 
-      <div className="flex items-center justify-between">
-        <h3 className="flex items-center gap-2 text-lg font-semibold text-foreground">
-          <Package className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
-          Niveaux de stock actuels
-        </h3>
-        <div className="flex items-center gap-2">
-          <Bouton taille="xs" onClick={() => setFormAjoutOuvert(!formAjoutOuvert)}>
-            <Plus className="h-4 w-4" aria-hidden="true" /> Ajouter un ingrédient
+      {pret && (
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+          <div className="relative w-full sm:w-72">
+            <Search
+              className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+              aria-hidden="true"
+            />
+            <input
+              type="search"
+              value={filtres.recherche}
+              onChange={(e) => setFiltres((f) => ({ ...f, recherche: e.target.value }))}
+              placeholder="Rechercher un ingrédient"
+              aria-label="Rechercher un ingrédient"
+              className="min-h-10 w-full rounded-lg border border-input bg-transparent pl-9 pr-3 text-sm placeholder:text-muted-foreground focus-visible:border-ring focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+            />
+          </div>
+          <Bouton
+            variante={filtres.seulementAlertes ? 'sombre' : 'secondaire'}
+            taille="sm"
+            className="min-h-10"
+            aria-pressed={filtres.seulementAlertes}
+            onClick={() => setFiltres((f) => ({ ...f, seulementAlertes: !f.seulementAlertes }))}
+          >
+            À réapprovisionner seulement
           </Bouton>
-          <Bouton variante="neutre" taille="xs" onClick={charger} disabled={chargement}>
-            Actualiser
-          </Bouton>
+          <p className="text-sm text-muted-foreground sm:ml-auto">Seuil d'alerte : {DESCRIPTION_SEUILS}</p>
         </div>
-      </div>
-
-      {formAjoutOuvert && (
-        <FormulaireAjoutStock
-          chargement={chargement}
-          onAjouter={creer}
-          onFermer={() => setFormAjoutOuvert(false)}
-        />
       )}
 
       <TableauStocks
-        stocks={stocks}
+        stocks={affiches}
         chargement={chargement}
+        erreur={erreur}
+        stockVide={stocks.length === 0}
+        enCours={enCours}
+        onRecharger={charger}
+        onEffacerFiltres={() => setFiltres(FILTRES_VIDES)}
         onModifier={modifier}
         onSupprimer={demanderSuppression}
       />
